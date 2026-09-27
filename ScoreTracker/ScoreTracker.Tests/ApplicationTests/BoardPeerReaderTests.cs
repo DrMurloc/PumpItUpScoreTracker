@@ -25,6 +25,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class BoardPeerReaderTests
 {
     private const int BoardId = 7;
+    private const int SealedWeek = 17;
     private static readonly DateTimeOffset SweptAt = new(2026, 8, 30, 17, 13, 0, TimeSpan.Zero);
 
     private readonly Mock<IOfficialSnapshotRepository> _snapshots = new();
@@ -40,13 +41,13 @@ public sealed class BoardPeerReaderTests
     private void Board(params PlacementRow[] rows)
     {
         _snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SnapshotRun(17, SweptAt, SweptAt, false, "Sealed", 0, 0, 0, null));
+            .ReturnsAsync(new SnapshotRun(SealedWeek, SweptAt, SweptAt, false, "Sealed", 0, 0, 0, null));
         _snapshots.Setup(s => s.GetBoards(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new BoardDimension(BoardId, LeaderboardTypes.Rating, PumbilityBoards.Singles, null, null, null)
             });
-        _snapshots.Setup(s => s.GetBoardPlacements(17, BoardId, PlacementScope.OfficialOnly,
+        _snapshots.Setup(s => s.GetBoardPlacements(SealedWeek, BoardId, PlacementScope.OfficialOnly,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
     }
@@ -57,19 +58,20 @@ public sealed class BoardPeerReaderTests
             .ReturnsAsync(players);
         // A fifty the mirror can plainly see, so the completeness check (D60) is not what any of
         // these cases is measuring. The one test that IS measuring it overrides this.
-        History(players.SelectMany(p => Enumerable.Range(0, 50)
-                .Select(i => new PlayerChartHistoryRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
+        Scores(players.SelectMany(p => Enumerable.Range(0, 50)
+                .Select(i => new PlayerChartScoreRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
             .ToArray());
     }
 
-    // The board store reads the mirror whole and narrows in memory, so the stub is the bulk
-    // read; singles because that is the board every case here is priced against.
-    private void History(params PlayerChartHistoryRow[] rows)
+    // The board store reads the sealed week whole and narrows in memory, so the stub is that
+    // week's bulk read, and only that week's; singles because that is the board every case here is
+    // priced against.
+    private void Scores(params PlayerChartScoreRow[] rows)
     {
-        _snapshots.Setup(s => s.GetEveryChartHistory(It.IsAny<MixEnum>(), PlacementScope.OfficialOnly,
+        _snapshots.Setup(s => s.GetChartScoresIn(SealedWeek, PlacementScope.OfficialOnly,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows
-                .Select(r => new BoardChartHistoryRow(r.PlayerId, r.ChartId, r.Level, r.Score,
+                .Select(r => new BoardChartScoreRow(r.PlayerId, r.ChartId, r.Level, r.Score,
                     ChartType.Single))
                 .ToArray());
     }
@@ -180,9 +182,9 @@ public sealed class BoardPeerReaderTests
         Players(players);
         Accounts(Account(userId, "Renamed", "NEWNAME#0001", true));
         // Both rows hold a fifty, and only the OLD one holds a pass on the chart under test.
-        History(players.SelectMany(p => Enumerable.Range(0, 50)
-                .Select(_ => new PlayerChartHistoryRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
-            .Append(new PlayerChartHistoryRow(2, chartId, 23, 991_000))
+        Scores(players.SelectMany(p => Enumerable.Range(0, 50)
+                .Select(_ => new PlayerChartScoreRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
+            .Append(new PlayerChartScoreRow(2, chartId, 23, 991_000))
             .ToArray());
 
         var scores = await Subject.GetBoardScoresOn(MixEnum.Phoenix2, new[] { 1 }, new[] { chartId },
@@ -192,6 +194,58 @@ public sealed class BoardPeerReaderTests
         // Answered under the id that was asked about, so the caller can still recognise it.
         Assert.Equal(1, row.BoardPlayerId);
         Assert.Equal(991_000, row.Score);
+    }
+
+    [Fact]
+    public async Task PeersAreJudgedOnTheLatestSealedWeekAlone()
+    {
+        Board(Row(1, 18_900m));
+        Players(Player(1, "CHANGWONHAM#1539"));
+        Accounts();
+
+        Assert.Single((await Read())!.Peers);
+
+        _snapshots.Verify(s => s.GetChartScoresIn(SealedWeek, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>()), Times.Once);
+        _snapshots.Verify(s => s.GetChartScoresIn(It.Is<int>(week => week != SealedWeek),
+            It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The week a peer is judged on is the week the reader is reading. The store used to trust its
+    ///     own idea of the current week for a minute, so right after a seal it could check the new
+    ///     week's PUMBILITY board against the old week's chart rows and hold the answer for hours.
+    /// </summary>
+    [Fact]
+    public async Task ANewlySealedWeekIsReadTheMomentTheReaderSeesIt()
+    {
+        Board(Row(1, 18_900m));
+        Players(Player(1, "CHANGWONHAM#1539"));
+        Accounts();
+        var store = new BoardScoreStore(_snapshots.Object);
+        Assert.Single((await new BoardPeerReader(_snapshots.Object, _users.Object, _cache, store)
+            .GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, null, CancellationToken.None))!.Peers);
+
+        // The next week seals. The player's fifty is only in the new week's rows.
+        const int nextWeek = SealedWeek + 1;
+        _snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(nextWeek, SweptAt.AddDays(7), SweptAt.AddDays(7), false, "Sealed", 0, 0, 0,
+                null));
+        _snapshots.Setup(s => s.GetBoardPlacements(nextWeek, BoardId, PlacementScope.OfficialOnly,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Row(1, 18_900m) });
+        _snapshots.Setup(s => s.GetChartScoresIn(nextWeek, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, 50)
+                .Select(_ => new BoardChartScoreRow(1, Guid.NewGuid(), 26, 1_000_000, ChartType.Single)).ToArray());
+        _snapshots.Setup(s => s.GetChartScoresIn(SealedWeek, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BoardChartScoreRow>());
+
+        var group = await new BoardPeerReader(_snapshots.Object, _users.Object, _cache, store)
+            .GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, null, CancellationToken.None);
+
+        Assert.Single(group!.Peers);
+        _snapshots.Verify(s => s.GetChartScoresIn(nextWeek, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -302,10 +356,10 @@ public sealed class BoardPeerReaderTests
         Accounts();
         // Player 2 places on a handful of charts, so a fifty cannot be built from what the mirror
         // holds and the shortfall against the board's own number is thousands, not hundreds.
-        History(Enumerable.Range(0, 50)
-            .Select(_ => new PlayerChartHistoryRow(1, Guid.NewGuid(), 26, 1_000_000))
+        Scores(Enumerable.Range(0, 50)
+            .Select(_ => new PlayerChartScoreRow(1, Guid.NewGuid(), 26, 1_000_000))
             .Concat(Enumerable.Range(0, 6)
-                .Select(_ => new PlayerChartHistoryRow(2, Guid.NewGuid(), 26, 1_000_000)))
+                .Select(_ => new PlayerChartScoreRow(2, Guid.NewGuid(), 26, 1_000_000)))
             .ToArray());
 
         var group = await Read();
@@ -393,28 +447,28 @@ public sealed class BoardPeerReaderTests
     private void CombinedBoard(params PlacementRow[] rows)
     {
         _snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SnapshotRun(17, SweptAt, SweptAt, false, "Sealed", 0, 0, 0, null));
+            .ReturnsAsync(new SnapshotRun(SealedWeek, SweptAt, SweptAt, false, "Sealed", 0, 0, 0, null));
         _snapshots.Setup(s => s.GetBoards(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new BoardDimension(BoardId, LeaderboardTypes.Rating, PumbilityBoards.Combined, null, null, null)
             });
-        _snapshots.Setup(s => s.GetBoardPlacements(17, BoardId, PlacementScope.OfficialOnly,
+        _snapshots.Setup(s => s.GetBoardPlacements(SealedWeek, BoardId, PlacementScope.OfficialOnly,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
     }
 
-    /// <summary>History with the type each row was published under, for the merged rebuild.</summary>
-    private void TypedHistory(params BoardChartHistoryRow[] rows)
+    /// <summary>The week's scores with the type each row was published under, for the merged rebuild.</summary>
+    private void TypedScores(params BoardChartScoreRow[] rows)
     {
-        _snapshots.Setup(s => s.GetEveryChartHistory(It.IsAny<MixEnum>(), PlacementScope.OfficialOnly,
+        _snapshots.Setup(s => s.GetChartScoresIn(SealedWeek, PlacementScope.OfficialOnly,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
     }
 
-    private static BoardChartHistoryRow Typed(int playerId, ChartType type)
+    private static BoardChartScoreRow Typed(int playerId, ChartType type)
     {
-        return new BoardChartHistoryRow(playerId, Guid.NewGuid(), 25, 995_000, type);
+        return new BoardChartScoreRow(playerId, Guid.NewGuid(), 25, 995_000, type);
     }
 
     /// <summary>
@@ -447,7 +501,7 @@ public sealed class BoardPeerReaderTests
         CombinedBoard(Row(1, 17_650m), Row(2, 17_650m));
         Players(Player(1, "WHOLE#0001"), Player(2, "HALF#0002"));
         // One fifty across both types; the other only the singles half of one.
-        TypedHistory(Enumerable.Range(0, 25).Select(_ => Typed(1, ChartType.Single))
+        TypedScores(Enumerable.Range(0, 25).Select(_ => Typed(1, ChartType.Single))
             .Concat(Enumerable.Range(0, 25).Select(_ => Typed(1, ChartType.Double)))
             .Concat(Enumerable.Range(0, 25).Select(_ => Typed(2, ChartType.Single)))
             .ToArray());

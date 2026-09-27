@@ -328,26 +328,27 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
-        CancellationToken ct)
+    public async Task<IReadOnlyList<ChartBoardScore>> GetChartBoardScoresIn(MixEnum mix, int snapshotId,
+        PlacementScope scope, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        // Grouped in SQL rather than in memory: this is every placement on every chart board of
-        // every snapshot, and the answer is one row per player per chart.
+        // One snapshot is a range of the clustered key. Grouped so a chart the sweep saw under two
+        // board names, or a player a board lists twice, still reads as one row per player per chart.
         return await (
                 from placement in Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
                 join board in database.Set<OfficialLeaderboardEntity>()
                     on placement.LeaderboardId equals board.Id
                 join chart in database.Set<ChartEntity>() on board.ChartId equals chart.Id
                 join chartMix in database.Set<ChartMixEntity>() on chart.Id equals chartMix.ChartId
-                where board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
+                where placement.SnapshotId == snapshotId
+                      && board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
                       && chartMix.MixId == mixId
                 group new { placement.Score, chart.Type, chartMix.Level } by
                     new { placement.PlayerId, ChartId = chart.Id }
-                into highs
-                select new ChartBoardHigh(highs.Key.PlayerId, highs.Key.ChartId, highs.Min(h => h.Type),
-                    highs.Min(h => h.Level), highs.Max(h => h.Score)))
+                into scores
+                select new ChartBoardScore(scores.Key.PlayerId, scores.Key.ChartId, scores.Min(h => h.Type),
+                    scores.Min(h => h.Level), scores.Max(h => h.Score)))
             .ToArrayAsync(ct);
     }
 
@@ -570,64 +571,19 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryFor(MixEnum mix,
-        IReadOnlyCollection<int> playerIds, ChartType chartType, int minimumLevel, int maximumLevel,
+    public async Task<IReadOnlyList<BoardChartScoreRow>> GetChartScoresIn(int snapshotId,
         PlacementScope scope, CancellationToken ct)
     {
-        if (playerIds.Count == 0) return Array.Empty<PlayerChartHistoryRow>();
         await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        var typeName = chartType.ToString();
         // The board dimension carries the chart's type and level, so the catalog is never joined:
-        // the mirror already wrote down what it swept. Grouped rather than ordered-and-first
-        // because only the best matters and the group-by stays on the covering index.
-        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
-            .Where(p => playerIds.Contains(p.PlayerId))
-            .Join(database.Set<OfficialLeaderboardEntity>()
-                    .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Chart
-                                                 && b.ChartId != null && b.ChartType == typeName
-                                                 && b.Level != null && b.Level >= minimumLevel
-                                                 && b.Level <= maximumLevel),
-                p => p.LeaderboardId, b => b.Id,
-                (p, b) => new { p.PlayerId, ChartId = b.ChartId!.Value, Level = b.Level!.Value, p.Score })
-            .GroupBy(x => new { x.PlayerId, x.ChartId, x.Level })
-            .Select(g => new PlayerChartHistoryRow(g.Key.PlayerId, g.Key.ChartId, g.Key.Level,
-                (int)g.Max(x => x.Score)))
-            .ToArrayAsync(ct);
-    }
-
-    public async Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryOn(MixEnum mix,
-        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
-        CancellationToken ct)
-    {
-        if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartHistoryRow>();
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
-            .Where(p => playerIds.Contains(p.PlayerId))
-            .Join(database.Set<OfficialLeaderboardEntity>()
-                    .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Chart
-                                                 && b.ChartId != null && chartIds.Contains(b.ChartId.Value)),
-                p => p.LeaderboardId, b => b.Id,
-                (p, b) => new { p.PlayerId, ChartId = b.ChartId!.Value, Level = b.Level ?? 0, p.Score })
-            .GroupBy(x => new { x.PlayerId, x.ChartId, x.Level })
-            .Select(g => new PlayerChartHistoryRow(g.Key.PlayerId, g.Key.ChartId, g.Key.Level,
-                (int)g.Max(x => x.Score)))
-            .ToArrayAsync(ct);
-    }
-
-    public async Task<IReadOnlyList<BoardChartHistoryRow>> GetEveryChartHistory(MixEnum mix,
-        PlacementScope scope, CancellationToken ct)
-    {
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        // The same shape as the two bounded reads above, with the bounds taken off and the type
-        // carried out instead of filtered on. Every type and level the boards hold: the caller
-        // answers a chart dialog as well as a pool, and a CO-OP chart has a board and no pool.
+        // the mirror already wrote down what it swept. Every type and level the boards hold: the
+        // caller answers a chart dialog as well as a pool, and a CO-OP chart has a board and no pool.
+        // Grouped so a player a board lists twice still reads as one score per chart.
         var rows = await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+            .Where(p => p.SnapshotId == snapshotId)
             .Join(database.Set<OfficialLeaderboardEntity>()
-                    .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Chart
-                                                 && b.ChartId != null && b.Level != null),
+                    .Where(b => b.LeaderboardType == LeaderboardTypes.Chart
+                                && b.ChartId != null && b.Level != null),
                 p => p.LeaderboardId, b => b.Id,
                 (p, b) => new
                 {
@@ -643,7 +599,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         // A board whose type this build has never heard of is dropped rather than guessed at.
         return rows
             .Where(r => Enum.TryParse<ChartType>(r.ChartType, out _))
-            .Select(r => new BoardChartHistoryRow(r.PlayerId, r.ChartId, r.Level, r.Score,
+            .Select(r => new BoardChartScoreRow(r.PlayerId, r.ChartId, r.Level, r.Score,
                 Enum.Parse<ChartType>(r.ChartType!)))
             .ToArray();
     }

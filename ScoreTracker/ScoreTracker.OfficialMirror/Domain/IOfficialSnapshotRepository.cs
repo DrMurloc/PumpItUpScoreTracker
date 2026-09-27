@@ -52,23 +52,20 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, PlacementScope scope, CancellationToken ct);
 
     /// <summary>
-    ///     The best score every board player has ever been seen with, per chart board, across
-    ///     every sealed snapshot of the mix — what the Hardmode census counts them on
-    ///     (docs/design/hardmode-leaderboard.md §2).
-    ///     <para>
-    ///         Across snapshots rather than the latest, because a chart board is a top-N and a
-    ///         player drops off it as others pass them: the highest row the mirror ever saw is
-    ///         the closest thing it has to their record. Chart type and level ride along so a
-    ///         caller can price the row without a second read.
-    ///     </para>
+    ///     Every board player's score per chart board in ONE snapshot of the mix — what the
+    ///     Hardmode census counts them on (docs/design/hardmode-leaderboard.md §2). One week and
+    ///     nothing older: a score a busy board has pushed out since is no longer published, and a
+    ///     fifty assembled from several weeks would mix old charts into this week's pool. Chart type
+    ///     and the catalog's level for the mix ride along so a caller can price the row without a
+    ///     second read.
     ///     <para>
     ///         ⚠ The scope is not optional and the census passes <see cref="PlacementScope.OfficialOnly" />:
     ///         supplemented rows are this site's own additions, and counting them would let our
     ///         data vote in our own census of what the world plays.
     ///     </para>
     /// </summary>
-    Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
-        CancellationToken ct);
+    Task<IReadOnlyList<ChartBoardScore>> GetChartBoardScoresIn(MixEnum mix, int snapshotId,
+        PlacementScope scope, CancellationToken ct);
 
     /// <summary>
     ///     Clears one snapshot's supplemented rows, leaving every official row alone. The
@@ -149,31 +146,11 @@ internal interface IOfficialSnapshotRepository
         CancellationToken ct);
 
     /// <summary>
-    ///     A set of players' best published score per chart across EVERY sealed snapshot of the
-    ///     mix, bounded by chart type and level. Across snapshots rather than within one because a
-    ///     score that dropped off a crowding board is still a score they set: the best of what was
-    ///     ever published is the reading (docs/design/pumbility-overhaul.md D59). The level bound
-    ///     is what keeps a band's read to a band; unbounded this carries every level the boards
-    ///     reach. Served by IX_OfficialLeaderboardPlacement_PlayerId_SnapshotId.
-    /// </summary>
-    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryFor(MixEnum mix,
-        IReadOnlyCollection<int> playerIds, ChartType chartType, int minimumLevel, int maximumLevel,
-        PlacementScope scope, CancellationToken ct);
-
-    /// <summary>
-    ///     The same read bounded by CHARTS rather than by a level band, for a caller that already
-    ///     knows which charts it is asking about — a chart's peer board asks about the one chart in
-    ///     front of it and would otherwise pull a whole level range to throw most of it away.
-    /// </summary>
-    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryOn(MixEnum mix,
-        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
-        CancellationToken ct);
-
-    /// <summary>
-    ///     The same read for EVERYONE, every chart board, every type and level — the bulk form
-    ///     the in-memory board store is built from (docs/design/pumbility-overhaul.md §6.14).
-    ///     A caller that is going to be asked about arbitrary players and arbitrary charts is
-    ///     better off holding this once per sweep than asking a hundred times a page.
+    ///     Every player's score on every chart board in ONE snapshot, every type and level — what
+    ///     the in-memory board store is built from (docs/design/pumbility-overhaul.md §6.14). One
+    ///     week and nothing older: a score a busy board has pushed out since is no longer published,
+    ///     and a board player's pool is read from this same week. The snapshot is a range of the
+    ///     clustered key, so the read costs one week's rows however many weeks the table holds.
     ///     <para>
     ///         It is a repository method rather than a query the store writes itself because the
     ///         placement table has exactly one reader: the scope belongs here, where a supplemented
@@ -181,7 +158,7 @@ internal interface IOfficialSnapshotRepository
     ///         (supplemented-leaderboards.md §7).
     ///     </para>
     /// </summary>
-    Task<IReadOnlyList<BoardChartHistoryRow>> GetEveryChartHistory(MixEnum mix, PlacementScope scope,
+    Task<IReadOnlyList<BoardChartScoreRow>> GetChartScoresIn(int snapshotId, PlacementScope scope,
         CancellationToken ct);
 
     /// <summary>

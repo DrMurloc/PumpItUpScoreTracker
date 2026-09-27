@@ -76,7 +76,8 @@ between 14 and 19.
 Both populations, together, weighted identically (D5):
 
 - **PIU Scores accounts** with a full 50-chart pool of the relevant type — 252 on Phoenix 2.
-- **Official-board players** whose top 50 can be reconstructed from the mirrored per-chart boards — 1,216,
+- **Official-board players** whose top 50 can be reconstructed from the latest sealed week's per-chart boards
+  (D35) — 1,070 on the 2026-09-06 copy, 1,216 while every week counted,
   deduped against the accounts they are linked to so a linked player votes once, through their site
   records.
 
@@ -418,6 +419,15 @@ Profile tab for the Glow section of `/Account` → Peers & score colors (`?tab=p
 rules, so every setting that makes something glow lives in one place. It keeps D24's default and D32's
 stored opt-out key. It also follows that tab's draft: nothing is written until Save, and leaving the tab
 discards the change.
+
+**D35 — official players are counted from the latest sealed week.** Asked whether the census should follow
+the PUMBILITY peers onto one week ([pumbility-overhaul.md](pumbility-overhaul.md) D71) after seeing which charts it
+moves, the owner, 2026-09-27: *"yup. do it."* A board player's top 50 is rebuilt from the latest sealed week's chart
+rankings only, not from the best row the mirror ever saw across every week: a score a busy ranking has pushed out
+since is no longer published, and a fifty assembled from several weeks mixes old charts into this week's pool. On the
+2026-09-06 copy the official electorate falls from 1,216 to 1,070, and 26 of the 810 listed charts trade places at
+their folders' cut lines, 13 in and 13 out, all at level 20 and up, since below 20 there are no official rankings to
+read. The same pools price the Official Boards tab.
 
 ### What each surface renders
 

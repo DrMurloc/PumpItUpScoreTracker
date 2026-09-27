@@ -7,10 +7,10 @@ using ScoreTracker.Tests.Integration.Fixtures;
 namespace ScoreTracker.Tests.Integration;
 
 /// <summary>
-///     The two reads behind board PUMBILITY peers, against a real database
-///     (docs/design/pumbility-overhaul.md §6.13). Both join placements to the board dimension and
-///     collapse across snapshots, and a mocked repository cannot catch a wrong join or a group-by
-///     that silently keeps the wrong row — which is the whole reason these exist.
+///     The read behind board PUMBILITY peers, against a real database
+///     (docs/design/pumbility-overhaul.md §6.13, §6.14). It joins one week's placements to the board
+///     dimension and groups them per player and chart, and a mocked repository cannot catch a wrong
+///     join or a filter that lets another week in — which is the whole reason these exist.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [ExcludeFromCodeCoverage]
@@ -18,6 +18,7 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset Week1 = new(2026, 8, 23, 16, 30, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset Week2 = new(2026, 8, 30, 16, 30, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Week3 = new(2026, 9, 6, 16, 30, 0, TimeSpan.Zero);
     private static readonly Guid SinglesChart = Guid.NewGuid();
     private static readonly Guid OtherSinglesChart = Guid.NewGuid();
     private static readonly Guid DoublesChart = Guid.NewGuid();
@@ -36,12 +37,10 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
     private EFOfficialSnapshotRepository Snapshots() => new(_fixture.DbContextFactory);
 
     /// <summary>
-    ///     Two sealed weeks. A player's score on the singles chart FALLS between them, which is the
-    ///     case the across-snapshot read exists for: dropping off a crowding board is not evidence
-    ///     a score went away.
+    ///     Two sealed weeks. Alice holds the singles chart in the first and is gone from it in the
+    ///     second, the way a busy board pushes a player out; Bob improves.
     /// </summary>
-    private async Task<(BoardDimension Singles, BoardDimension Other, BoardDimension Doubles,
-        PlayerDimension Alice, PlayerDimension Bob)> Seed()
+    private async Task<Seeded> Seed()
     {
         var snapshots = Snapshots();
         var singles = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Chart, "Chart S23",
@@ -78,48 +77,65 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
         }, CancellationToken.None);
         await snapshots.Seal(week2, Week2.AddMinutes(40), CancellationToken.None);
 
-        return (singles, other, doubles, alice, bob);
+        return new Seeded(singles, alice, bob, week1, week2);
     }
 
     [Fact]
-    public async Task TheBestScoreAcrossEveryWeekIsTheReadingEvenWhenTheRowIsGone()
+    public async Task AScoreGoneFromTheWeekIsGoneFromTheReading()
     {
         var seeded = await Seed();
 
-        var rows = await Snapshots().GetChartHistoryFor(MixEnum.Phoenix2,
-            new[] { seeded.Alice.Id, seeded.Bob.Id }, ChartType.Single, 20, 29,
-            PlacementScope.OfficialOnly, CancellationToken.None);
+        var rows = await Snapshots().GetChartScoresIn(seeded.Week2, PlacementScope.OfficialOnly,
+            CancellationToken.None);
 
-        var alice = Assert.Single(rows, r => r.PlayerId == seeded.Alice.Id);
-        Assert.Equal(995_000, alice.Score);
-        Assert.Equal(SinglesChart, alice.ChartId);
-        Assert.Equal(23, alice.Level);
-        // Bob's two rows collapse to his better one rather than doubling him.
-        var bob = Assert.Single(rows, r => r.PlayerId == seeded.Bob.Id);
-        Assert.Equal(986_000, bob.Score);
+        // Alice's 995,000 from the week before does not follow her into this one, and the pool
+        // board's rows are not chart scores.
+        var row = Assert.Single(rows);
+        Assert.Equal(seeded.Bob.Id, row.PlayerId);
+        Assert.Equal(SinglesChart, row.ChartId);
+        Assert.Equal(23, row.Level);
+        Assert.Equal(ChartType.Single, row.Type);
+        Assert.Equal(986_000, row.Score);
     }
 
     [Fact]
-    public async Task TheLevelBandAndTheChartTypeBothBound()
+    public async Task EachWeekReadsItsOwnRowsAndNothingLater()
+    {
+        var seeded = await Seed();
+
+        var rows = await Snapshots().GetChartScoresIn(seeded.Week1, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+
+        Assert.Equal(4, rows.Count);
+        // Bob's better score is a week later and stays there.
+        Assert.Equal(980_000, rows.Single(r => r.PlayerId == seeded.Bob.Id).Score);
+        var alice = rows.Where(r => r.PlayerId == seeded.Alice.Id).ToDictionary(r => r.ChartId);
+        Assert.Equal(995_000, alice[SinglesChart].Score);
+        Assert.Equal((12, ChartType.Single), (alice[OtherSinglesChart].Level, alice[OtherSinglesChart].Type));
+        Assert.Equal((23, ChartType.Double), (alice[DoublesChart].Level, alice[DoublesChart].Type));
+    }
+
+    [Fact]
+    public async Task ASupplementedRowStaysOutOfTheOfficialReading()
     {
         var seeded = await Seed();
         var snapshots = Snapshots();
+        var carol = (await snapshots.EnsurePlayers(MixEnum.Phoenix2, new[] { ("CAROL#3333", (Uri?)null) },
+            Week2, CancellationToken.None))[0];
+        await snapshots.WritePlacements(seeded.Week2,
+            new[] { new PlacementRow(seeded.Singles.Id, carol.Id, 2, 984_000, true) }, CancellationToken.None);
 
-        var inBand = await snapshots.GetChartHistoryFor(MixEnum.Phoenix2, new[] { seeded.Alice.Id },
-            ChartType.Single, 20, 29, PlacementScope.OfficialOnly, CancellationToken.None);
-        var wholePool = await snapshots.GetChartHistoryFor(MixEnum.Phoenix2, new[] { seeded.Alice.Id },
-            ChartType.Single, 10, 29, PlacementScope.OfficialOnly, CancellationToken.None);
-        var doubles = await snapshots.GetChartHistoryFor(MixEnum.Phoenix2, new[] { seeded.Alice.Id },
-            ChartType.Double, 10, 29, PlacementScope.OfficialOnly, CancellationToken.None);
+        var official = await snapshots.GetChartScoresIn(seeded.Week2, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        var supplemented = await snapshots.GetChartScoresIn(seeded.Week2, PlacementScope.IncludingSupplemented,
+            CancellationToken.None);
 
-        // The level 12 chart is hers too, and only the wider read carries it.
-        Assert.Single(inBand);
-        Assert.Equal(2, wholePool.Count);
-        Assert.Equal(DoublesChart, Assert.Single(doubles).ChartId);
+        Assert.DoesNotContain(official, r => r.PlayerId == carol.Id);
+        Assert.Equal(984_000, Assert.Single(supplemented, r => r.PlayerId == carol.Id).Score);
     }
 
     [Fact]
-    public async Task TheChartBoundReadCarriesCoOpAndTheLevelsNoPoolWouldPrice()
+    public async Task CoOpAndTheLevelsNoPoolWouldPriceAreCarried()
     {
         // The board is held whole rather than trimmed to what a pool prices, because the same
         // read answers a chart dialog: a CO-OP chart has a board and no pool, and a level 4
@@ -135,34 +151,39 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
             tinyChart, "Single", 4, CancellationToken.None);
         var players = await snapshots.EnsurePlayers(MixEnum.Phoenix2,
             new[] { ("ALICE#1111", (Uri?)null) }, Week1, CancellationToken.None);
-        var week3 = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(7),
-            CancellationToken.None);
+        var week3 = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week3, CancellationToken.None);
         await snapshots.WritePlacements(week3, new[]
         {
             new PlacementRow(coop.Id, players[0].Id, 1, 993_000),
             new PlacementRow(tiny.Id, players[0].Id, 1, 1_000_000)
         }, CancellationToken.None);
-        await snapshots.Seal(week3, Week2.AddDays(7).AddMinutes(40), CancellationToken.None);
+        await snapshots.Seal(week3, Week3.AddMinutes(40), CancellationToken.None);
 
-        var rows = await Snapshots().GetChartHistoryOn(MixEnum.Phoenix2, new[] { players[0].Id },
-            new[] { coopChart, tinyChart }, PlacementScope.OfficialOnly, CancellationToken.None);
+        var rows = await Snapshots().GetChartScoresIn(week3, PlacementScope.OfficialOnly, CancellationToken.None);
 
-        Assert.Equal(993_000, Assert.Single(rows, r => r.ChartId == coopChart).Score);
+        var coopRow = Assert.Single(rows, r => r.ChartId == coopChart);
+        Assert.Equal((ChartType.CoOp, 993_000), (coopRow.Type, coopRow.Score));
         Assert.Equal(1_000_000, Assert.Single(rows, r => r.ChartId == tinyChart).Score);
     }
 
     [Fact]
-    public async Task TheChartBoundReadAnswersOnlyTheChartsAsked()
+    public async Task TheLatestSealedWeekIsNeverARunStillInFlight()
     {
         var seeded = await Seed();
+        var snapshots = Snapshots();
+        // A third sweep has started and written Alice back onto the chart, but it has not sealed.
+        var inFlight = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week3, CancellationToken.None);
+        await snapshots.WritePlacements(inFlight,
+            new[] { new PlacementRow(seeded.Singles.Id, seeded.Alice.Id, 1, 999_000) }, CancellationToken.None);
 
-        var rows = await Snapshots().GetChartHistoryOn(MixEnum.Phoenix2,
-            new[] { seeded.Alice.Id }, new[] { SinglesChart }, PlacementScope.OfficialOnly,
-            CancellationToken.None);
+        var latest = await snapshots.GetLatestSealed(MixEnum.Phoenix2, CancellationToken.None);
+        var rows = await new BoardScoreStore(snapshots).InLevelRange(MixEnum.Phoenix2, latest!.Id,
+            ChartType.Single, new[] { seeded.Alice.Id, seeded.Bob.Id }, 20, 29, CancellationToken.None);
+
+        Assert.Equal(seeded.Week2, latest.Id);
 
         var row = Assert.Single(rows);
-        Assert.Equal(SinglesChart, row.ChartId);
-        Assert.Equal(995_000, row.Score);
+        Assert.Equal((seeded.Bob.Id, 986_000), (row.PlayerId, row.Score));
     }
 
     [Fact]
@@ -182,14 +203,6 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
         Assert.Equal(18_800, rows.Single(r => r.PlayerId == seeded.Bob.Id).Score);
     }
 
-    [Fact]
-    public async Task AnEmptyPlayerSetReadsNothingRatherThanEverything()
-    {
-        await Seed();
-
-        Assert.Empty(await Snapshots().GetChartHistoryFor(MixEnum.Phoenix2, Array.Empty<int>(),
-            ChartType.Single, 10, 29, PlacementScope.OfficialOnly, CancellationToken.None));
-        Assert.Empty(await Snapshots().GetChartHistoryOn(MixEnum.Phoenix2, Array.Empty<int>(),
-            new[] { SinglesChart }, PlacementScope.OfficialOnly, CancellationToken.None));
-    }
+    private sealed record Seeded(BoardDimension Singles, PlayerDimension Alice, PlayerDimension Bob, int Week1,
+        int Week2);
 }

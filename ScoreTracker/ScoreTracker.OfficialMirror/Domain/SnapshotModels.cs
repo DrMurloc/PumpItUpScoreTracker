@@ -39,10 +39,11 @@ internal enum PlacementScope
 }
 
 /// <summary>
-///     One board player's best seen score on one chart, with what that chart is, so a caller can
-///     price it without a second read. <see cref="Score" /> is decimal because a placement's is.
+///     One board player's score on one chart in one sealed week, with what that chart is, so a
+///     caller can price it without a second read. <see cref="Score" /> is decimal because a
+///     placement's is.
 /// </summary>
-internal sealed record ChartBoardHigh(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
+internal sealed record ChartBoardScore(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
 
 /// <summary>
 ///     One chart board in one snapshot: how many rows it holds and the lowest score among them, which on a full
@@ -146,17 +147,17 @@ internal sealed record RenameProposal(int Id, int OldPlayerId, int? NewPlayerId,
 internal sealed record PlayerChartPlacement(int PlayerId, Guid ChartId, int Place, decimal Score);
 
 /// <summary>
-///     One player's best published score on one chart, across every snapshot that ever carried it.
-///     The level rides along because the caller prices the chart and would otherwise read the
-///     catalog for something the board dimension already knows.
+///     One player's published score on one chart in one sealed week. The level rides along because
+///     the caller prices the chart and would otherwise read the catalog for something the board
+///     dimension already knows.
 /// </summary>
-internal sealed record PlayerChartHistoryRow(int PlayerId, Guid ChartId, int Level, int Score);
+internal sealed record PlayerChartScoreRow(int PlayerId, Guid ChartId, int Level, int Score);
 
 /// <summary>
 ///     The same row with the chart type it was published under — the bulk form, for a caller
-///     holding the whole mix rather than asking about one type at a time.
+///     holding the whole week rather than asking about one type at a time.
 /// </summary>
-internal sealed record BoardChartHistoryRow(int PlayerId, Guid ChartId, int Level, int Score,
+internal sealed record BoardChartScoreRow(int PlayerId, Guid ChartId, int Level, int Score,
     ChartType Type);
 
 /// <summary>A placement joined with its board's dimension — the hub read shape.</summary>

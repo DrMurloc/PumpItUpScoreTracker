@@ -82,9 +82,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
             CancellationToken cancellationToken);
 
         /// <summary>
-        ///     What those players scored, one row per player and chart: the highest placement they
-        ///     hold across every mirrored snapshot, not only the latest. Falling off a board is not
-        ///     evidence a score went away, so the best of what was ever published is the reading.
+        ///     What those players scored, one row per player and chart, as the latest sealed week
+        ///     published it — the same week their pool is read from. A score a busy board has pushed
+        ///     out since is not in it.
         ///     <para>
         ///         Bounded by chart type and level because a caller wants a band, and unbounded it
         ///         would carry every level the boards reach. Charts below roughly level 20 come back
