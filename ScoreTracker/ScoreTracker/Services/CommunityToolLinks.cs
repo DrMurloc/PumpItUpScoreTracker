@@ -14,6 +14,23 @@ public static class CommunityToolLinks
     public const string PiuTracker = "https://piutracker.app";
 
     /// <summary>
+    ///     The RISE capture app (docs/design/rise.md §6.4). Its name stays English in every locale, the
+    ///     way the app itself spells it.
+    /// </summary>
+    public const string ScoresWatcherName = "PIU Scores Watcher";
+
+    /// <summary>
+    ///     The watcher's Windows installer, through GitHub's "latest" redirect: whatever the app released
+    ///     last is what this serves, so a release never waits on a site deploy.
+    /// </summary>
+    public const string ScoresWatcherInstaller =
+        "https://github.com/DrMurloc/PiuScoresWatcher/releases/latest/download/PiuScoresWatcher-win-Setup.exe";
+
+    /// <summary>What the watcher looks at, sends and keeps — the page its own setup screen links.</summary>
+    public const string ScoresWatcherPrivacy =
+        "https://github.com/DrMurloc/PiuScoresWatcher/blob/main/docs/PRIVACY.md";
+
+    /// <summary>
     ///     An external tool link as markup, for a localized sentence that embeds it. Opens in a
     ///     new tab — the player is mid-import, and taking the page out from under them would cost
     ///     them the run in progress. <c>noopener</c> because the target is somebody else's site.

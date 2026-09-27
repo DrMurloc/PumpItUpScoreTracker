@@ -82,6 +82,16 @@ public static class MixCapabilities
     }
 
     /// <summary>
+    ///     Whether PIU Scores Watcher, the RISE capture app, reads this mix — and so whether the import
+    ///     page and the Import Scores widget offer its download (docs/design/rise.md D26). Asked rather
+    ///     than inferred from the missing official site, which the legacy mixes are missing too.
+    /// </summary>
+    public static bool HasScoresWatcher(this MixEnum mix)
+    {
+        return MixProfiles.For(mix).Features.ScoresWatcher;
+    }
+
+    /// <summary>
     ///     Whether scores on this mix are also tracked against a quarterly season
     ///     (docs/design/seasons.md §1): <b>Phoenix 2 only. Phoenix 1 has no seasons and never will</b>
     ///     — it is going offline-only. Named here rather than repeated as a local array in each

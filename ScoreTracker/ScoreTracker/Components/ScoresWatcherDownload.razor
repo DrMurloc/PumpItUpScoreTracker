@@ -1,0 +1,23 @@
+@using ScoreTracker.Web.Services
+
+@* The capture app's one download button (docs/design/rise.md §6.4). The import page and the Import
+   Scores widget both render this, so the two can never offer different builds or word it apart.
+   A disabled button drops its link rather than trusting "disabled" on an anchor, which a browser
+   still follows. *@
+<MudButton Href="@(Disabled ? null : CommunityToolLinks.ScoresWatcherInstaller)"
+           Variant="Variant.Filled" Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.Download"
+           FullWidth="FullWidth" Disabled="Disabled" Class="@Class"
+           data-testid="scores-watcher-download">
+    @L["Download for Windows"]
+</MudButton>
+
+@code {
+
+    [Parameter] public bool FullWidth { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+}
