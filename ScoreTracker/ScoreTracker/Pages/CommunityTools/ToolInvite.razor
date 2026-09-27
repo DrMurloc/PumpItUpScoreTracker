@@ -65,8 +65,9 @@ else
         </div>
 
         @* A tool whose maker has not linked Discord would refuse the connection, so everyone — signed in
-           or not — gets the reason instead of a button that cannot work. *@
-        @if (!_preview.CanTakePlayers)
+           or not — gets the reason instead of a button that cannot work. A player who connected before
+           the maker unlinked keeps that connection, so they see it instead. *@
+        @if (!_preview.CanTakePlayers && !_connected)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
                 <MudText Typo="Typo.body2"><b>@L["{0} can't connect players yet", _preview.Name]</b></MudText>

@@ -70,6 +70,27 @@ public sealed class ToolInvitePageTests : ComponentTestBase
         Assert.DoesNotContain("Sign in to continue", cut.Markup);
     }
 
+    // A direct connection outlives the maker unlinking Discord, so a player who already connected is
+    // shown that connection rather than told nothing has been shared.
+    [Fact]
+    public void APlayerAlreadyConnectedSeesTheirConnectionWhenTheToolCannotTakePlayers()
+    {
+        SignedIn();
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyToolConnectionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerToolConnectionRecord(ToolId, "PandaGames", null, "PIU69", ShareSource.Direct, false,
+                    DateTimeOffset.UnixEpoch)
+            });
+        GivenPreview(Preview(canTakePlayers: false));
+
+        var cut = Render();
+
+        Assert.Contains("PandaGames can now read your scores", cut.Markup);
+        Assert.DoesNotContain("can't connect players yet", cut.Markup);
+        Assert.DoesNotContain("Nothing has been shared", cut.Markup);
+    }
+
     [Fact]
     public void AToolThatCanTakePlayersStillOffersConnect()
     {
