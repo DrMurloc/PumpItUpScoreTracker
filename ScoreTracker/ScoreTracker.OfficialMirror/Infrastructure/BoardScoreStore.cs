@@ -5,7 +5,7 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.OfficialMirror.Infrastructure;
 
 /// <summary>
-///     Every board player's published score per chart in the latest sealed week, held in memory
+///     Every board player's published score per chart, one sealed week at a time, held in memory
 ///     (docs/design/pumbility-overhaul.md §6.14).
 ///     <para>
 ///         The mirror is swept weekly and asked on every page: a peer group, a fifty check, a chart
@@ -14,17 +14,18 @@ namespace ScoreTracker.OfficialMirror.Infrastructure;
 ///         and a half of them per chart type — for data that changes once a week.
 ///     </para>
 ///     <para>
-///         It never needs invalidating. The set is stamped with the sealed snapshot it was built
-///         from, so a sweep produces a new one and the old is dropped; nothing has to remember to
-///         evict it, and a second app instance builds its own and is correct by construction. Which
-///         snapshot is current is itself re-read at most once a minute, which is as often as a
-///         weekly sweep can possibly matter.
+///         It never needs invalidating. A set is stamped with the sealed snapshot it was built from
+///         and a caller names the snapshot it is reading, so a new sweep is a new set rather than a
+///         stale one, and a second app instance builds its own and is correct by construction. The
+///         newest two weeks of a mix are held: a request that read the latest week just before a
+///         seal still finds its own week, and nothing older lingers.
 ///     </para>
 ///     <para>
 ///         One week and nothing older, so a build reads that week's rows alone however many weeks
-///         the mirror has swept, and a sweep still in flight is never in it. Every type and level the
-///         boards carry, not just what prices into a pool: the same reads answer a chart dialog, and a
-///         CO-OP chart has a board even though it has no pool.
+///         the mirror has swept. The caller naming the week is what keeps a peer's chart rows and the
+///         PUMBILITY board they are judged against the same week. Every type and level the boards
+///         carry, not just what prices into a pool: the same reads answer a chart dialog, and a CO-OP
+///         chart has a board even though it has no pool.
 ///     </para>
 ///     <para>
 ///         The rows arrive through <see cref="IOfficialSnapshotRepository.GetChartScoresIn" />
@@ -35,53 +36,52 @@ namespace ScoreTracker.OfficialMirror.Infrastructure;
 /// </summary>
 internal sealed class BoardScoreStore
 {
-    /// <summary>How long the answer to "which snapshot is current" is trusted. The sweep is weekly.</summary>
-    private static readonly TimeSpan VersionTtl = TimeSpan.FromMinutes(1);
+    /// <summary>How many weeks of a mix are held: the latest, and the one a request racing a seal still reads.</summary>
+    private const int WeeksHeld = 2;
 
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly Dictionary<MixEnum, Loaded> _sets = new();
+    private readonly Dictionary<(MixEnum Mix, int SnapshotId), Loaded> _sets = new();
     private readonly IOfficialSnapshotRepository _snapshots;
-    private readonly Dictionary<MixEnum, (int SnapshotId, DateTimeOffset ReadAt)> _versions = new();
 
     public BoardScoreStore(IOfficialSnapshotRepository snapshots)
     {
         _snapshots = snapshots;
     }
 
-    /// <summary>Players' scores of one chart type in the week the set holds, within a level band.</summary>
-    public async Task<IReadOnlyList<PlayerChartScoreRow>> InLevelRange(MixEnum mix, ChartType chartType,
-        IReadOnlyCollection<int> playerIds, int minimumLevel, int maximumLevel,
+    /// <summary>Players' scores of one chart type in one sealed week, within a level band.</summary>
+    public async Task<IReadOnlyList<PlayerChartScoreRow>> InLevelRange(MixEnum mix, int snapshotId,
+        ChartType chartType, IReadOnlyCollection<int> playerIds, int minimumLevel, int maximumLevel,
         CancellationToken cancellationToken)
     {
         if (playerIds.Count == 0 || minimumLevel > maximumLevel) return Array.Empty<PlayerChartScoreRow>();
-        var set = await Current(mix, cancellationToken);
+        var set = await Week(mix, snapshotId, cancellationToken);
         return set.Read(playerIds,
             row => row.Type == chartType && row.Level >= minimumLevel && row.Level <= maximumLevel);
     }
 
     /// <summary>The same, bounded by charts instead — what a chart's own board asks for.</summary>
-    public async Task<IReadOnlyList<PlayerChartScoreRow>> OnCharts(MixEnum mix,
+    public async Task<IReadOnlyList<PlayerChartScoreRow>> OnCharts(MixEnum mix, int snapshotId,
         IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds,
         CancellationToken cancellationToken)
     {
         if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartScoreRow>();
         var wanted = chartIds as IReadOnlySet<Guid> ?? chartIds.ToHashSet();
-        var set = await Current(mix, cancellationToken);
+        var set = await Week(mix, snapshotId, cancellationToken);
         return set.Read(playerIds, row => wanted.Contains(row.ChartId));
     }
 
-    /// <summary>Builds the set at startup so the first viewer of the day does not pay for it.</summary>
+    /// <summary>Builds the latest sealed week at startup so the first viewer of the day does not pay for it.</summary>
     public async Task Warm(MixEnum mix, CancellationToken cancellationToken)
     {
-        await Current(mix, cancellationToken);
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest != null) await Week(mix, latest.Id, cancellationToken);
     }
 
-    private async Task<Loaded> Current(MixEnum mix, CancellationToken cancellationToken)
+    private async Task<Loaded> Week(MixEnum mix, int snapshotId, CancellationToken cancellationToken)
     {
-        var snapshotId = await CurrentSnapshot(mix, cancellationToken);
         lock (_sets)
         {
-            if (_sets.TryGetValue(mix, out var have) && have.SnapshotId == snapshotId) return have;
+            if (_sets.TryGetValue((mix, snapshotId), out var have)) return have;
         }
 
         // A single flight: the first request after a restart pays the load and everyone arriving
@@ -91,13 +91,16 @@ internal sealed class BoardScoreStore
         {
             lock (_sets)
             {
-                if (_sets.TryGetValue(mix, out var have) && have.SnapshotId == snapshotId) return have;
+                if (_sets.TryGetValue((mix, snapshotId), out var have)) return have;
             }
 
             var built = await Build(snapshotId, cancellationToken);
             lock (_sets)
             {
-                _sets[mix] = built;
+                _sets[(mix, snapshotId)] = built;
+                foreach (var older in _sets.Keys.Where(key => key.Mix == mix)
+                             .OrderByDescending(key => key.SnapshotId).Skip(WeeksHeld).ToArray())
+                    _sets.Remove(older);
             }
 
             return built;
@@ -108,32 +111,8 @@ internal sealed class BoardScoreStore
         }
     }
 
-    /// <summary>
-    ///     The sealed snapshot the set is stamped with. Zero when the mix has never been swept —
-    ///     a real value, and the empty set built under it is the right answer.
-    /// </summary>
-    private async Task<int> CurrentSnapshot(MixEnum mix, CancellationToken cancellationToken)
-    {
-        lock (_versions)
-        {
-            if (_versions.TryGetValue(mix, out var known) && DateTimeOffset.UtcNow - known.ReadAt < VersionTtl)
-                return known.SnapshotId;
-        }
-
-        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
-        var id = latest?.Id ?? 0;
-        lock (_versions)
-        {
-            _versions[mix] = (id, DateTimeOffset.UtcNow);
-        }
-
-        return id;
-    }
-
     private async Task<Loaded> Build(int snapshotId, CancellationToken cancellationToken)
     {
-        if (snapshotId == 0) return Loaded.From(snapshotId, Array.Empty<Row>());
-
         // Official rows only: a supplemented row is our own arithmetic laid over the board, and a
         // peer's evidence has to be what piugame published (D59).
         var rows = await _snapshots.GetChartScoresIn(snapshotId, PlacementScope.OfficialOnly, cancellationToken);

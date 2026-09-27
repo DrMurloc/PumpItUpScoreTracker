@@ -242,8 +242,8 @@ internal sealed class BoardPeerReader
         var key = CacheKeys.Mix(nameof(BoardPeerReader), mix, "Qualified", pool, snapshotId);
         if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
-        var priced = (await PricedRows(mix, pool, everyone.Select(p => p.PlayerId).Distinct().ToArray(),
-                cancellationToken))
+        var priced = (await PricedRows(mix, pool, snapshotId,
+                everyone.Select(p => p.PlayerId).Distinct().ToArray(), cancellationToken))
             .GroupBy(r => r.PlayerId)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
@@ -261,10 +261,11 @@ internal sealed class BoardPeerReader
 
     /// <summary>
     ///     The rows a pool is rebuilt from: one type's for a typed ladder, and both types' for the
-    ///     merged one, whose fifty is drawn from either (D68).
+    ///     merged one, whose fifty is drawn from either (D68). Read from the same week as the board
+    ///     the pools are checked against.
     /// </summary>
     private async Task<IReadOnlyList<(int PlayerId, ChartType Type, int Level, int Score)>> PricedRows(MixEnum mix,
-        PumbilityPool pool, IReadOnlyCollection<int> playerIds, CancellationToken cancellationToken)
+        PumbilityPool pool, int snapshotId, IReadOnlyCollection<int> playerIds, CancellationToken cancellationToken)
     {
         var types = pool switch
         {
@@ -274,8 +275,8 @@ internal sealed class BoardPeerReader
         };
         var rows = new List<(int PlayerId, ChartType Type, int Level, int Score)>();
         foreach (var type in types)
-            rows.AddRange((await _board.InLevelRange(mix, type, playerIds, PeerGroup.PumbilityPoolFloor,
-                    DifficultyLevel.Max, cancellationToken))
+            rows.AddRange((await _board.InLevelRange(mix, snapshotId, type, playerIds,
+                    PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
                 .Select(r => (r.PlayerId, type, r.Level, r.Score)));
         return rows;
     }
@@ -333,8 +334,11 @@ internal sealed class BoardPeerReader
         if (boardPlayerIds.Count == 0 || minimumLevel > maximumLevel)
             return Array.Empty<BoardScoreReading>();
 
-        var rows = await _board.InLevelRange(mix, chartType, boardPlayerIds, minimumLevel, maximumLevel,
-            cancellationToken);
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest == null) return Array.Empty<BoardScoreReading>();
+
+        var rows = await _board.InLevelRange(mix, latest.Id, chartType, boardPlayerIds, minimumLevel,
+            maximumLevel, cancellationToken);
 
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }
@@ -391,7 +395,7 @@ internal sealed class BoardPeerReader
         // projection already counts it, because it is handed the whole set. Without this the two
         // numbers on one card disagree about who passed the chart (bug check 2026-09-06).
         var owner = await Owners(mix, latest.Id, boardPlayerIds, cancellationToken);
-        var rows = await _board.OnCharts(mix, owner.Keys.ToArray(), chartIds, cancellationToken);
+        var rows = await _board.OnCharts(mix, latest.Id, owner.Keys.ToArray(), chartIds, cancellationToken);
 
         // Answered under the id the caller asked about, and one row per person per chart: their
         // best, whichever tag it was set under.

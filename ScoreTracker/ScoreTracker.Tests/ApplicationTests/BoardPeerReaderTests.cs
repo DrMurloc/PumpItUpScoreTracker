@@ -211,6 +211,43 @@ public sealed class BoardPeerReaderTests
             It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     The week a peer is judged on is the week the reader is reading. The store used to trust its
+    ///     own idea of the current week for a minute, so right after a seal it could check the new
+    ///     week's PUMBILITY board against the old week's chart rows and hold the answer for hours.
+    /// </summary>
+    [Fact]
+    public async Task ANewlySealedWeekIsReadTheMomentTheReaderSeesIt()
+    {
+        Board(Row(1, 18_900m));
+        Players(Player(1, "CHANGWONHAM#1539"));
+        Accounts();
+        var store = new BoardScoreStore(_snapshots.Object);
+        Assert.Single((await new BoardPeerReader(_snapshots.Object, _users.Object, _cache, store)
+            .GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, null, CancellationToken.None))!.Peers);
+
+        // The next week seals. The player's fifty is only in the new week's rows.
+        const int nextWeek = SealedWeek + 1;
+        _snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(nextWeek, SweptAt.AddDays(7), SweptAt.AddDays(7), false, "Sealed", 0, 0, 0,
+                null));
+        _snapshots.Setup(s => s.GetBoardPlacements(nextWeek, BoardId, PlacementScope.OfficialOnly,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Row(1, 18_900m) });
+        _snapshots.Setup(s => s.GetChartScoresIn(nextWeek, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, 50)
+                .Select(_ => new BoardChartScoreRow(1, Guid.NewGuid(), 26, 1_000_000, ChartType.Single)).ToArray());
+        _snapshots.Setup(s => s.GetChartScoresIn(SealedWeek, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BoardChartScoreRow>());
+
+        var group = await new BoardPeerReader(_snapshots.Object, _users.Object, _cache, store)
+            .GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, null, CancellationToken.None);
+
+        Assert.Single(group!.Peers);
+        _snapshots.Verify(s => s.GetChartScoresIn(nextWeek, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task APlayerWithNoAccountIsABoardPeer()
     {

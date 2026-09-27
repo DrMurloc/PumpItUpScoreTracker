@@ -167,7 +167,7 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task TheStoreHoldsTheLatestSealedWeekAndNotARunStillInFlight()
+    public async Task TheLatestSealedWeekIsNeverARunStillInFlight()
     {
         var seeded = await Seed();
         var snapshots = Snapshots();
@@ -176,8 +176,11 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
         await snapshots.WritePlacements(inFlight,
             new[] { new PlacementRow(seeded.Singles.Id, seeded.Alice.Id, 1, 999_000) }, CancellationToken.None);
 
-        var rows = await new BoardScoreStore(snapshots).InLevelRange(MixEnum.Phoenix2, ChartType.Single,
-            new[] { seeded.Alice.Id, seeded.Bob.Id }, 20, 29, CancellationToken.None);
+        var latest = await snapshots.GetLatestSealed(MixEnum.Phoenix2, CancellationToken.None);
+        var rows = await new BoardScoreStore(snapshots).InLevelRange(MixEnum.Phoenix2, latest!.Id,
+            ChartType.Single, new[] { seeded.Alice.Id, seeded.Bob.Id }, 20, 29, CancellationToken.None);
+
+        Assert.Equal(seeded.Week2, latest.Id);
 
         var row = Assert.Single(rows);
         Assert.Equal((seeded.Bob.Id, 986_000), (row.PlayerId, row.Score));

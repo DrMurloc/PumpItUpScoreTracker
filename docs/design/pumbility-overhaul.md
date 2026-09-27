@@ -1940,14 +1940,18 @@ arrived yet.
 | | `BoardScoreStore` (OfficialMirror) | `PeerScoreStore` (ScoreLedger) |
 |---|---|---|
 | Holds | every board player's score per chart in the latest sealed week, per mix (D71) | every player's passing bests, per mix |
-| Keyed by | the latest sealed snapshot | the player |
+| Keyed by | the sealed snapshot the caller is reading, the newest two held per mix | the player |
 | Released by | a new sweep — the key changes | the player's own import, per player |
 | Size | one week: Phoenix 2 about 191,000 rows, Phoenix 1 about 123,000 (2026-09-06 copy) | Phoenix 2 41,706 rows, Phoenix 1 1,039,022 |
 
 The board store **never needs invalidating**: the set is stamped with the snapshot it was built
 from, a sweep produces a new one, and the old is dropped. Nothing has to remember to evict it, and a
-second app instance builds its own and is correct by construction. Which snapshot is current is
-itself re-read at most once a minute, which is as often as a weekly sweep can matter.
+second app instance builds its own and is correct by construction. The caller names the week it is
+reading — the week its PUMBILITY board came from — so a peer's chart rows and the number they are
+checked against are one week by construction, and the newest two weeks of a mix are held so a request
+that read the latest week just before a seal still finds its own. The store used to trust its own idea
+of the current week for a minute, and for that minute after a seal it checked the new week's board
+against the old week's rows and kept the answer for twelve hours (bug check, 2026-09-27).
 
 **One week, not every week (D71).** The first version built the set from every sealed week's placements,
 grouped to each player's best, in one query. That query grew by about half a million rows a week, and by late
