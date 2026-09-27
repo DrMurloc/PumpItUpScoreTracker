@@ -881,8 +881,6 @@
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        // One upload = one session.
-        var uploadSessionId = Guid.NewGuid();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
         // A CSV is a manual submission: a passing row is what the player wants shown, so it is
         // authoritative and may lower a record (docs/design/score-truth-model.md D9). A broken row is
@@ -915,9 +913,10 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
+                // No session id: the Ledger opens and extends the session exactly as it does for a
+                // manual entry, under the CSV source, which is what puts an upload on Undo.
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
-                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix,
-                    SessionId: uploadSessionId),
+                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix),
                     cancellationToken);
             }
             catch (OperationCanceledException)

@@ -363,6 +363,23 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Once));
     }
 
+    [Fact]
+    public async Task AnUploadSavesLikeAManualEntryUnderTheCsvSource()
+    {
+        // A save that brings no session id gets one from the Ledger, opened the way a manual entry's
+        // is, and Undo lists it. An id the page made up itself was never opened, so no upload could
+        // be undone.
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(Guid.NewGuid(), 930000, PhoenixPlate.FairGame, false, Uploaded));
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c => c.SessionId == null && c.Source == ScoreJournalEntry.CsvSource),
+            It.IsAny<CancellationToken>()), Times.Exactly(2)));
+    }
+
     private void GivenTheRecords(params RecordedPhoenixScore[] records)
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))

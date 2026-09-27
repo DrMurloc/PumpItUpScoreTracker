@@ -223,8 +223,9 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArrayAsync(cancellationToken);
         // When each import ran, by the wall clock: the ScoreSession row. Only a stored session that
         // has one is grouped (D53). Every official import and score check opens one, as does the
-        // manual-entry envelope; a CSV upload, an API request and anything before the table shipped
-        // (2026-08-01) has none, and shows exactly as it always did.
+        // manual-entry envelope, which a CSV upload rides under its own source; an older CSV upload,
+        // an API request and anything before the table shipped (2026-08-01) has none, and shows
+        // exactly as it always did.
         var imported = await database.Set<ScoreSessionEntity>()
             .Where(s => s.UserId == userId)
             .Select(s => new { s.Id, s.StartedAt, s.LastActivityAt })
