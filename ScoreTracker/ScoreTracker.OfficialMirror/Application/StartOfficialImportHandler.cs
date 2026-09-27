@@ -81,7 +81,6 @@ internal sealed class StartOfficialImportHandler : IRequestHandler<StartOfficial
                 new RunOfficialImportCommand(userId, request.Mix, sid, request.CardId,
                     request.ExpectedGameTag, request.IncludeBroken), cancellationToken);
             handedOff = true;
-            _guard.Started(userId, request.Mix, _dateTime.Now);
             return new ImportStartResult(ImportStartOutcome.Started);
         }
         finally

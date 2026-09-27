@@ -144,26 +144,39 @@ public sealed class StartImportCheckHandlerTests
         guard.Setup(g => g.TryBegin(UserId, MixEnum.Phoenix, Now, true))
             .Returns(new ImportSlot(ImportSlotOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
         var bus = new Mock<IBus>();
+        var site = new Mock<IOfficialSiteClient>();
 
-        var result = await Build(bus: bus, guard: guard).Handle(Start(), CancellationToken.None);
+        var result = await Build(bus: bus, guard: guard, site: site).Handle(Start(), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.CoolingDown, result.Outcome);
         Assert.Equal(TimeSpan.FromMinutes(4), result.RetryAfter);
         bus.Verify(b => b.Publish(It.IsAny<RunOfficialImportCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        // Refused before the credential and the sign-in: a spammed press costs piugame nothing.
+        site.Verify(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ADeepScanNeverWaitsOutTheCooldownButStartsIt()
+    public async Task ADeepScanNeverWaitsOutTheCooldown()
     {
-        // The monthly allowance already rations deep scans (owner, 2026-09-27); it still reads more of
-        // piugame than any other run, so the Import button waits after one.
+        // The monthly allowance already rations deep scans (owner, 2026-09-27). It still starts the
+        // clock once the run begins — RunOfficialImportConsumerTests.
         var guard = Guard();
 
         var result = await Build(guard: guard).Handle(Start(deepScan: true), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.Started, result.Outcome);
         guard.Verify(g => g.TryBegin(UserId, MixEnum.Phoenix, Now, false), Times.Once);
-        guard.Verify(g => g.Started(UserId, MixEnum.Phoenix, Now), Times.Once);
+    }
+
+    [Fact]
+    public async Task APlainCheckWaitsOutTheCooldown()
+    {
+        var guard = Guard();
+
+        await Build(guard: guard).Handle(Start(), CancellationToken.None);
+
+        guard.Verify(g => g.TryBegin(UserId, MixEnum.Phoenix, Now, true), Times.Once);
     }
 
     // ---- builders ----

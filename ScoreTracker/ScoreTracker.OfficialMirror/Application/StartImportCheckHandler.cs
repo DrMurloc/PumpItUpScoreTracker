@@ -90,8 +90,6 @@ internal sealed class StartImportCheckHandler : IRequestHandler<StartImportCheck
                     request.DeepScan ? ImportKind.DeepScan : ImportKind.Check),
                 cancellationToken);
             handedOff = true;
-            // A deep scan starts the clock too: it reads more of piugame than any other run.
-            _guard.Started(userId, request.Mix, _dateTime.Now);
             return new ImportCheckStartResult(ImportCheckStartOutcome.Started, left);
         }
         finally

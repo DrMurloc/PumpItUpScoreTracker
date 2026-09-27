@@ -168,9 +168,11 @@ public sealed class StartOfficialImportHandlerTests
     }
 
     [Fact]
-    public async Task TheCooldownStartsWhenTheRunIsHandedOff()
+    public async Task TheStartLeavesTheClockToTheRun()
     {
-        var (handler, site, _, _, guard, userId) = Build();
+        // The clock starts where the run begins (RunOfficialImportConsumer), so a run that never
+        // begins starts nothing.
+        var (handler, site, _, _, guard, _) = Build();
         site.Setup(s => s.SignIn(MixEnum.Phoenix, "player1", "hunter2", It.IsAny<CancellationToken>()))
             .ReturnsAsync("sid123");
 
@@ -178,7 +180,9 @@ public sealed class StartOfficialImportHandlerTests
             new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
-        guard.Verify(g => g.Started(userId, MixEnum.Phoenix, Now), Times.Once);
+        guard.Verify(g => g.TryBegin(It.IsAny<Guid>(), MixEnum.Phoenix, Now, true), Times.Once);
+        guard.Verify(g => g.Started(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>()),
+            Times.Never);
     }
 
     [Fact]

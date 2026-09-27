@@ -121,6 +121,9 @@
         // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
         _running = true;
         _status = null;
+        // Handed back if the press is refused: a refusal changes nothing, so the last check's result
+        // stays on screen.
+        var shown = _finished;
         _finished = null;
         StateHasChanged();
 
@@ -133,6 +136,7 @@
         if (result.Outcome == ImportCheckStartOutcome.Started) return;
 
         _running = false;
+        _finished = shown;
         Snackbar.Add(result.Outcome switch
         {
             ImportCheckStartOutcome.InvalidCredentials => L["Invalid Login Information"],
@@ -142,7 +146,7 @@
             ImportCheckStartOutcome.CoolingDown => L["You can import again in {0} min.",
                 ImportCooldown.MinutesLeft(result.RetryAfter)],
             _ => L["Something went wrong."]
-        }, Severity.Warning);
+        }, result.Outcome == ImportCheckStartOutcome.CoolingDown ? Severity.Error : Severity.Warning);
     }
 
     private Task OnStatus(ImportStatusUpdatedEvent update)

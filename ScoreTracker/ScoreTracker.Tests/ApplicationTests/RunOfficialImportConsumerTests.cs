@@ -332,6 +332,9 @@ public sealed class RunOfficialImportConsumerTests
             It.IsAny<CancellationToken>()), Times.Once);
         guard.Verify(g => g.End(userId), Times.Once);
         guard.Verify(g => g.EndDeepScan(), Times.Never);
+        // Nothing ran, so the mix's clock never started and the Import button is not held back.
+        guard.Verify(g => g.Started(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>()),
+            Times.Never);
     }
 
     [Fact]
@@ -392,5 +395,23 @@ public sealed class RunOfficialImportConsumerTests
             It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         mediator.Verify(m => m.Publish(It.IsAny<ImportStatusErrorEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    /// <summary>
+    ///     Five minutes between imports on a mix start where the run begins — every kind, a deep scan
+    ///     included, since it reads more of piugame than any other run (owner, 2026-09-27).
+    /// </summary>
+    [Theory]
+    [InlineData(ImportKind.Standard)]
+    [InlineData(ImportKind.Check)]
+    [InlineData(ImportKind.DeepScan)]
+    public async Task TheRunStartsItsMixsClock(ImportKind kind)
+    {
+        var guard = Guard();
+        var userId = Guid.NewGuid();
+
+        await Build(new Mock<IMediator>(), guard: guard).Consume(Context(Message(userId, kind: kind)));
+
+        guard.Verify(g => g.Started(userId, MixEnum.Phoenix, Now), Times.Once);
     }
 }

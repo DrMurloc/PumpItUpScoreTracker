@@ -888,6 +888,8 @@ public sealed class OfficialLeaderboardSagaTests
         var result = await saga.Handle(ImportCommand(), CancellationToken.None);
 
         Assert.Equal(outcome, result.Outcome);
+        // The wait rides back to the API's Retry-After; without it a script is told to retry in a second.
+        Assert.Equal(coolingDown ? TimeSpan.FromMinutes(3) : null, result.RetryAfter);
         f.Site.Verify(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
         guard.Verify(g => g.TryBegin(ImportUserId, MixEnum.Phoenix, Now, true), Times.Once);
@@ -944,6 +946,27 @@ public sealed class OfficialLeaderboardSagaTests
 
         f.Site.Verify(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()), Times.Once);
         f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix, It.IsAny<string>(), "card2",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportNamingNoCardTakesTheAccountsFirst()
+    {
+        // The DTO's GameTag defaults to empty, so most scripts name no card at all.
+        var f = ArrangeImport(cardId: "card7");
+        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new GameCardRecord(Name.From("FIRST"), Id: "card7", IsActive: false),
+                new GameCardRecord(Name.From("SECOND"), Id: "card8", IsActive: true)
+            });
+        var saga = BuildImportSaga(f);
+
+        var result = await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "", false),
+            CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.Imported, result.Outcome);
+        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix, It.IsAny<string>(), "card7",
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

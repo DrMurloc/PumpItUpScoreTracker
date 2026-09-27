@@ -39,6 +39,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
     private readonly Chart _chart = MakeChart();
+    private readonly Guid _me = Guid.NewGuid();
 
     public QuickRecordWidgetTests()
     {
@@ -59,7 +60,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartCatalogCache>();
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
-        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
+        CurrentUser.SetupGet(c => c.User).Returns(new User(_me, "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
         // Last: reading the renderer locks the service collection. The widget's bubble gates
         // its tooltip on RendererInfo; render it interactive.
         this.RenderInteractive();
@@ -186,7 +187,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RecordedPhoenixScore(_chart.Id, 985320, PhoenixPlate.MarvelousGame, false,
                 new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
-        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.Mix == MixEnum.Phoenix),
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.UserId == _me && q.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var cut = Render();
         await Pick(cut, _chart);

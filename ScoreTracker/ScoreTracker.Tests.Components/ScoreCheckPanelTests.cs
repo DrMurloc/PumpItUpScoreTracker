@@ -194,8 +194,28 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
 
         await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
 
-        _snackbar.Verify(s => s.Add("You can import again in 4 min.", It.IsAny<Severity>(),
+        _snackbar.Verify(s => s.Add("You can import again in 4 min.", Severity.Error,
             It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
         Assert.False(Button(panel, "Import and check").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public async Task ARefusedCheckLeavesTheLastResultOnScreen()
+    {
+        // Pressed again inside the five minutes, the check is refused; the result it just reported
+        // stays, rather than giving way to the empty panel.
+        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 3));
+        var panel = Render();
+        await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
+        await Finish(panel, added: 2);
+        Assert.Contains("Added 2 scores PIUGAME had that we didn't.", panel.Markup);
+        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.CoolingDown, 3,
+                TimeSpan.FromMinutes(4)));
+
+        await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
+
+        Assert.Contains("Added 2 scores PIUGAME had that we didn't.", panel.Markup);
     }
 }

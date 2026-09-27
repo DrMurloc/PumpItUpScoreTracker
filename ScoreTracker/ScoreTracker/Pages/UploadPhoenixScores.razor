@@ -521,9 +521,7 @@
 
         _isImporting = true;
         _errors.Clear();
-        _scores.Clear();
-        _importCompleted = false;
-        _importStatus = L["Starting Import..."].Value;
+        var shown = ClearForImport();
         await RememberSelectedCard();
         var result = await Mediator.Send(new StartOfficialImportCommand(
             new StoredCredentialSource(blob.KeyId, blob.Ciphertext), _currentMix, _selectedId, _selectedGameTag,
@@ -546,13 +544,34 @@
                 break;
             case ImportStartOutcome.AlreadyRunning:
                 _isImporting = false;
+                RestoreAfterRefusal(shown);
                 Snackbar.Add(L["An import is already running"].Value, Severity.Info);
                 break;
             case ImportStartOutcome.CoolingDown:
                 _isImporting = false;
+                RestoreAfterRefusal(shown);
                 Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
                 break;
         }
+    }
+
+    // What the page showed before a press, cleared for the run's own results and handed back if the
+    // press is refused: a refusal changes nothing, so the run that just finished stays on screen
+    // rather than giving way to the strip's older, stale verdict.
+    private (RecordedPhoenixScore[] Scores, bool Completed, string? Status) ClearForImport()
+    {
+        var shown = (_scores.ToArray(), _importCompleted, _importStatus);
+        _scores.Clear();
+        _importCompleted = false;
+        _importStatus = L["Starting Import..."].Value;
+        return shown;
+    }
+
+    private void RestoreAfterRefusal((RecordedPhoenixScore[] Scores, bool Completed, string? Status) shown)
+    {
+        foreach (var score in shown.Scores) _scores.Add(score);
+        _importCompleted = shown.Completed;
+        _importStatus = shown.Status;
     }
 
     private async Task ForgetSavedCredentials()
@@ -719,9 +738,7 @@
             }
             await RememberSelectedCard();
 
-            _scores.Clear();
-            _importCompleted = false;
-            _importStatus = L["Starting Import..."].Value;
+            var shown = ClearForImport();
             // Hand the scrape to the background job: SignIn runs now (a bad password is caught
             // immediately), then status + completion arrive over the hub while the page stays
             // usable — the user can leave. Terminal state is flipped by StatusUpdate/ImportError.
@@ -743,10 +760,12 @@
                     break;
                 case ImportStartOutcome.AlreadyRunning:
                     _isImporting = false;
+                    RestoreAfterRefusal(shown);
                     Snackbar.Add(L["An import is already running"].Value, Severity.Info);
                     break;
                 case ImportStartOutcome.CoolingDown:
                     _isImporting = false;
+                    RestoreAfterRefusal(shown);
                     Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
                     break;
             }

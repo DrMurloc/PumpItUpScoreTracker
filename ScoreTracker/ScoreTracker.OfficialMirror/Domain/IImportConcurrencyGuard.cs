@@ -16,8 +16,9 @@ internal interface IImportConcurrencyGuard
     ImportSlot TryBegin(Guid userId, MixEnum mix, DateTimeOffset now, bool cooldownApplies);
 
     /// <summary>
-    ///     A run was handed off at <paramref name="at" />: the mix's cooldown starts here, so a press that
-    ///     never became a run — a mistyped password, a refusal — starts nothing.
+    ///     A run began at <paramref name="at" />: the mix's cooldown starts here, so a press that never
+    ///     became a run — a mistyped password, a refusal, a deep scan turned away by the site-wide cap —
+    ///     starts nothing.
     /// </summary>
     void Started(Guid userId, MixEnum mix, DateTimeOffset at);
 

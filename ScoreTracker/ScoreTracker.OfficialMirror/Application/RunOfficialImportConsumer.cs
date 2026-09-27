@@ -79,6 +79,11 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
                 }
             }
 
+            // The run begins here, so the mix's five-minute clock does too — for every kind, a deep scan
+            // included, since it reads more of piugame than any other run. After the site-wide gate
+            // above, so a scan turned away there starts nothing.
+            _guard.Started(message.UserId, message.Mix, _dateTime.Now);
+
             // Opened here rather than inside the import body so this run can point at it before the
             // scrape starts.
             var sessionId = await _mediator.Send(

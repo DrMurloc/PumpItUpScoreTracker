@@ -53,7 +53,8 @@ answer (retries hung off the import-status work) and is deliberately out of scop
   last run that started on that mix is refused before anything reaches piugame, with a toast saying how
   long is left; the v1 import API answers `429` with `Retry-After`. A deep scan is never refused — the
   monthly allowance already rations it — but it starts the clock like any run. The clock starts when a
-  run is handed off, so a mistyped password or an "already running" refusal starts nothing. Per mix,
+  run begins, so a mistyped password, an "already running" refusal or a deep scan the site-wide cap
+  turns away starts nothing, and a refused press leaves the page showing what it showed before. Per mix,
   because each mix is its own piugame site, and in memory beside the one-import-at-a-time slot, so a
   restart clears both.
 - **Nothing else saves on a mix while it imports** (owner, 2026-09-27). While a player's import runs on a

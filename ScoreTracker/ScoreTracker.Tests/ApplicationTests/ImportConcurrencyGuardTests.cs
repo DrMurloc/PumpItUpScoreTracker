@@ -122,4 +122,19 @@ public sealed class ImportConcurrencyGuardTests
         guard.End(user);
         Assert.False(guard.IsRunning(user, MixEnum.Phoenix2));
     }
+
+    [Fact]
+    public void AStartedClockNeverMakesTheUserLookBusy()
+    {
+        // The clock is checked before the slot is taken, so a spammed press during the cooldown never
+        // holds the slot even for the moment a save on the mix would read as an import running.
+        var guard = new ImportConcurrencyGuard();
+        var user = Guid.NewGuid();
+        guard.Started(user, MixEnum.Phoenix, Now);
+
+        var refused = guard.TryBegin(user, MixEnum.Phoenix, Now.AddMinutes(1), true);
+
+        Assert.Equal(ImportSlotOutcome.CoolingDown, refused.Outcome);
+        Assert.False(guard.IsRunning(user, MixEnum.Phoenix));
+    }
 }

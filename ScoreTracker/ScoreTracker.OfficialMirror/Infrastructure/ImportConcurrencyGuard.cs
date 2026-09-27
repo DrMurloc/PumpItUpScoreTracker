@@ -24,14 +24,13 @@ internal sealed class ImportConcurrencyGuard : IImportConcurrencyGuard
 
     public ImportSlot TryBegin(Guid userId, MixEnum mix, DateTimeOffset now, bool cooldownApplies)
     {
-        if (!_running.TryAdd(userId, mix)) return ImportSlot.AlreadyRunning;
-        if (!cooldownApplies || !_lastStarted.TryGetValue((userId, mix), out var started) ||
-            now - started >= Cooldown)
-            return ImportSlot.Taken;
-
-        // Taken for a moment and handed straight back: a refusal holds nothing.
-        _running.TryRemove(userId, out _);
-        return new ImportSlot(ImportSlotOutcome.CoolingDown, Cooldown - (now - started));
+        if (_running.ContainsKey(userId)) return ImportSlot.AlreadyRunning;
+        // The clock before the slot, so a refusal never holds the slot — not even for the moment a
+        // concurrent save on the mix would read as an import running.
+        if (cooldownApplies && _lastStarted.TryGetValue((userId, mix), out var started) &&
+            now - started < Cooldown)
+            return new ImportSlot(ImportSlotOutcome.CoolingDown, Cooldown - (now - started));
+        return _running.TryAdd(userId, mix) ? ImportSlot.Taken : ImportSlot.AlreadyRunning;
     }
 
     public void Started(Guid userId, MixEnum mix, DateTimeOffset at)

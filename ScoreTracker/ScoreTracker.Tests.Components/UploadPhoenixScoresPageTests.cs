@@ -52,6 +52,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     private readonly Mock<IImportCredentialClientStore> _clientStore = new();
     private readonly Mock<IUiNotificationHub> _uiHub = new();
     private readonly Mock<IPhoenixScoreFileExtractor> _extractor = new();
+    private readonly Guid _me = Guid.NewGuid();
 
     public UploadPhoenixScoresPageTests()
     {
@@ -94,7 +95,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         CurrentUser.SetupGet(c => c.User).Returns(new User(
-            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
+            _me, "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
     }
 
     [Theory]
@@ -599,7 +600,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         var snackbar = new Mock<ISnackbar>();
         Services.AddSingleton(snackbar.Object);
         GivenTheFileParsesTo(new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.FairGame, false, Uploaded));
-        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.Mix == MixEnum.Phoenix),
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.UserId == _me && q.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         await UploadAndSave();
@@ -628,5 +629,55 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         snackbar.Verify(s => s.Add("You can import again in 2 min.", Severity.Error,
             It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
         cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+    }
+
+    [Fact]
+    public async Task ATypedImportInsideTheCooldownSaysHowLongIsLeftAndFreesTheButtons()
+    {
+        // The typed-password path has its own refusal handling; most presses come through it.
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameId", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("9990001");
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameTag", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("CARD");
+        _mediator.Setup(m => m.Send(It.Is<StartOfficialImportCommand>(c => c.Source is TypedCredentialSource),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4.5)));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await cut.Find("input[type=text]").ChangeAsync(new ChangeEventArgs { Value = "player" });
+        await cut.Find("input[type=password]").ChangeAsync(new ChangeEventArgs { Value = "hunter2" });
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        snackbar.Verify(s => s.Add("You can import again in 5 min.", Severity.Error,
+            It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+    }
+
+    [Fact]
+    public async Task ARefusedImportLeavesTheRunThatJustFinishedOnScreen()
+    {
+        // The page and the check panel inside it both listen; the hub delivers to each.
+        var listeners = new List<Func<ImportStatusUpdatedEvent, Task>>();
+        _uiHub.Setup(h => h.Subscribe(It.IsAny<string>(), It.IsAny<Func<ImportStatusUpdatedEvent, Task>>()))
+            .Callback<string, Func<ImportStatusUpdatedEvent, Task>>((_, handler) => listeners.Add(handler))
+            .Returns(Mock.Of<IDisposable>());
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.Started));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+        foreach (var listener in listeners)
+            await cut.InvokeAsync(() => listener(new ImportStatusUpdatedEvent(_me, "Charts finished saving",
+                Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix)));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=view-session-link]")));
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=view-session-link]")));
     }
 }
