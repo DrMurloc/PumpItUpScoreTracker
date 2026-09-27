@@ -4,18 +4,23 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 
 namespace ScoreTracker.OfficialMirror.Application;
 
 // Runs the completeness check off the request circuit, mirroring RunOfficialImportConsumer —
-// including the per-user slot it must release however the run ends, and the ImportResult row it
-// opens. The check RUNS the standard import inside itself, so this is the only consumer that
-// sees the whole attempt: one press, one row, whichever of the two buttons was pressed.
+// including the per-user slot it must release however the run ends, the ImportResult row it
+// opens, and the session it points that row at. The check RUNS the standard import inside
+// itself, so this is the only consumer that sees the whole attempt: one press, one row, whichever
+// of the two buttons was pressed. A deep scan also holds one of the site-wide deep-scan slots
+// for the whole run.
 internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
 {
     private readonly ICurrentUserAccessor _currentUser;
@@ -49,6 +54,7 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
 
         var outcome = ImportOutcome.Completed;
         var reportIt = true;
+        var deepScanSlot = false;
         int? saved = null;
         try
         {
@@ -58,15 +64,33 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
             var user = await _mediator.Send(new GetUserByIdQuery(message.UserId), context.CancellationToken);
             if (user != null) _currentUser.SetScopedUser(user);
 
-            // The saga hands its session back rather than the consumer minting one: it opens the
-            // session AFTER the deep-scan slot gate, so a refused scan leaves no empty session row
-            // in the player's list. Null means exactly that — refused, nothing opened.
-            var run = await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix,
-                message.Sid, message.CardId, message.ExpectedGameTag, message.DeepScan, message.IncludeBroken),
-                context.CancellationToken);
-            saved = run.Saved;
-            if (run.SessionId is { } session)
-                await _results.AttachSession(resultId, session, context.CancellationToken);
+            // Taken before the session opens, so a scan that loses the race for the site-wide slot
+            // leaves no empty session row in the player's list.
+            if (message.DeepScan)
+            {
+                deepScanSlot = _guard.TryBeginDeepScan();
+                if (!deepScanSlot)
+                {
+                    await _mediator.Publish(new ImportStatusUpdatedEvent(message.UserId,
+                            "Another deep scan is running — try again in a few minutes",
+                            Array.Empty<RecordedPhoenixScore>(), message.Mix),
+                        context.CancellationToken);
+                    saved = 0;
+                    return;
+                }
+            }
+
+            // The run points at its session before the scrape starts: restart recovery finds a run
+            // only through its session, so one cut off mid-scrape without it is never closed, and
+            // the scores it had already saved are never replayed.
+            var sessionId = await _mediator.Send(
+                new BeginScoreSessionCommand(message.UserId, message.Mix, ScoreJournalEntry.OfficialImportSource,
+                    message.ExpectedGameTag, message.CardId), context.CancellationToken);
+            await _results.AttachSession(resultId, sessionId, context.CancellationToken);
+
+            saved = await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix,
+                message.Sid, message.CardId, message.ExpectedGameTag, message.DeepScan, message.IncludeBroken,
+                sessionId), context.CancellationToken);
         }
         catch (InvalidCredentialException)
         {
@@ -99,6 +123,7 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
         }
         finally
         {
+            if (deepScanSlot) _guard.EndDeepScan();
             _guard.End(message.UserId);
             if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, saved, CancellationToken.None);
         }

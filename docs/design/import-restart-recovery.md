@@ -69,7 +69,7 @@ The scores are right. Everything built on them is missing, and the UI says it wo
 
 | Thing | Where | Written when |
 |---|---|---|
-| `ImportResult` row | OfficialMirror | `Open` before any piugame call; `Close` in the consumer's `finally` |
+| `ImportResult` row | OfficialMirror | `Open` before any piugame call; pointed at its session the moment that opens, before the scrape (§3.1 finds a run only through it); `Close` in the consumer's `finally` |
 | `ScoreSession` row | ScoreLedger | on the submission that mints the session |
 | Best-attempt record | ScoreLedger | per changed score |
 | `ScoreEventJournal` row | ScoreLedger | per changed score |

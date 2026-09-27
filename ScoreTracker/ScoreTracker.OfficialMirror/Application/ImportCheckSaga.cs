@@ -12,8 +12,6 @@ using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
-using ScoreTracker.ScoreLedger.Contracts;
-using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -31,7 +29,7 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// </summary>
 internal sealed class ImportCheckSaga :
     IRequestHandler<StartImportCheckCommand, ImportCheckStartResult>,
-    IRequestHandler<ExecuteImportCheckCommand, ImportCheckRun>
+    IRequestHandler<ExecuteImportCheckCommand, int>
 {
     private readonly IBus _bus;
     private readonly IChartRepository _charts;
@@ -125,57 +123,34 @@ internal sealed class ImportCheckSaga :
     ///     The background body. Imports FIRST — counting an account that played twenty minutes ago
     ///     against scores we have not fetched yet reports charts that are simply not imported yet.
     /// </summary>
-    public async Task<ImportCheckRun> Handle(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
+    public async Task<int> Handle(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
     {
-        var deepScanSlot = false;
-        try
-        {
-            if (request.DeepScan)
-            {
-                deepScanSlot = _guard.TryBeginDeepScan();
-                if (!deepScanSlot)
-                {
-                    await Status(request, "Another deep scan is running — try again in a few minutes",
-                        cancellationToken);
-                    return new ImportCheckRun(null, 0);
-                }
-            }
+        // Both halves save into the run's one session, so a single press is a single row in the
+        // player's sessions list.
+        //
+        // The player's choice, not a literal: this half writes records, so a hardcoded true
+        // re-recorded every break somebody had just cleaned up — press Score check and they
+        // were all back. Both halves of the run read the same flag.
+        var imported = await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
+            request.CardId, request.ExpectedGameTag, request.IncludeBroken, request.SessionId), cancellationToken);
 
-            // ONE session for the whole run, shared by the import and by whatever the deeper read
-            // recovers. Letting each mint its own put two rows seconds apart in the player's
-            // sessions list for a single button press.
-            var sessionId = await _mediator.Send(new BeginScoreSessionCommand(request.UserId, request.Mix,
-                    ScoreJournalEntry.OfficialImportSource, request.ExpectedGameTag, request.CardId),
-                cancellationToken);
+        var (added, checkedCount) = request.DeepScan
+            ? await DeepScan(request, cancellationToken)
+            : await Census(request, cancellationToken);
 
-            // The player's choice, not a literal: this half writes records, so a hardcoded true
-            // re-recorded every break somebody had just cleaned up — press Score check and they
-            // were all back. Both halves of the run read the same flag.
-            var imported = await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
-                request.CardId, request.ExpectedGameTag, request.IncludeBroken, sessionId), cancellationToken);
-
-            var (added, checkedCount) = request.DeepScan
-                ? await DeepScan(request, sessionId, cancellationToken)
-                : await Census(request, sessionId, cancellationToken);
-
-            await _mediator.Publish(
-                new ImportCheckCompletedEvent(request.UserId, request.Mix, added, checkedCount),
-                cancellationToken);
-            // Both halves count: the run is one press, and the import inside it saved into the
-            // same session as the repair that followed.
-            return new ImportCheckRun(sessionId, imported + added);
-        }
-        finally
-        {
-            if (deepScanSlot) _guard.EndDeepScan();
-        }
+        await _mediator.Publish(
+            new ImportCheckCompletedEvent(request.UserId, request.Mix, added, checkedCount),
+            cancellationToken);
+        // Both halves count: the run is one press, and the import inside it saved into the
+        // same session as the repair that followed.
+        return imported + added;
     }
 
     /// <summary>
     ///     Counts every level, then re-reads only the ones that disagree. A clean account pays for
     ///     the census and nothing else.
     /// </summary>
-    private async Task<(int Added, int Checked)> Census(ExecuteImportCheckCommand request, Guid sessionId,
+    private async Task<(int Added, int Checked)> Census(ExecuteImportCheckCommand request,
         CancellationToken cancellationToken)
     {
         var official = await _officialSite.GetOfficialCensus(request.Mix, request.UserId, request.Sid,
@@ -190,7 +165,7 @@ internal sealed class ImportCheckSaga :
         if (buckets.Count == 0) return (0, official.TotalPasses);
 
         await Status(request, "Reading the levels that don't match", cancellationToken);
-        return (await Save(request, buckets, sessionId, cancellationToken), official.TotalPasses);
+        return (await Save(request, buckets, cancellationToken), official.TotalPasses);
     }
 
     /// <summary>
@@ -198,29 +173,28 @@ internal sealed class ImportCheckSaga :
     ///     would have pointed at, plus the one thing a count never could — a score improved without
     ///     changing grade or plate.
     /// </summary>
-    private async Task<(int Added, int Checked)> DeepScan(ExecuteImportCheckCommand request, Guid sessionId,
+    private async Task<(int Added, int Checked)> DeepScan(ExecuteImportCheckCommand request,
         CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid,
             Array.Empty<string>(), request.IncludeBroken, cancellationToken);
-        return (await SaveFound(request, found, sessionId, cancellationToken), found.Count);
+        return (await SaveFound(request, found, cancellationToken), found.Count);
     }
 
     private async Task<int> Save(ExecuteImportCheckCommand request, IReadOnlyCollection<string> buckets,
-        Guid sessionId, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid, buckets,
             request.IncludeBroken, cancellationToken);
-        return await SaveFound(request, found, sessionId, cancellationToken);
+        return await SaveFound(request, found, cancellationToken);
     }
 
     // Through the import's own save path, so a recovered score obeys the same raise-only rule and
     // joins the same session, journal and rating sweep as any other imported one.
     private Task<int> SaveFound(ExecuteImportCheckCommand request,
-        IReadOnlyList<OfficialRecordedScore> found, Guid sessionId,
-        CancellationToken cancellationToken)
+        IReadOnlyList<OfficialRecordedScore> found, CancellationToken cancellationToken)
     {
-        return _mediator.Send(new SaveOfficialScoresCommand(request.UserId, request.Mix, sessionId, found),
+        return _mediator.Send(new SaveOfficialScoresCommand(request.UserId, request.Mix, request.SessionId, found),
             cancellationToken);
     }
 
