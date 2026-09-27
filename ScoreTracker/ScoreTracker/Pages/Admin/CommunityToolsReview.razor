@@ -88,10 +88,6 @@ else
                     {
                         <span style="opacity:.7;">@($" · {tool.RepositoryOwner}")</span>
                     }
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                             Color="@(tool.RepositoryCheckedAt is null ? Color.Warning : Color.Success)">
-                        @(tool.RepositoryCheckedAt is null ? L["Not checked"] : L["Reachable"])
-                    </MudChip>
                 }
             </MudText>
 
@@ -105,10 +101,19 @@ else
                     <MudText Typo="Typo.body2">@tool.CreatedAt.LocalDateTime.ToString("dd MMM yyyy")</MudText>
                 </div>
                 <div>
-                    @* Yours alone, and the reason rule 3 exists — a way to reach the maker. *@
-                    <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Your Discord handle"]</MudText>
+                    @* Yours alone, and the reason rule 3 exists — a way to reach the maker. It opens
+                       their Discord profile, which is where the message goes. *@
+                    <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Discord"]</MudText>
                     <MudText Typo="Typo.body2">
-                        @(string.IsNullOrWhiteSpace(tool.DiscordHandle) ? L["None given"] : tool.DiscordHandle)
+                        @if (tool.MakerDiscordId is null)
+                        {
+                            <span style="opacity:.6;">@L["Not linked"]</span>
+                        }
+                        else
+                        {
+                            <LinkedDiscordAccount DiscordId="@tool.MakerDiscordId" Handle="@tool.MakerDiscordHandle"
+                                                  AsLink="true"></LinkedDiscordAccount>
+                        }
                     </MudText>
                 </div>
             </div>
@@ -159,9 +164,9 @@ else
                 </MudText>
                 <MudText Typo="Typo.caption" Style="opacity:.7;">
                     @tool.OwnerName
-                    @if (!string.IsNullOrWhiteSpace(tool.DiscordHandle))
+                    @if (!string.IsNullOrWhiteSpace(tool.MakerDiscordHandle))
                     {
-                        @($" · {tool.DiscordHandle}")
+                        @($" · @{tool.MakerDiscordHandle}")
                     }
                     @if (tool.Kind == ToolKind.Integrated)
                     {
@@ -183,9 +188,6 @@ else
                         {
                             @($" · {tool.RepositoryOwner}")
                         }
-                        @(tool.RepositoryCheckedAt is null
-                            ? $" · {L["Not checked"]}"
-                            : $" · {L["Reachable"]}")
                     }
                 </MudText>
             </div>

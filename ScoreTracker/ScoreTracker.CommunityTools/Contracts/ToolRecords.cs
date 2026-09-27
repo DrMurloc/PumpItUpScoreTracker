@@ -31,9 +31,6 @@ public sealed record ToolRecord(
     string? RepositoryUrl,
     /// <summary>The account the repository sits under. Displayed for a human, never decided on.</summary>
     string? RepositoryOwner,
-    DateTimeOffset? RepositoryCheckedAt,
-    /// <summary>The maker's own, or an admin's view of it. Never reaches a player-facing surface.</summary>
-    string? DiscordHandle,
     DateTimeOffset? AgreedToRulesAt,
     /// <summary>
     ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
@@ -57,6 +54,13 @@ public sealed record ToolRecord(
     /// </summary>
     bool HasKeys,
     bool WebhookConfigured);
+
+/// <summary>
+///     The Discord account linked to the signed-in maker's own PIU Scores account. The handle is
+///     looked up from Discord and is null when Discord could not be asked.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record DiscordLinkRecord(string DiscordId, string? Handle);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]

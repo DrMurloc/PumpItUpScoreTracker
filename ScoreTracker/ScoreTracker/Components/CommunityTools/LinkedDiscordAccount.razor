@@ -1,0 +1,43 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+
+@* A maker's linked Discord account, shown the same way wherever it appears. The handle comes from
+   Discord and is missing when Discord could not be asked; the account id is always there to link
+   to, so the fallback is a link to the profile rather than nothing. *@
+
+@if (!string.IsNullOrWhiteSpace(DiscordId))
+{
+    <span class="ct-discord">
+        @if (ShowAvatar && Handle is not null)
+        {
+            <span class="ct-discord-avatar" aria-hidden="true">@Handle[..1].ToUpperInvariant()</span>
+        }
+        @if (Handle is null)
+        {
+            <MudLink Href="@ProfileUrl" Target="_blank" rel="noopener">@L["View on Discord"] ↗</MudLink>
+        }
+        else if (AsLink)
+        {
+            <MudLink Href="@ProfileUrl" Target="_blank" rel="noopener">@($"@{Handle}") ↗</MudLink>
+        }
+        else
+        {
+            <span class="ct-discord-handle">@($"@{Handle}")</span>
+        }
+    </span>
+}
+
+@code {
+    /// <summary>The Discord user id the account link stored. Nothing renders without one.</summary>
+    [Parameter] public string? DiscordId { get; set; }
+
+    /// <summary>The account's handle as Discord reports it, or null when Discord could not say.</summary>
+    [Parameter] public string? Handle { get; set; }
+
+    /// <summary>The handle's initial beside it, for where the account stands on its own.</summary>
+    [Parameter] public bool ShowAvatar { get; set; }
+
+    /// <summary>Whether the handle opens the Discord profile — for the one reader who messages them.</summary>
+    [Parameter] public bool AsLink { get; set; }
+
+    private string ProfileUrl => $"https://discord.com/users/{DiscordId}";
+}

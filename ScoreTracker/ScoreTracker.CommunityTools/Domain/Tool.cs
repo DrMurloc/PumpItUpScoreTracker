@@ -21,8 +21,7 @@ internal sealed class Tool
         ToolVisibility visibility, bool acceptsAllToolsShare, WebhookMode webhookMode, Uri? webhookUrl,
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
-        string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt, ToolKind kind)
+        string? repositoryOwner, DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
         Kind = kind;
         Id = id;
@@ -41,8 +40,6 @@ internal sealed class Tool
         WebhookUrlVerifiedAt = webhookUrlVerifiedAt;
         RepositoryUrl = repositoryUrl;
         RepositoryOwner = repositoryOwner;
-        RepositoryCheckedAt = repositoryCheckedAt;
-        DiscordHandle = discordHandle;
         AgreedToRulesAt = agreedToRulesAt;
     }
 
@@ -78,18 +75,6 @@ internal sealed class Tool
     ///     only a human makes, and this is what makes it visible at a glance.
     /// </summary>
     public string? RepositoryOwner { get; private set; }
-
-    /// <summary>
-    ///     When <see cref="RepositoryUrl" /> last answered anonymously. Null means it has not, or the
-    ///     URL changed since it did.
-    /// </summary>
-    public DateTimeOffset? RepositoryCheckedAt { get; private set; }
-
-    /// <summary>
-    ///     How the maker is reached when something breaks. Admin-visible only — never in a
-    ///     player-facing record.
-    /// </summary>
-    public string? DiscordHandle { get; private set; }
 
     /// <summary>When the maker accepted the rules. Recorded once, at registration.</summary>
     public DateTimeOffset? AgreedToRulesAt { get; private set; }
@@ -135,24 +120,22 @@ internal sealed class Tool
     ///     else's data is involved.
     /// </summary>
     public static Tool Create(Guid id, Guid ownerUserId, Name name, DateTimeOffset createdAt,
-        Uri? repositoryUrl = null, string? discordHandle = null, DateTimeOffset? agreedToRulesAt = null,
-        ToolKind kind = ToolKind.Integrated)
+        Uri? repositoryUrl = null, DateTimeOffset? agreedToRulesAt = null, ToolKind kind = ToolKind.Integrated)
     {
         return new Tool(id, ownerUserId, name, null, null, ToolVisibility.Private, true,
             WebhookMode.None, null, Array.Empty<MixEnum>(), createdAt, null, null, null,
-            repositoryUrl, OwnerOf(repositoryUrl), null, Blank(discordHandle), agreedToRulesAt, kind);
+            repositoryUrl, OwnerOf(repositoryUrl), agreedToRulesAt, kind);
     }
 
     public static Tool Rehydrate(Guid id, Guid ownerUserId, Name name, string? description, Uri? url,
         ToolVisibility visibility, bool acceptsAllToolsShare, WebhookMode webhookMode, Uri? webhookUrl,
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
-        string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt, ToolKind kind)
+        string? repositoryOwner, DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
         return new Tool(id, ownerUserId, name, description, url, visibility, acceptsAllToolsShare,
             webhookMode, webhookUrl, mixes, createdAt, approvedAt, rejectionReason, webhookUrlVerifiedAt,
-            repositoryUrl, repositoryOwner, repositoryCheckedAt, discordHandle, agreedToRulesAt, kind);
+            repositoryUrl, repositoryOwner, agreedToRulesAt, kind);
     }
 
     /// <summary>
@@ -165,10 +148,6 @@ internal sealed class Tool
     ///         repository and swapping it afterwards is the same trick as renaming, wearing a
     ///         different hat.
     ///     </para>
-    ///     <para>
-    ///         <b>A changed repository is an unchecked repository</b>, exactly as a changed webhook
-    ///         URL is an unverified one. Without that, check once and swap to anything.
-    ///     </para>
     /// </summary>
     public void Describe(Name name, string? description, Uri? url, Uri? repositoryUrl)
     {
@@ -177,10 +156,7 @@ internal sealed class Tool
                                            || repositoryUrl?.ToString() != RepositoryUrl?.ToString();
 
         if (repositoryUrl?.ToString() != RepositoryUrl?.ToString())
-        {
-            RepositoryCheckedAt = null;
             RepositoryOwner = OwnerOf(repositoryUrl);
-        }
 
         Name = name;
         Description = description;
@@ -192,27 +168,6 @@ internal sealed class Tool
             Visibility = ToolVisibility.PendingApproval;
             ApprovedAt = null;
         }
-    }
-
-    /// <summary>Not player-visible, so changing it does not return the tool to review.</summary>
-    public void SetDiscordHandle(string? handle)
-    {
-        DiscordHandle = Blank(handle);
-    }
-
-    /// <summary>Records that <see cref="RepositoryUrl" /> answered anonymously.</summary>
-    public void MarkRepositoryReachable(DateTimeOffset at)
-    {
-        if (RepositoryUrl is null)
-            throw new ToolRepositoryRequiredException("There is no repository link to check.");
-
-        RepositoryCheckedAt = at;
-    }
-
-    /// <summary>Withdraws the proof after a check that did not answer.</summary>
-    public void ClearRepositoryCheck()
-    {
-        RepositoryCheckedAt = null;
     }
 
     /// <summary>
@@ -227,11 +182,6 @@ internal sealed class Tool
             .FirstOrDefault();
 
         return string.IsNullOrWhiteSpace(segment) ? null : segment;
-    }
-
-    private static string? Blank(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     public void RequestListing(bool makerHasDiscord)

@@ -525,56 +525,6 @@ public sealed class ToolKeyAndShareHandlerTests
             It.IsAny<DateTimeOffset>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    private void ToolWithRepository(bool alreadyChecked)
-    {
-        var tool = Tool.Create(ToolId, MakerId, Name.From("Planner"), Now,
-            new Uri("https://github.com/errlena/planner"), agreedToRulesAt: Now);
-        if (alreadyChecked) tool.MarkRepositoryReachable(Now);
-        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
-    }
-
-    [Fact]
-    public async Task ARepositoryThatAnswersIsRecordedAsChecked()
-    {
-        ToolWithRepository(alreadyChecked: false);
-        _repositories.Setup(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryReachability.Ok(200));
-
-        var result = await ManagementSaga()
-            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None);
-
-        Assert.True(result.Reachable);
-        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == Now),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    // A repository that has gone private is the case this exists to catch, so a failing check has
-    // to withdraw the previous proof. A stale tick beside a dead link is worse than no tick.
-    [Fact]
-    public async Task ARepositoryThatStoppedAnsweringLosesItsCheck()
-    {
-        ToolWithRepository(alreadyChecked: true);
-        _repositories.Setup(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryReachability.Failed(WebhookFailureReason.ClientError, 404));
-
-        var result = await ManagementSaga()
-            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None);
-
-        Assert.False(result.Reachable);
-        Assert.Equal(404, result.StatusCode);
-        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == null),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task CheckingAToolWithNoRepositoryTellsTheMakerWhatToAdd()
-    {
-        await Assert.ThrowsAsync<ToolRepositoryRequiredException>(() => ManagementSaga()
-            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None));
-
-        _repositories.Verify(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
     // The gate is on acquiring a second player: a stranger is refused while the maker has no Discord
     // linked, and nothing is granted.
     [Fact]

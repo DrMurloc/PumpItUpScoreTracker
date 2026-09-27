@@ -70,4 +70,22 @@ public sealed class CommunityToolsSignInRedirectTests : ComponentTestBase
         Assert.Equal(SignInFor($"/Developers/{toolId}/players"), Location);
         Mediator.Verify(m => m.Send(It.IsAny<GetMyToolsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    /// <summary>
+    ///     A console section that reads its own data does so before the frame inside it renders, so
+    ///     that read must wait for a signed-in visitor too — or it refuses them before the frame can
+    ///     send them anywhere.
+    /// </summary>
+    [Fact]
+    public void AConsoleSectionThatLoadsItsOwnDataStillSendsALoggedOutVisitorToSignIn()
+    {
+        var toolId = Guid.NewGuid();
+        Services.GetRequiredService<NavigationManager>().NavigateTo($"/Developers/{toolId}/players");
+
+        RenderComponent<ConsolePlayers>(p => p.Add(x => x.ToolId, toolId));
+
+        Assert.Equal(SignInFor($"/Developers/{toolId}/players"), Location);
+        Mediator.Verify(m => m.Send(It.IsAny<GetToolInviteLinksQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

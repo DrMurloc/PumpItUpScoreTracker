@@ -32,7 +32,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<ApproveToolCommand>,
     IRequestHandler<RejectToolCommand>,
     IRequestHandler<DeleteToolCommand>,
-    IRequestHandler<CheckToolRepositoryCommand, RepositoryCheckResult>,
+    IRequestHandler<GetMyDiscordLinkQuery, DiscordLinkRecord?>,
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
@@ -172,8 +172,7 @@ internal sealed class ToolManagementSaga :
                 "You can't register a tool. If you think that's wrong, ask in the PIU Scores Discord.");
 
         var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
-            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now,
-            request.Kind);
+            _dateTime.Now, Link(request.RepositoryUrl), _dateTime.Now, request.Kind);
         await _tools.Save(tool, cancellationToken);
 
         // The maker is player one. Without this they cannot test their own tool against a real
@@ -183,30 +182,13 @@ internal sealed class ToolManagementSaga :
         return tool.Id;
     }
 
-    /// <summary>
-    ///     Fetches the source repository anonymously and records whether it answered.
-    ///     <para>
-    ///         A failed check clears the previous proof rather than leaving it standing. A repository
-    ///         that has gone private is exactly the case this exists to catch, and a stale tick
-    ///         beside a dead link is worse than no tick at all.
-    ///     </para>
-    /// </summary>
-    public async Task<RepositoryCheckResult> Handle(CheckToolRepositoryCommand request,
-        CancellationToken cancellationToken)
+    public async Task<DiscordLinkRecord?> Handle(GetMyDiscordLinkQuery request, CancellationToken cancellationToken)
     {
-        var tool = await Manageable(request.ToolId, cancellationToken);
-        if (tool.RepositoryUrl is null)
-            throw ToolRepositoryRequiredException.ForMaker();
-
-        var outcome = await _repositories.Check(tool.RepositoryUrl, cancellationToken);
-
-        if (outcome.Reachable) tool.MarkRepositoryReachable(_dateTime.Now);
-        else tool.ClearRepositoryCheck();
-
-        await _tools.Save(tool, cancellationToken);
-
-        return new RepositoryCheckResult(outcome.Reachable,
-            outcome.Reachable ? null : outcome.Reason.ToString(), outcome.StatusCode);
+        var me = _currentUser.User.Id;
+        var discordId = (await _reach.DiscordAccounts(new[] { me }, cancellationToken)).GetValueOrDefault(me);
+        return discordId is null
+            ? null
+            : new DiscordLinkRecord(discordId, await _discordNames.HandleOf(discordId, cancellationToken));
     }
 
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)
@@ -214,7 +196,6 @@ internal sealed class ToolManagementSaga :
         var tool = await Manageable(request.ToolId, cancellationToken);
         tool.Describe(Name.From(request.Name), request.Description, Link(request.Url),
             Link(request.RepositoryUrl));
-        tool.SetDiscordHandle(request.DiscordHandle);
         await _tools.Save(tool, cancellationToken);
     }
 
@@ -355,8 +336,8 @@ internal sealed class ToolManagementSaga :
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
             headerName, !string.IsNullOrWhiteSpace(headerValue),
             !string.IsNullOrWhiteSpace(verificationHash),
-            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
-            tool.DiscordHandle, tool.AgreedToRulesAt, takesPlayers, makerDiscordId, makerDiscordHandle, tool.Kind,
+            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.AgreedToRulesAt, takesPlayers,
+            makerDiscordId, makerDiscordHandle, tool.Kind,
             keyCount > 0, tool.WebhookMode != WebhookMode.None);
     }
 

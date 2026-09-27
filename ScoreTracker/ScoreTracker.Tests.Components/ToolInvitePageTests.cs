@@ -5,6 +5,8 @@ using Bunit;
 using Moq;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages.CommunityTools;
 using Xunit;
 
@@ -25,10 +27,59 @@ public sealed class ToolInvitePageTests : ComponentTestBase
             .ReturnsAsync(preview);
     }
 
-    private static ToolInvitePreview Preview()
+    private static ToolInvitePreview Preview(bool canTakePlayers = true)
     {
         return new ToolInvitePreview(ToolId, "PandaGames", null, null, "PIU69", false, false, 0,
-            "https://github.com/example/tool", ToolKind.Integrated, true);
+            "https://github.com/example/tool", ToolKind.Integrated, canTakePlayers);
+    }
+
+    private void SignedIn()
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("Tester"), true, null,
+            new Uri("https://piu.test/a.png"), null));
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyToolConnectionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PlayerToolConnectionRecord>());
+    }
+
+    // A refusal the player cannot see coming is what crashed this page, so a tool that cannot take
+    // players says why instead of offering a button that would be refused.
+    [Fact]
+    public void AToolThatCannotTakePlayersGivesTheReasonInsteadOfConnect()
+    {
+        SignedIn();
+        GivenPreview(Preview(canTakePlayers: false));
+
+        var cut = Render();
+
+        Assert.Contains("PandaGames can't connect players yet", cut.Markup);
+        Assert.Contains("Its maker still has to link a Discord account", cut.Markup);
+        Assert.DoesNotContain("Connect PandaGames", cut.Markup);
+        Assert.DoesNotContain("What it will be able to read", cut.Markup);
+    }
+
+    [Fact]
+    public void ALoggedOutVisitorGetsTheSameReasonAndNoSignIn()
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+        GivenPreview(Preview(canTakePlayers: false));
+
+        var cut = Render();
+
+        Assert.Contains("PandaGames can't connect players yet", cut.Markup);
+        Assert.DoesNotContain("Sign in to continue", cut.Markup);
+    }
+
+    [Fact]
+    public void AToolThatCanTakePlayersStillOffersConnect()
+    {
+        SignedIn();
+        GivenPreview(Preview());
+
+        var cut = Render();
+
+        Assert.Contains("Connect PandaGames", cut.Markup);
+        Assert.DoesNotContain("can't connect players yet", cut.Markup);
     }
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>

@@ -54,10 +54,38 @@
                               Label=@L["Public source repository"] Placeholder="https://github.com/you/your-tool"
                               HelperText='@L["Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it."].Value'
                               Style="max-width:420px;"></MudTextField>
-                <MudTextField T="string" @bind-Value="_discordHandle" Class="mt-3" MaxLength="64"
-                              Label=@L["Your Discord handle"]
-                              HelperText='@L["Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool."].Value'
-                              Style="max-width:420px;"></MudTextField>
+
+                @* Linking means leaving for Discord, which would lose what has been typed here, so the
+                   wizard only says where to do it. *@
+                <MudPaper Outlined="true" Class="pa-3 mt-3 d-flex flex-column gap-2" Style="max-width:420px;">
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.overline">@L["Discord"]</MudText>
+                        @if (_discord is null)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                                @L["Not linked"]
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                                @L["Linked"]
+                            </MudChip>
+                        }
+                    </div>
+                    @if (_discord is null)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @L["Before anyone else can connect, you'll need to link your Discord. You can do it from your tool's console once it's created."]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <LinkedDiscordAccount DiscordId="@_discord.DiscordId" Handle="@_discord.Handle"
+                                              ShowAvatar="true"></LinkedDiscordAccount>
+                        <MudText Typo="Typo.body2">@L["DrMurloc can reach you here if anything goes wrong."]</MudText>
+                    }
+                </MudPaper>
 
                 @* The fork. It changes the crumb rail, not just the next screen. *@
                 <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["What is this tool?"]</MudText>
@@ -71,13 +99,6 @@
                         <span class="ct-choice-sub">@L["Just a directory entry pointing at your site. No key, no API, no webhooks."]</span>
                     </MudRadio>
                 </MudRadioGroup>
-
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
-                    <MudText Typo="Typo.body2">
-                        <b>@L["Both are needed before anyone else can use your tool."]</b>
-                        @L["Without them it still works — for you, on your own scores."]
-                    </MudText>
-                </MudAlert>
                 break;
 
             case Step.CreateKey:
@@ -212,7 +233,7 @@
             case Step.Listing:
                 <MudText Typo="Typo.h5" Class="mb-2">@L["Ask to be listed"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
+                    @L["Optional, and the only step that involves me. A listed tool appears in the directory every player can browse. I read its source before approving it, so listing needs a public repository link and a linked Discord. Your tool works either way."]
                 </MudText>
                 <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"
                               Lines="3" Immediate="true" Disabled="_submitted"
@@ -350,7 +371,9 @@
     private string _name = string.Empty;
     private string _description = string.Empty;
     private string _repositoryUrl = string.Empty;
-    private string _discordHandle = string.Empty;
+
+    /// <summary>The maker's linked Discord account, or null when they have none yet.</summary>
+    private DiscordLinkRecord? _discord;
 
     /// <summary>The rules are free and instant to accept, unlike having a repository ready.</summary>
     private bool _agreed;
@@ -372,6 +395,11 @@
 
     /// <summary>Raised when the maker leaves the wizard, so the host can show the console.</summary>
     [Parameter] public EventCallback OnFinished { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _discord = await Mediator.Send(new GetMyDiscordLinkQuery());
+    }
 
     /// <summary>
     ///     Which crumb a screen belongs to. Several screens share one, which is the point — a maker
@@ -481,8 +509,7 @@
                     break;
 
                 case Step.Name:
-                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name,
-                        Blank(_repositoryUrl), Blank(_discordHandle), _kind));
+                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name, Blank(_repositoryUrl), _kind));
                     // Nothing to mint and nobody to invite, so straight to the one thing a
                     // listing-only tool is for.
                     _step = _kind == ToolKind.ListingOnly ? Step.Listing : Step.CreateKey;
@@ -555,7 +582,10 @@
     {
         if (string.IsNullOrWhiteSpace(_description)) return;
 
-        await Mediator.Send(new UpdateToolCommand(_toolId!.Value, _name, _description, null));
+        // The source link travels too: the update replaces what the tool describes, and a listing
+        // request that follows needs the link entered at registration still in place.
+        await Mediator.Send(new UpdateToolCommand(_toolId!.Value, _name, _description, null,
+            Blank(_repositoryUrl)));
     }
 
     /// <summary>

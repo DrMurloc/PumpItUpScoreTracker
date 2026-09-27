@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using AngleSharp.Dom;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -157,29 +159,84 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     Neither is required to register — a maker building against their own scores needs
-    ///     neither — but both travel when supplied.
+    ///     Not required to register — a maker building against their own scores needs none — but
+    ///     it travels when supplied.
     /// </summary>
     [Fact]
-    public void TheSourceAndHandleTravelWithRegistration()
+    public async Task TheSourceTravelsWithRegistration()
     {
-        var page = Render();
-        AcceptRules(page);
-        PrimaryButton(page).Click();
+        var page = await AtNameScreenAsync();
 
-        // Only the name box is Immediate; the other two bind on change, and an Input on them
-        // silently does nothing.
+        // Only the name box is Immediate; the source binds on change, and an Input on it silently
+        // does nothing.
         var boxes = Boxes(page);
-        boxes[0].Input("Murloc Planner");
-        boxes[1].Change("https://github.com/errlena/planner");
-        boxes[2].Change("errlena");
+        await boxes[0].InputAsync(new ChangeEventArgs { Value = "Murloc Planner" });
+        await boxes[1].ChangeAsync(new ChangeEventArgs { Value = "https://github.com/errlena/planner" });
 
-        PrimaryButton(page).Click();
+        await PrimaryButton(page).ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(It.Is<CreateToolCommand>(c =>
-                c.Name == "Murloc Planner"
-                && c.RepositoryUrl == "https://github.com/errlena/planner"
-                && c.DiscordHandle == "errlena"),
+                c.Name == "Murloc Planner" && c.RepositoryUrl == "https://github.com/errlena/planner"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private async Task<IRenderedComponent<ToolSetupWizard>> AtNameScreenAsync()
+    {
+        var page = Render();
+        await page.FindAll(".ct-rules-agree input[type=checkbox]").First()
+            .ChangeAsync(new ChangeEventArgs { Value = true });
+        await PrimaryButton(page).ClickAsync(new MouseEventArgs());
+        return page;
+    }
+
+    /// <summary>
+    ///     Linking leaves for Discord, which would lose everything typed in the wizard, so a maker
+    ///     with no link is told where to do it rather than handed a button.
+    /// </summary>
+    [Fact]
+    public async Task AMakerWithNoDiscordIsToldWhereToLinkIt()
+    {
+        var page = await AtNameScreenAsync();
+
+        Assert.Contains("Not linked", page.Markup);
+        Assert.Contains("Before anyone else can connect, you'll need to link your Discord.", page.Markup);
+        Assert.DoesNotContain("Your Discord handle", page.Markup);
+    }
+
+    [Fact]
+    public async Task AMakerWithDiscordLinkedSeesTheAccount()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyDiscordLinkQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DiscordLinkRecord("123456789012345678", "stepmaniac_77"));
+
+        var page = await AtNameScreenAsync();
+
+        Assert.Contains("@stepmaniac_77", page.Markup);
+        Assert.Contains("DrMurloc can reach you here if anything goes wrong.", page.Markup);
+        Assert.DoesNotContain("Not linked", page.Markup);
+    }
+
+    /// <summary>
+    ///     The description is saved on its own screen, and the source typed at registration has to
+    ///     survive that save — or asking to be listed would be refused for a link the maker gave.
+    /// </summary>
+    [Fact]
+    public async Task SavingTheDescriptionKeepsTheSourceLink()
+    {
+        var page = await AtNameScreenAsync();
+        await Boxes(page)[0].InputAsync(new ChangeEventArgs { Value = "Murloc Planner" });
+        await Boxes(page)[1].ChangeAsync(new ChangeEventArgs { Value = "https://github.com/errlena/planner" });
+        await PrimaryButton(page).ClickAsync(new MouseEventArgs());
+        await Boxes(page).First().InputAsync(new ChangeEventArgs { Value = "Production" });
+        // Create the key, then past the reveal, the invite screen and the webhook screen.
+        for (var screen = 0; screen < 4; screen++) await PrimaryButton(page).ClickAsync(new MouseEventArgs());
+
+        await page.FindAll("textarea").First().InputAsync(new ChangeEventArgs { Value = "Plans your sessions." });
+        await PrimaryButton(page).ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.Is<UpdateToolCommand>(c =>
+                c.Description == "Plans your sessions."
+                && c.RepositoryUrl == "https://github.com/errlena/planner"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

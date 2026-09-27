@@ -58,15 +58,18 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
             .ReturnsAsync(tools);
     }
 
+    private const string TusasDiscord = "123456789012345678";
+
     private static ToolRecord Pending(WebhookMode mode = WebhookMode.ScorePush,
-        string? rejection = null, string? repository = "https://github.com/tusa/planner")
+        string? rejection = null, string? repository = "https://github.com/tusa/planner",
+        string? discordId = TusasDiscord, string? discordHandle = "tusa.piu")
     {
         return new ToolRecord(ToolId, Guid.NewGuid(), "TUSA", "Planner", "Plans your sessions.",
             "https://planner.example/", ToolVisibility.PendingApproval, false, mode,
             "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now,
             "X-Planner-Token", true, true,
-            repository, repository is null ? null : "tusa", repository is null ? null : Now,
-            "tusa.piu", Now, repository is not null, null, null, ToolKind.Integrated, true, true);
+            repository, repository is null ? null : "tusa", Now, discordId is not null, discordId,
+            discordHandle, ToolKind.Integrated, true, true);
     }
 
     private IRenderedFragment Render()
@@ -195,6 +198,44 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
         var cut = Render();
 
         Assert.DoesNotContain("asks players for their PIUGame session", cut.Markup);
+    }
+
+    /// <summary>The account DrMurloc messages, and the one click that gets him there.</summary>
+    [Fact]
+    public void TheQueueShowsTheMakersLinkedDiscordAndOpensTheirProfile()
+    {
+        GivenAdmin(true);
+        GivenQueue(Pending());
+
+        var cut = Render();
+
+        var discord = cut.FindAll("a").Single(a => a.TextContent.Contains("@tusa.piu"));
+        Assert.Equal($"https://discord.com/users/{TusasDiscord}", discord.GetAttribute("href"));
+    }
+
+    [Fact]
+    public void AMakerWithNoDiscordLinkedReadsNotLinked()
+    {
+        GivenAdmin(true);
+        GivenQueue(Pending(discordId: null, discordHandle: null));
+
+        var cut = Render();
+
+        Assert.Contains("Not linked", cut.Markup);
+    }
+
+    /// <summary>The source is read by hand at review, so nothing on the card claims it was checked.</summary>
+    [Fact]
+    public void TheSourceCarriesNoReachabilityVerdict()
+    {
+        GivenAdmin(true);
+        GivenQueue(Pending());
+
+        var cut = Render();
+
+        Assert.Contains("https://github.com/tusa/planner", cut.Markup);
+        Assert.DoesNotContain("Not checked", cut.Markup);
+        Assert.DoesNotContain("Reachable", cut.Markup);
     }
 
     /// <summary>

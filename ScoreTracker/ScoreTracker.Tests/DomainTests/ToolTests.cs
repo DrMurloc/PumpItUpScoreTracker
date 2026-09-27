@@ -342,30 +342,6 @@ public sealed class ToolTests
         Assert.True(tool.CanTakePlayers(makerHasDiscord: true));
     }
 
-    // Otherwise: check once, swap to anything. Same rule as the webhook proof, same reason.
-    [Fact]
-    public void ChangingTheRepositoryWithdrawsItsCheck()
-    {
-        var tool = SourcedTool();
-        tool.MarkRepositoryReachable(Now);
-
-        tool.Describe(tool.Name, tool.Description, tool.Url,
-            new Uri("https://github.com/someone-else/a-different-thing"));
-
-        Assert.Null(tool.RepositoryCheckedAt);
-    }
-
-    [Fact]
-    public void SavingTheSameRepositoryAgainKeepsItsCheck()
-    {
-        var tool = SourcedTool();
-        tool.MarkRepositoryReachable(Now);
-
-        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
-
-        Assert.Equal(Now, tool.RepositoryCheckedAt);
-    }
-
     // The repository is printed beside the tool in the directory, so swapping it after approval is
     // renaming wearing a different hat.
     [Fact]

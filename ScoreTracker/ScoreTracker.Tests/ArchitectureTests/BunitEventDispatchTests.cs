@@ -78,7 +78,7 @@ public sealed class BunitEventDispatchTests
         ["SessionHeroTests.cs"] = 1,
         ["SimilarChartsShelfTests.cs"] = 18,
         ["TitlesPageTests.cs"] = 12,
-        ["ToolSetupWizardTests.cs"] = 29,
+        ["ToolSetupWizardTests.cs"] = 24,
         ["ToolWebhookPanelTests.cs"] = 4,
         ["UploadPhoenixScoresPageTests.cs"] = 1
     };
