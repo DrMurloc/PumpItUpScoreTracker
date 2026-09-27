@@ -57,11 +57,12 @@ internal interface IImportResultRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Runs that saved into a session and then ended in anything but Completed, at or after
-    ///     <paramref name="finishedFrom" /> — the one way an import's announcement can go missing on a
-    ///     live process.
+    ///     Runs that began at or after <paramref name="since" />, saved into a session, and ended in
+    ///     anything but Completed — the one way an import's announcement can go missing on a live
+    ///     process. Filtered on when the run began, not only when it ended: <see cref="CloseAbandoned" />
+    ///     stamps an ending on runs far older than that, and those are closed without a card.
     /// </summary>
-    Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset finishedFrom,
+    Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset since,
         CancellationToken cancellationToken = default);
 
     /// <summary>

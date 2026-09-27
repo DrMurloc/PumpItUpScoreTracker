@@ -179,6 +179,10 @@ public sealed class ImportResultRepositoryTests : IAsyncLifetime
         var stale = await OpenRun(Guid.NewGuid(), Now.AddDays(-3), Guid.NewGuid());
         await repo.Close(stale, Now.AddDays(-3).AddMinutes(1), ImportOutcome.PiuGameError, 0);
         await OpenRun(Guid.NewGuid(), Now.AddMinutes(-1), Guid.NewGuid()); // still running
+        // Began days ago and was closed a moment ago by the startup pass's silent close: its session is
+        // too old for a card, so the tick must not find it through the fresh ending.
+        await OpenRun(Guid.NewGuid(), Now.AddDays(-4), Guid.NewGuid());
+        await repo.CloseAbandoned(Now.AddDays(-1), Now.AddMinutes(-2));
 
         var found = await repo.GetFailedSince(Now.AddDays(-1));
 

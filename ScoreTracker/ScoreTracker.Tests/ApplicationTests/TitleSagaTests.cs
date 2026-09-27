@@ -281,9 +281,9 @@ public sealed class TitleSagaTests
     [Fact]
     public async Task DetectedBasicBadgesAreCapturedAsMilestonesAndAnnounced()
     {
-        // The fallback route for site-only badges (CompletionRequired == 0: events, play/plate
-        // counts): an import that saved no scores has no open batch to park them on and no
-        // snapshot card coming, so they must take a card of their own rather than be swallowed.
+        // The route for site-only badges (CompletionRequired == 0: events, play/plate counts) when
+        // an import changed no score: no snapshot card is coming, so they must take a card of their
+        // own rather than be swallowed.
         var ctx = new SagaContext(MixEnum.Phoenix);
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
@@ -381,9 +381,10 @@ public sealed class TitleSagaTests
 
         ctx.Titles.Verify(t => t.SaveTitles(MixEnum.Phoenix, ctx.UserId, It.IsAny<IEnumerable<TitleAchievedRecord>>(),
             It.IsAny<CancellationToken>()), Times.Once);
+        // The ladders' completions come from the batch's crossings and are never written here; with no
+        // reported titles there is nothing else to write.
         ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
-            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x => x.Title == "RISE CHALLENGER")),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

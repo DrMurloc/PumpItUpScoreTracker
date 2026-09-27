@@ -388,10 +388,9 @@ One `ImportResult` row per press of Import, Import and check, or Deep scan.
   reason.
 - **Separate from `ScoreSession`**, which records what got *saved*: a session can span eight
   hours and several runs, an import is one attempt with one ending, and a failed one may have no
-  session at all. The FK points import → session so undo never reaches into this table. The
-  standard path's session moved up into its consumer to make that free; the check's stays in the
-  saga, because it is opened *after* the deep-scan slot gate and minting it earlier would leave
-  an empty session row every time a scan lost the race.
+  session at all. The FK points import → session so undo never reaches into this table. Every
+  kind's session is opened in the consumer, *after* the deep-scan slot gate, so a scan that loses
+  the race leaves no empty session row.
 - **`ScoreCount` is stamped by the run itself**, at close. It was originally read off the
   Ledger's `ScoreSession.ScoreCount` through the published `GetScoreSessionsQuery` — correct on
   paper, wrong in practice (a restart-recovered session has its counts set from the journal
@@ -402,9 +401,10 @@ afterwards, but the run itself cannot wait for that): that counter is written wh
   that saved seven scores sat at `ScoreCount` 0 with seven journal rows behind it, and the Undo
   page showed 0 too. The import already knows what it saved, so it says so — which also drops a
   cross-vertical read entirely.
-  ⚠ **The Ledger's own counter still has this hole**, and the Undo page still reads it. That is
-  its own ticket: the batch lives only in memory, so a restart between the last save and the
-  drain loses the count with no way to recover it.
+  Since 2026-09-26 an import writes the Ledger's counter itself, at its announcement, the moment
+  its last score saves ([import-restart-recovery.md](import-restart-recovery.md) §0), and a run a
+  restart cut short has it set by the startup replay. Only a typed entry's batch can still lose its
+  count to a restart.
 
 ### The surfaces
 

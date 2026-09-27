@@ -80,13 +80,16 @@ internal sealed class EFImportResultRepository : IImportResultRepository
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset finishedFrom,
+    public async Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset since,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var completed = ImportOutcome.Completed.ToString();
+        // FinishedAt leads so the index does the narrowing; a run ends after it begins, so every row
+        // StartedAt admits is inside it.
         return await database.Set<ImportResultEntity>()
-            .Where(r => r.FinishedAt >= finishedFrom && r.SessionId != null && r.Outcome != completed)
+            .Where(r => r.FinishedAt >= since && r.StartedAt >= since && r.SessionId != null &&
+                        r.Outcome != completed)
             .OrderByDescending(r => r.FinishedAt)
             .Select(r => new ImportRunForRecovery(r.Id, r.UserId, r.SessionId, r.StartedAt, r.FinishedAt))
             .ToArrayAsync(cancellationToken);

@@ -19,8 +19,8 @@ internal interface IScoreSessionRepository
         DateTimeOffset startedAt, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Extends a session and adds to its counts, at batch drain rather than per submission —
-    ///     an import posts thousands of scores and must not post thousands of updates.
+    ///     Extends a session and adds to its counts, once per announcement rather than per
+    ///     submission — an upload posts thousands of scores and must not post thousands of updates.
     /// </summary>
     Task Touch(Guid id, DateTimeOffset at, int newCount, int upscoreCount,
         CancellationToken cancellationToken = default);

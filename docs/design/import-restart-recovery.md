@@ -49,6 +49,21 @@ answer (retries hung off the import-status work) and is deliberately out of scop
   upload, which drains it the moment the upload ends (`DrainScoreBatchCommand`) and falls back to the
   two-minute timer if the page is gone before it can.
 
+**Known edges, not fixed** (found by the review of this change; each needs two unlikely things at once):
+
+- **A typed entry that announces mid-import.** A score typed in while a deep scan is still reading
+  pages gets its own two-minute announcement before the import's. The import's capture then counts
+  that chart as held, the typed capture counted the import's early saves as held, and a title or
+  folder the two only complete together is announced on both cards. A typed batch still open when
+  the import announces is folded in and does not have this problem.
+- **A re-press inside the startup wait.** A run a restart cut short is replayed three minutes after
+  boot. If the player presses Import again before that, the new run captures first, and a title
+  the two runs only complete together is announced by both. The wait is there so a deploy's
+  outgoing process can finish its own imports before this one replays them.
+- **A database outage that also stops the run closing.** If saves landed, the announcement on the
+  way out failed, and closing the `ImportResult` row failed too, the row stays open and only the
+  next startup replays it — and if that is more than a day away, never.
+
 The sections below are the 2026-08-09 design and its amendments. Where they describe imports riding the
 batch, the session-first candidate query, `GetUnprocessedSessionsQuery`, `StaleAfter` or the 25-session
 cap, this section supersedes them.

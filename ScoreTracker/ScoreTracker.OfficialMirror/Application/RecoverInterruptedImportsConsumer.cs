@@ -99,10 +99,11 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     }
 
     /// <summary>
-    ///     The five-minute tick: replays the session of every run that saved and then ended in a
-    ///     failure during the last day. Such a run announces what it saved on its way out, and this is
+    ///     The five-minute tick: replays the session of every run that began in the last day, saved,
+    ///     and then ended in a failure. Such a run announces what it saved on its way out, and this is
     ///     for when that announcement itself failed. Never closes a run — a run with no ending is
-    ///     still working, or belongs to the startup pass.
+    ///     still working, or belongs to the startup pass — and never reaches one the startup pass
+    ///     closed for being older than a day, however recently it stamped that ending.
     /// </summary>
     public async Task Consume(ConsumeContext<OverdueScoreBatchesFlushedEvent> context)
     {

@@ -9,11 +9,9 @@ namespace ScoreTracker.OfficialMirror.Application;
 ///     A player's recent import attempts, straight off the vertical's own table.
 ///     <para>
 ///         The score count is stamped on the run when it closes rather than read off the Ledger's
-///         <c>ScoreSession.ScoreCount</c>. That counter is written when the score batch DRAINS —
-///         a ~2 minute in-memory debounce — so it cannot answer for a run that just finished, and
-///         an app restart inside the window leaves it at zero permanently while the journal holds
-///         the rows. Observed 2026-08-08: a check that saved seven scores sat at ScoreCount 0 with
-///         seven journal rows behind it.
+///         <c>ScoreSession.ScoreCount</c>, which counts only the new passes and upscores the
+///         announcement carried, and which a run cut short by a restart only gets from the
+///         startup replay.
 ///     </para>
 /// </summary>
 internal sealed class ImportHistoryHandler

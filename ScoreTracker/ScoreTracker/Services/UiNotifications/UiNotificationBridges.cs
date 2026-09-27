@@ -76,9 +76,10 @@ internal sealed class PlayerStatsUiBridge : INotificationHandler<PlayerStatsUpda
 ///     </para>
 ///     <para>
 ///         This is the event a page waiting on capture should listen for, and the reason it need
-///         not poll. Scores are held as a batch for two minutes past the LAST of them before
-///         capture even begins, so any timer aimed at that is guessing at someone else's
-///         schedule — and every guess this page made was wrong in a different way.
+///         not poll. When capture begins depends on where the scores came from — an import the
+///         moment it finishes saving, typed entries two minutes after the last of them — so any
+///         timer aimed at it is guessing at someone else's schedule, and every guess this page
+///         made was wrong in a different way.
 ///     </para>
 /// </summary>
 public sealed class ScoreHighlightsCapturedUiBridge : IConsumer<ScoreHighlightsCapturedEvent>
