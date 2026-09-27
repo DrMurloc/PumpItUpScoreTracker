@@ -445,6 +445,9 @@
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>몇 년 전에 클리어한 뒤 다시 하지 않은 채보는 새로운 영역으로 취급합니다.</value>
   </data>
+  <data name="A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate." xml:space="preserve">
+    <value>확인은 점수를 레벨별로 셉니다. 정밀 검사는 대신 모든 페이지를 읽습니다 — 더 느리지만, 등급이나 플레이트 변화 없이 올린 점수를 찾을 수 있는 유일한 방법입니다.</value>
+  </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
   </data>
@@ -762,6 +765,9 @@
   </data>
   <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
     <value>{0}개 채보를 추가하고, 세션에 들어갈 수 없는 {1}개는 건너뛰었습니다.</value>
+  </data>
+  <data name="Added {0} scores PIUGAME had that were missing here." xml:space="preserve">
+    <value>PIUGAME에는 있고 여기에는 없던 점수 {0}개를 추가했습니다.</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>추가 의견</value>
@@ -1791,6 +1797,9 @@
   </data>
   <data name="Checking roles" xml:space="preserve">
     <value>역할 확인 중</value>
+  </data>
+  <data name="Checking your scores" xml:space="preserve">
+    <value>점수 확인 중</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>게임 카드를 선택한 다음 가져오기를 다시 누르세요.</value>
@@ -3231,6 +3240,9 @@
   </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>노래 찾기 — 예: Iolite Sky</value>
+  </data>
+  <data name="Find scores PIUGAME has that never made it here, and add them." xml:space="preserve">
+    <value>PIUGAME에는 있지만 여기에 들어오지 않은 점수를 찾아 추가합니다.</value>
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>다음 패스를 찾으세요.</value>
@@ -5620,6 +5632,9 @@
   <data name="None given" xml:space="preserve">
     <value>없음</value>
   </data>
+  <data name="None left — next on {0}" xml:space="preserve">
+    <value>남은 횟수 없음 — 다음은 {0}</value>
+  </data>
   <data name="None of those plays could be added — the session is already full." xml:space="preserve">
     <value>추가할 수 있는 플레이가 없습니다. 세션이 이미 가득 찼습니다.</value>
   </data>
@@ -5856,6 +5871,9 @@
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>이 필터에 해당하는 항목이 없습니다. 하나를 해제해 보세요.</value>
+  </data>
+  <data name="Nothing missing — all {0} scores match PIUGAME." xml:space="preserve">
+    <value>누락된 점수가 없습니다 — {0}개 점수가 모두 PIUGAME과 일치합니다.</value>
   </data>
   <data name="Nothing more can start." xml:space="preserve">
     <value>더 이상 시작할 수 없습니다.</value>
@@ -8023,6 +8041,9 @@
   <data name="Score Calculator" xml:space="preserve">
     <value>점수 계산기</value>
   </data>
+  <data name="Score check" xml:space="preserve">
+    <value>점수 확인</value>
+  </data>
   <data name="Score Completion" xml:space="preserve">
     <value>점수 완료율</value>
   </data>
@@ -8232,6 +8253,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>이 플레이어의 보드 보기</value>
+  </data>
+  <data name="See them on your sessions page" xml:space="preserve">
+    <value>세션 페이지에서 보기</value>
   </data>
   <data name="See this session" xml:space="preserve">
     <value>이 세션 보기</value>
@@ -8700,6 +8724,9 @@
   </data>
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>이 위젯을 불러오는 중 문제가 발생했습니다.</value>
+  </data>
+  <data name="Something went wrong." xml:space="preserve">
+    <value>문제가 발생했습니다.</value>
   </data>
   <data name="Song" xml:space="preserve">
     <value>노래</value>
@@ -10957,6 +10984,9 @@
   <data name="You can leave this page." xml:space="preserve">
     <value>이 페이지를 떠나도 됩니다.</value>
   </data>
+  <data name="You can leave — anything found is added to your scores." xml:space="preserve">
+    <value>페이지를 떠나도 됩니다 — 찾은 점수는 모두 기록에 추가됩니다.</value>
+  </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>연결된 어떤 방법으로도 계정에 로그인할 수 있습니다</value>
   </data>
@@ -11757,6 +11787,9 @@
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0}개 나감</value>
+  </data>
+  <data name="{0} left this month" xml:space="preserve">
+    <value>이번 달 {0}회 남음</value>
   </data>
   <data name="{0} less downtime" xml:space="preserve">
     <value>휴식 {0} 적음</value>

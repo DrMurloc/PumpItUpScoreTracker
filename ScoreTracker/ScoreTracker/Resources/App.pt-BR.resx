@@ -445,6 +445,9 @@
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>Um chart que você passou há anos e nunca revisitou conta como território novo.</value>
   </data>
+  <data name="A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate." xml:space="preserve">
+    <value>Uma conferência conta suas pontuações nível por nível. Uma varredura profunda lê cada página — é mais lenta, e é o único jeito de encontrar uma pontuação que você melhorou sem mudar de grau nem de plate.</value>
+  </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Já existe uma comunidade com esse nome.</value>
   </data>
@@ -762,6 +765,9 @@
   </data>
   <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
     <value>{0} charts adicionados, {1} ignorados que a sessão não podia aceitar.</value>
+  </data>
+  <data name="Added {0} scores PIUGAME had that were missing here." xml:space="preserve">
+    <value>{0} pontuações que o PIUGAME tinha e faltavam aqui foram adicionadas.</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>Comentários adicionais</value>
@@ -1791,6 +1797,9 @@
   </data>
   <data name="Checking roles" xml:space="preserve">
     <value>Verificando cargos</value>
+  </data>
+  <data name="Checking your scores" xml:space="preserve">
+    <value>Conferindo suas pontuações</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Escolha um cartão de jogo e aperte Importar de novo.</value>
@@ -3231,6 +3240,9 @@
   </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>Procure uma música — ex. Iolite Sky</value>
+  </data>
+  <data name="Find scores PIUGAME has that never made it here, and add them." xml:space="preserve">
+    <value>Encontre as pontuações que o PIUGAME tem e nunca chegaram aqui, e adicione-as.</value>
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Encontre seu próximo pass.</value>
@@ -5620,6 +5632,9 @@
   <data name="None given" xml:space="preserve">
     <value>Não informado</value>
   </data>
+  <data name="None left — next on {0}" xml:space="preserve">
+    <value>Nenhuma restante — a próxima em {0}</value>
+  </data>
   <data name="None of those plays could be added — the session is already full." xml:space="preserve">
     <value>Nenhuma dessas jogadas pôde ser adicionada: a sessão já está cheia.</value>
   </data>
@@ -5856,6 +5871,9 @@
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nada corresponde a estes filtros. Remova um para ver o resto.</value>
+  </data>
+  <data name="Nothing missing — all {0} scores match PIUGAME." xml:space="preserve">
+    <value>Nada faltando — todas as {0} pontuações batem com o PIUGAME.</value>
   </data>
   <data name="Nothing more can start." xml:space="preserve">
     <value>Nada mais pode começar.</value>
@@ -8023,6 +8041,9 @@
   <data name="Score Calculator" xml:space="preserve">
     <value>Calculadora de pontuação</value>
   </data>
+  <data name="Score check" xml:space="preserve">
+    <value>Conferência de pontuações</value>
+  </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Conclusão de pontuação</value>
   </data>
@@ -8232,6 +8253,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>Ver os quadros do jogador</value>
+  </data>
+  <data name="See them on your sessions page" xml:space="preserve">
+    <value>Veja-as na sua página de sessões</value>
   </data>
   <data name="See this session" xml:space="preserve">
     <value>Ver esta sessão</value>
@@ -8700,6 +8724,9 @@
   </data>
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>Algo deu errado ao carregar este widget.</value>
+  </data>
+  <data name="Something went wrong." xml:space="preserve">
+    <value>Algo deu errado.</value>
   </data>
   <data name="Song" xml:space="preserve">
     <value>Música</value>
@@ -10957,6 +10984,9 @@
   <data name="You can leave this page." xml:space="preserve">
     <value>Você pode sair desta página.</value>
   </data>
+  <data name="You can leave — anything found is added to your scores." xml:space="preserve">
+    <value>Você pode sair — tudo o que for encontrado é adicionado às suas pontuações.</value>
+  </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>Você pode entrar na sua conta com qualquer método conectado</value>
   </data>
@@ -11757,6 +11787,9 @@
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} saíram</value>
+  </data>
+  <data name="{0} left this month" xml:space="preserve">
+    <value>Restam {0} este mês</value>
   </data>
   <data name="{0} less downtime" xml:space="preserve">
     <value>{0} a menos de descanso</value>
