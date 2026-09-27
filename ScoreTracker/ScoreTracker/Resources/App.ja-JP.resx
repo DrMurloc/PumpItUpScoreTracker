@@ -445,6 +445,9 @@
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>何年も前にクリアしたきり触れていない譜面は、新しい挑戦として扱います。</value>
   </data>
+  <data name="A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate." xml:space="preserve">
+    <value>確認はスコアをレベルごとに数えます。詳細スキャンは代わりにすべてのページを読み込みます — 時間はかかりますが、ランクやプレートを変えずに更新したスコアを見つける唯一の方法です。</value>
+  </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>この名前のコミュニティは既に存在します。</value>
   </data>
@@ -763,6 +766,9 @@
   </data>
   <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
     <value>{0}件の譜面を追加し、セッションに入らない{1}件をスキップしました。</value>
+  </data>
+  <data name="Added {0} scores PIUGAME had that were missing here." xml:space="preserve">
+    <value>PIUGAMEにあってここになかったスコアを{0}件追加しました。</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>追加コメント</value>
@@ -1798,6 +1804,9 @@
   </data>
   <data name="Checking roles" xml:space="preserve">
     <value>ロールを確認中</value>
+  </data>
+  <data name="Checking your scores" xml:space="preserve">
+    <value>スコアを確認中</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>ゲームカードを選んでから、もう一度インポートを押してください。</value>
@@ -3245,6 +3254,9 @@
   </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>曲を検索 — 例：Iolite Sky</value>
+  </data>
+  <data name="Find scores PIUGAME has that never made it here, and add them." xml:space="preserve">
+    <value>PIUGAMEにあるのにここに届いていないスコアを見つけて追加します。</value>
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>次のパスを見つけよう。</value>
@@ -5647,6 +5659,9 @@
   <data name="None given" xml:space="preserve">
     <value>指定なし</value>
   </data>
+  <data name="None left — next on {0}" xml:space="preserve">
+    <value>残りなし — 次回は{0}</value>
+  </data>
   <data name="None of those plays could be added — the session is already full." xml:space="preserve">
     <value>どのプレイも追加できませんでした。セッションはもういっぱいです。</value>
   </data>
@@ -5884,6 +5899,9 @@
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>この絞り込みに該当するものはありません。いずれかを解除してください。</value>
+  </data>
+  <data name="Nothing missing — all {0} scores match PIUGAME." xml:space="preserve">
+    <value>不足はありません — {0}件のスコアすべてがPIUGAMEと一致しています。</value>
   </data>
   <data name="Nothing more can start." xml:space="preserve">
     <value>これ以上は始められません。</value>
@@ -8064,6 +8082,9 @@
   <data name="Score Calculator" xml:space="preserve">
     <value>スコア計算機</value>
   </data>
+  <data name="Score check" xml:space="preserve">
+    <value>スコア確認</value>
+  </data>
   <data name="Score Completion" xml:space="preserve">
     <value>スコア達成率</value>
   </data>
@@ -8276,6 +8297,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>このプレイヤーのボードを見る</value>
+  </data>
+  <data name="See them on your sessions page" xml:space="preserve">
+    <value>セッションページで確認する</value>
   </data>
   <data name="See this session" xml:space="preserve">
     <value>このセッションを見る</value>
@@ -8750,6 +8774,9 @@
   </data>
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>このウィジェットの読み込み中に問題が発生しました。</value>
+  </data>
+  <data name="Something went wrong." xml:space="preserve">
+    <value>問題が発生しました。</value>
   </data>
   <data name="Song" xml:space="preserve">
     <value>曲</value>
@@ -11019,6 +11046,9 @@
   <data name="You can leave this page." xml:space="preserve">
     <value>このページを離れても大丈夫です。</value>
   </data>
+  <data name="You can leave — anything found is added to your scores." xml:space="preserve">
+    <value>ページを離れても大丈夫です。見つかったスコアはすべて追加されます。</value>
+  </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>連携済みのどの方法でもアカウントにログインできます</value>
   </data>
@@ -11819,6 +11849,9 @@
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} 件が出た</value>
+  </data>
+  <data name="{0} left this month" xml:space="preserve">
+    <value>今月の残り {0} 回</value>
   </data>
   <data name="{0} less downtime" xml:space="preserve">
     <value>休憩 −{0}</value>

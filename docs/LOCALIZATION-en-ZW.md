@@ -878,3 +878,21 @@ through), `blogl` (a grade's floor), `mrglmr` (full), `plom` (same), `grabmrp` (
 | option / options | brolum | Number unmarked, like Tool/Tools. |
 | also | ugl | |
 | way (of the way through) | gorlub | |
+
+## The score check batch (2026-09-27)
+
+Coined for the Score check panel on the import page (*Import and check* / *Deep scan*). Reused as-is:
+`Mrglurg` (check, from *Checking roles* and *check back*), `Grrgl Murgblarg` (the existing *Deep scan*
+key), `Murpgrrgl` (added), `Glorg` (add), `Glurgro` (missing), `Bam` (nothing), `Rglmagl` (none),
+`Grorpglorg` (next), `Romagl` (match), `Murmrgl` (leave), `uplarga` (improved), `mrglro` (has / had),
+`lurgo` (left), `mrglgralp` (month), `Grubmarg` (find), `molarg` (never), `urgbam` (here), `Gromurp`
+(your), `orgab` (sessions), `plglur` (page), `rorgmo` (reads), `ugmorgru` (instead), `gorlub` (way) and
+the three words of the existing *Something went wrong loading this widget.*
+
+| English | en-ZW | Notes |
+|---|---|---|
+| anything | argrog | Beside `algrog` (everything). |
+| found | grubmarggro | `Grubmarg` (find) + the `gro` participle ending. |
+| made (made it here) | mrgurp | Not `murpgro`, which two existing values already spend. |
+| slower | grrolurg | One extra `r` on the existing *Slow* (`Grolurg`) — the comparative device. |
+| without | momag | `mo` (negation) + `mag` (with). |

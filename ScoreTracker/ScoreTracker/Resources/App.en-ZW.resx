@@ -445,6 +445,9 @@
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>GRO murgl blub rglplgl murmblgrl gl ro glargl murggrglplgl mrargl lurg grgl murpmurgro.</value>
   </data>
+  <data name="A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate." xml:space="preserve">
+    <value>A mrglurg grorpgl gromurp mgrlgmrg grorpmurm bu grorpmurm. A grrgl murgblarg rorgmo olga plglur ugmorgru — grrolurg, ap gro ub gorlub ro grubmarg a mrglrgl blub uplarga momag grolurg rorgl ol murp.</value>
+  </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>GRO plglmurgblub glgrgl grglmrp mrg glglgrrgl glmrp.</value>
   </data>
@@ -763,6 +766,9 @@
   </data>
   <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
     <value>Glorg {0} murgl, rorolurg {1} mrp grrglgrrglgl plglurg bo margro.</value>
+  </data>
+  <data name="Added {0} scores PIUGAME had that were missing here." xml:space="preserve">
+    <value>Murpgrrgl {0} mgrlgmrg PIUGAME mrglro argo arg glurgro urgbam.</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>Rgllurgblub Gromorggro</value>
@@ -1798,6 +1804,9 @@
   </data>
   <data name="Checking roles" xml:space="preserve">
     <value>Mrglurg roglubrgl</value>
+  </data>
+  <data name="Checking your scores" xml:space="preserve">
+    <value>Mrglurg gromurp mgrlgmrg</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Arglro gro glorgargl mrpmorg, mrplurg urgglorg Glorggl morgro.</value>
@@ -3245,6 +3254,9 @@
   </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>Blubgl gro mrgl — blub.lurg. Iolite Sky</value>
+  </data>
+  <data name="Find scores PIUGAME has that never made it here, and add them." xml:space="preserve">
+    <value>Grubmarg mgrlgmrg PIUGAME mrglro argo molarg mrgurp ug urgbam, ap glorg grglblarg.</value>
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Blubgl gromurp grorpglorg maglplgl.</value>
@@ -5647,6 +5659,9 @@
   <data name="None given" xml:space="preserve">
     <value>Alla</value>
   </data>
+  <data name="None left — next on {0}" xml:space="preserve">
+    <value>Rglmagl lurgo — grorpglorg ap {0}</value>
+  </data>
   <data name="None of those plays could be added — the session is already full." xml:space="preserve">
     <value>Mo mrgl blu lurg gab grolp — blu orgab gab ulbog.</value>
   </data>
@@ -5884,6 +5899,9 @@
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Blarggllurg morgmaglblgrl blgrlmrp glrglmurg. Mrpmurg argl grgl blarg mrp morggl.</value>
+  </data>
+  <data name="Nothing missing — all {0} scores match PIUGAME." xml:space="preserve">
+    <value>Bam glurgro — ulbog {0} mgrlgmrg romagl PIUGAME.</value>
   </data>
   <data name="Nothing more can start." xml:space="preserve">
     <value>Mua brglgro murgl.</value>
@@ -8064,6 +8082,9 @@
   <data name="Score Calculator" xml:space="preserve">
     <value>Mrglrgl Grglmurgmorg</value>
   </data>
+  <data name="Score check" xml:space="preserve">
+    <value>Mrglrgl mrglurg</value>
+  </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Mrglrgl Grglgrglblub</value>
   </data>
@@ -8276,6 +8297,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>Blarg grglblarg grrglplgl</value>
+  </data>
+  <data name="See them on your sessions page" xml:space="preserve">
+    <value>Romorg grglblarg ur gromurp orgab plglur</value>
   </data>
   <data name="See this session" xml:space="preserve">
     <value>Blomorg blu Orgab</value>
@@ -8750,6 +8774,9 @@
   </data>
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>Mrglmrglblub mrprgl rogrgl romorgargl grglmrp murggrrgl.</value>
+  </data>
+  <data name="Something went wrong." xml:space="preserve">
+    <value>Mrglmrglblub mrprgl rogrgl.</value>
   </data>
   <data name="Song" xml:space="preserve">
     <value>Mrgl</value>
@@ -11019,6 +11046,9 @@
   <data name="You can leave this page." xml:space="preserve">
     <value>Blub grorp murmrgl grglmrp urggrgl.</value>
   </data>
+  <data name="You can leave — anything found is added to your scores." xml:space="preserve">
+    <value>Blub gab murmrgl — argrog grubmarggro arg murpgrrgl ro gromurp mgrlgmrg.</value>
+  </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>Blub grorp mrpmurp mrp grgl gromurp grgl glgrgl ro urgblgrlplgl glorgmagl</value>
   </data>
@@ -11819,6 +11849,9 @@
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} rolurg</value>
+  </data>
+  <data name="{0} left this month" xml:space="preserve">
+    <value>{0} lurgo blu mrglgralp</value>
   </data>
   <data name="{0} less downtime" xml:space="preserve">
     <value>{0} mgl morgglgrgl</value>

@@ -31,7 +31,7 @@
         {
             <MudText Typo="Typo.body1" Class="mt-1">
                 @(_finished.Added > 0
-                    ? L["Added {0} scores PIUGAME had that we didn't.", _finished.Added]
+                    ? L["Added {0} scores PIUGAME had that were missing here.", _finished.Added]
                     : L["Nothing missing — all {0} scores match PIUGAME.", _finished.Checked.ToString("N0")])
             </MudText>
             @if (_finished.Added > 0)
@@ -134,9 +134,9 @@
         _running = false;
         Snackbar.Add(result.Outcome switch
         {
-            ImportCheckStartOutcome.InvalidCredentials => L["Invalid Login Information"],
-            ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
-            ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
+            ImportCheckStartOutcome.InvalidCredentials => L["Invalid Username/Password"],
+            ImportCheckStartOutcome.CredentialUnlockFailed => L["Couldn't unlock your saved password. Enter it to import."],
+            ImportCheckStartOutcome.AlreadyRunning => L["An import is already running"],
             ImportCheckStartOutcome.NoDeepScansLeft => L["None left — next on {0}", NextUnlock],
             _ => L["Something went wrong."]
         }, Severity.Warning);
