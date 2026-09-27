@@ -14,6 +14,7 @@ using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Web.Configuration;
+using ScoreTracker.Web.Services;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 
 namespace ScoreTracker.Web.Pages;
@@ -69,6 +70,17 @@ public sealed class FrontDoorModel : PageModel
         ? exp > _clock.Now ? exp - _clock.Now : TimeSpan.Zero
         : null;
 
+    /// <summary>
+    ///     The page that sent the visitor here to sign in, handed on to every sign-in button so they
+    ///     land back on it. Null when there was none, or when it was not a path on this site.
+    /// </summary>
+    public string? ReturnUrl { get; private set; }
+
+    public string SignInHref(string path)
+    {
+        return SignInReturnUrl.Append(path, ReturnUrl);
+    }
+
     /// <summary>"1M+"-style short form for the tier-list card's provenance tag.</summary>
     public string ScoreBasisShort => Ledger.TotalRecords >= 1_000_000
         ? $"{Ledger.TotalRecords / 1_000_000d:0.#}M+"
@@ -77,11 +89,12 @@ public sealed class FrontDoorModel : PageModel
     /// <summary>
     ///     The front door is for visitors who aren't signed in — it owns "/Welcome" and
     ///     "/Login", and the dashboard owns "/". A signed-in visitor who lands here has
-    ///     nothing to see, so they bounce home.
+    ///     nothing to see, so they go where they were headed, or home.
     /// </summary>
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
-        if (User.Identity?.IsAuthenticated == true) return Redirect("/");
+        ReturnUrl = SignInReturnUrl.Sanitize(Request.Query[SignInReturnUrl.QueryKey], Url);
+        if (User.Identity?.IsAuthenticated == true) return LocalRedirect(ReturnUrl ?? "/");
 
         // A fresh local database routes the developer to the populate harness.
         if (_devAuth.Value.Enabled &&

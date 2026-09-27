@@ -117,17 +117,17 @@
             <p class="new-here">@L["New here? Signing in creates your account automatically — no forms, no site password."]</p>
 
             <div class="provider-stack">
-                <a class="btn" href="/Login/Discord">
+                <a class="btn" href="@Model.SignInHref("/Login/Discord")">
                     <span class="badge badge-discord" aria-hidden="true">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.5" cy="12" rx="2" ry="2.3"/><ellipse cx="15.5" cy="12" rx="2" ry="2.3"/><path d="M4 17c1.5 1.6 4.2 2.5 8 2.5s6.5-.9 8-2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                     </span>
                     @L["Log In With", "Discord"]
                 </a>
-                <a class="btn" href="/Login/Google">
+                <a class="btn" href="@Model.SignInHref("/Login/Google")">
                     <span class="badge badge-google" aria-hidden="true">G</span>
                     @L["Log In With", "Google"]
                 </a>
-                <a class="btn" href="/PiuGameLogin">
+                <a class="btn" href="@Model.SignInHref("/PiuGameLogin")">
                     <span class="badge badge-piugame" aria-hidden="true">
                         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2 L14 8 H11.5 V14 H8.5 V8 H6 Z"/><rect x="6" y="15.5" width="8" height="2.5" rx="1"/></svg>
                     </span>

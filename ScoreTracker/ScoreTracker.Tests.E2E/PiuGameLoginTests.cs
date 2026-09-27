@@ -30,6 +30,39 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
         await _browser.DisposeAsync();
     }
 
+    /// <summary>
+    ///     A page that sends a logged-out visitor to sign in gets them back. Only an existing
+    ///     account can show it — a brand-new one is taken to setup first, wherever it came from.
+    /// </summary>
+    [Fact]
+    public async Task SigningInFromAPageReturnsTheVisitorToIt()
+    {
+        await PiuGameLoginFlow.LogInAsNewUserAsync(_page);
+
+        var signedOut = await _fixture.NewBrowserContextAsync();
+        try
+        {
+            var page = await signedOut.NewPageAsync();
+            await page.GotoAsync("/Login?returnUrl=%2FAccount");
+
+            var piuGame = page.Locator("a.btn[href^='/PiuGameLogin']");
+            Assert.Equal("/PiuGameLogin?returnUrl=%2FAccount", await piuGame.GetAttributeAsync("href"));
+            await piuGame.ClickAsync();
+
+            await page.Locator("input[name='username']")
+                .FillAsync(PiuGameLoginFlow.Username, new LocatorFillOptions { Timeout = 30_000 });
+            await page.Locator("input[name='password']").FillAsync(PiuGameLoginFlow.Password);
+            await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
+
+            await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/Account",
+                new PageWaitForURLOptions { Timeout = 60_000 });
+        }
+        finally
+        {
+            await signedOut.DisposeAsync();
+        }
+    }
+
     [Fact]
     public async Task FirstPiuGameLoginCreatesTheAccountAndSignsTheBrowserIn()
     {

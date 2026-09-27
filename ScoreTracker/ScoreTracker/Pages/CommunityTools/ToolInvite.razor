@@ -7,7 +7,6 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
-@using System.Web
 <PageTitle>@(_preview?.Name ?? L["Community Tools"].Value)</PageTitle>
 
 @* The one logged-out surface in the feature: a maker sends this link to people who may never have
@@ -136,8 +135,7 @@ else
     private bool _connected;
     private bool _showConnect;
 
-    private string SignInUrl =>
-        $"/Login?redirectUrl={HttpUtility.UrlEncode($"/CommunityTools/Invite/{Code}")}";
+    private string SignInUrl => SignInReturnUrl.Append("/Login", $"/CommunityTools/Invite/{Code}");
 
     // The connect dialog speaks in directory records, and an invite preview carries the same facts
     // it needs — reusing the one dialog keeps the PIUGame-session warning identical on both routes.

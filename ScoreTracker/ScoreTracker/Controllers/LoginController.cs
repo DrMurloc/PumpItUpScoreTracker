@@ -49,15 +49,35 @@ public sealed class LoginController : Controller
 
 
     [HttpGet("{providerName}")]
-    public async Task<IActionResult> SignIn([FromRoute] string providerName)
+    public async Task<IActionResult> SignIn([FromRoute] string providerName, [FromQuery] string? returnUrl)
     {
         if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
 
 
         if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
 
-        return Challenge(new AuthenticationProperties { RedirectUri = $"/Login/{providerName}/Callback" },
-            providerName);
+        return Challenge(WithReturnUrl(new AuthenticationProperties
+        {
+            RedirectUri = $"/Login/{providerName}/Callback"
+        }, returnUrl), providerName);
+    }
+
+    /// <summary>
+    ///     Carries the return address through the provider round trip in the properties the
+    ///     callback reads back. Dropped when it is not a path on this site.
+    /// </summary>
+    private AuthenticationProperties WithReturnUrl(AuthenticationProperties properties, string? returnUrl)
+    {
+        var back = SignInReturnUrl.Sanitize(returnUrl, Url);
+        if (back is not null) properties.Items[SignInReturnUrl.QueryKey] = back;
+        return properties;
+    }
+
+    private string? ReturnUrlOf(AuthenticateResult result)
+    {
+        string? returnUrl = null;
+        result.Ticket?.Properties.Items.TryGetValue(SignInReturnUrl.QueryKey, out returnUrl);
+        return SignInReturnUrl.Sanitize(returnUrl, Url);
     }
 
     [HttpGet("{providerName}/Callback")]
@@ -69,8 +89,7 @@ public sealed class LoginController : Controller
 
         if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
 
-        var returnUrl = "";
-        authenticateResult.Ticket?.Properties.Items.TryGetValue("returnUrl", out returnUrl);
+        var returnUrl = ReturnUrlOf(authenticateResult);
 
         var principal = authenticateResult.Principal;
 
@@ -131,9 +150,8 @@ public sealed class LoginController : Controller
     public async Task<IActionResult> PiuGameLogin([FromForm] string? username, [FromForm] string? password,
         [FromForm] string? returnUrl)
     {
-        var backToForm = "/PiuGameLogin" + (string.IsNullOrWhiteSpace(returnUrl)
-            ? ""
-            : $"?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        returnUrl = SignInReturnUrl.Sanitize(returnUrl, Url);
+        var backToForm = SignInReturnUrl.Append("/PiuGameLogin", returnUrl);
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             return LocalRedirect(AppendError(backToForm, "Invalid"));
 
@@ -191,15 +209,17 @@ public sealed class LoginController : Controller
     }
 
     [HttpGet("{providerName}/Link")]
-    public async Task<IActionResult> LinkSignIn([FromRoute] string providerName)
+    public async Task<IActionResult> LinkSignIn([FromRoute] string providerName, [FromQuery] string? returnUrl)
     {
         if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
         if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
 
         if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
 
-        return Challenge(new AuthenticationProperties { RedirectUri = $"/Login/{providerName}/Link/Callback" },
-            providerName);
+        return Challenge(WithReturnUrl(new AuthenticationProperties
+        {
+            RedirectUri = $"/Login/{providerName}/Link/Callback"
+        }, returnUrl), providerName);
     }
 
     [HttpGet("{providerName}/Link/Callback")]
@@ -213,6 +233,7 @@ public sealed class LoginController : Controller
         if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
 
         var id = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+        var returnUrl = ReturnUrlOf(authenticateResult);
 
         await HttpContext.SignOutAsync("ExternalAuthentication");
 
@@ -239,7 +260,9 @@ public sealed class LoginController : Controller
                 $"/Account?linkResult=Conflict&linkProvider={providerName}&mergeWith={owner.Id}");
         }
 
-        return LocalRedirect($"/Account?linkResult={result}&linkProvider={providerName}");
+        // A page that asked for the link shows the linked account itself; without one, the Account
+        // page reports the result.
+        return LocalRedirect(returnUrl ?? $"/Account?linkResult={result}&linkProvider={providerName}");
     }
 
     // Verify mode: completes a provider's flow to prove control of whatever account owns that
