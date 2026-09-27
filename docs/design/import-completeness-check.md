@@ -378,10 +378,15 @@ One `ImportResult` row per press of Import, Import and check, or Deep scan.
   reason.
 - **Separate from `ScoreSession`**, which records what got *saved*: a session can span eight
   hours and several runs, an import is one attempt with one ending, and a failed one may have no
-  session at all. The FK points import → session so undo never reaches into this table. The
-  standard path's session moved up into its consumer to make that free; the check's stays in the
-  saga, because it is opened *after* the deep-scan slot gate and minting it earlier would leave
-  an empty session row every time a scan lost the race.
+  session at all. The FK points import → session so undo never reaches into this table. Both
+  paths open their session **in the consumer** and point the run at it **before the scrape**:
+  restart recovery finds a run only through its session, so a run cut off mid-scrape with no
+  session on it is never closed and its saved scores are never replayed
+  ([import-restart-recovery.md](import-restart-recovery.md) §3.1). The check's consumer takes the
+  deep-scan slot first, so a scan that loses the race for it still leaves no empty session row.
+  *Corrected 2026-09-26:* the check's session used to open inside the saga and reach the run only
+  when the whole run returned, which hid every restart mid-check — deep scans above all — from
+  recovery.
 - **`ScoreCount` is stamped by the run itself**, at close. It was originally read off the
   Ledger's `ScoreSession.ScoreCount` through the published `GetScoreSessionsQuery` — correct on
   paper, wrong in practice (a restart-recovered session has its counts set from the journal
@@ -420,7 +425,7 @@ the next page load to have the truth ([import-restart-recovery.md](import-restar
 ### Still open
 
 - The **spent-deep-scan bug**: `SpendDeepScanCommand` runs in the start handler, before the
-  publish, so a user who loses the site-wide slot race in `ExecuteImportCheckCommand` is charged
+  publish, so a user who loses the site-wide slot race in `RunImportCheckConsumer` is charged
   for a scan that never ran. Out of scope here; its own ticket.
 - **An unauthenticated page parses as "zero scores", not as an error.** `GetCards` returns an
   empty array when the profile boxes are missing, `OfficialSiteClient.GetRecordedScores` uses the
