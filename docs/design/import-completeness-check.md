@@ -9,9 +9,11 @@ by key-fallback and the locale-parity ratchet stays green because no locale carr
 > carries the `ImportKind`, and `RunOfficialImportConsumer` runs every kind: pass 1 is the ordinary walk and
 > save; pass 2 re-reads the levels the census says disagree (Check) or every best-score page (Deep scan)
 > into the same run, which then announces once ([import-restart-recovery.md](import-restart-recovery.md) §0).
-> `RunImportCheckCommand`, its consumer and `ExecuteImportCheckCommand` are gone; the start command, the
-> credits and the site-wide deep-scan slot are unchanged. Where the sections below say the check runs an
-> import and then its own step, those are now pass 1 and pass 2 of one run.
+> `RunImportCheckCommand`, its consumer, `ExecuteImportCheckCommand` and `SaveOfficialScoresCommand` are
+> gone, and what was `ImportCheckSaga` is now only its start handler (`StartImportCheckHandler`); the start
+> command, the credits and the site-wide deep-scan slot are unchanged. A deep scan that finds the slot taken
+> now ends in an error the panel can see, instead of a status that left it spinning. Where the sections
+> below say the check runs an import and then its own step, those are now pass 1 and pass 2 of one run.
 
 > **A check saves what it finds** (owner call, 2026-08-03). Nobody looks at a list of their own
 > scores from the official site and declines one, so anything a run recovers is written on the spot
@@ -298,9 +300,9 @@ with **no new project reference and no new cross-vertical port**. Nothing is add
 
 | Layer | Location | New types |
 |---|---|---|
-| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckStartResult`, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
+| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckStartResult`, `Events/ImportCheckCompletedEvent`; `Messages/RunOfficialImportCommand` carries the `ImportKind` |
 | Domain *(internal)* | `OfficialMirror/Domain` | `AccountCensus`/`CensusBucket`, `CensusBuckets`, `LocalCensusBuilder`, `CensusDiff`, `IOfficialSiteClient` additions |
-| Application *(internal)* | `OfficialMirror/Application` | `ImportCheckSaga`, `StartImportCheckHandler`, `RunImportCheckConsumer`, `ExecuteImportCheckCommand` |
+| Application *(internal)* | `OfficialMirror/Application` | `StartImportCheckHandler`; the second pass is the import body's own (`OfficialLeaderboardSaga.ReadDeeper`), run by `RunOfficialImportConsumer` |
 | Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus` and `GetBestScoresIn` |
 | Wiring *(public)* | `OfficialMirror/Wiring` | model-contribution row, DI, consumer registration |
 | Data | `ScoreTracker.Data` | `UserEntity.DeepScansRemaining` + `AddUserDeepScansRemaining`; `IUserRepository` gains the spend/read/reset trio |
@@ -369,10 +371,9 @@ own dependency fault rate that day was the *lowest* of the six.
 
 One `ImportResult` row per press of Import, Import and check, or Deep scan.
 
-- **Opened at the consumer, not in the import body.** `RunOfficialImportConsumer` and
-  `RunImportCheckConsumer` sit one level above where the three paths diverge. The check *runs*
-  the standard import inside itself, so a row minted in the body would give every check two —
-  the same trap the session table hit and solved by passing an id down.
+- **Opened at the consumer, not in the import body.** `RunOfficialImportConsumer` runs all three
+  kinds and opens the row, then the session, before the body starts — so a run that dies on its
+  first piugame call still has a row, and the row can point at its session from the start.
 - **`Kind`** (`Standard` · `Check` · `DeepScan`) because the three cost the official site wildly
   different amounts; "deep scans fail" and "everything fails" must be countable apart.
 - **`Outcome`** is a closed vocabulary and never exception text: `Completed` · `PiuGameError` ·
@@ -429,7 +430,7 @@ the next page load to have the truth ([import-restart-recovery.md](import-restar
 ### Still open
 
 - The **spent-deep-scan bug**: `SpendDeepScanCommand` runs in the start handler, before the
-  publish, so a user who loses the site-wide slot race in `ExecuteImportCheckCommand` is charged
+  publish, so a user who loses the site-wide slot race in `RunOfficialImportConsumer` is charged
   for a scan that never ran. Out of scope here; its own ticket.
 - **An unauthenticated page parses as "zero scores", not as an error.** `GetCards` returns an
   empty array when the profile boxes are missing, `OfficialSiteClient.GetRecordedScores` uses the

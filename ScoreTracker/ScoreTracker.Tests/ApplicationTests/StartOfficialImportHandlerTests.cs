@@ -51,7 +51,8 @@ public sealed class StartOfficialImportHandlerTests
 
         Assert.Equal(ImportStartOutcome.Started, result.Outcome);
         bus.Verify(b => b.Publish(It.Is<RunOfficialImportCommand>(m =>
-                m.UserId == userId && m.Mix == MixEnum.Phoenix && m.Sid.Reveal() == "sid123" && m.CardId == "card1"),
+                m.UserId == userId && m.Mix == MixEnum.Phoenix && m.Sid.Reveal() == "sid123" && m.CardId == "card1" &&
+                m.Kind == ImportKind.Standard),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

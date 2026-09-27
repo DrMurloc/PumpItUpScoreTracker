@@ -14,10 +14,9 @@ using ScoreTracker.ScoreLedger.Contracts.Commands;
 
 namespace ScoreTracker.OfficialMirror.Application;
 
-// Runs the import off the request circuit, and is the only place that learns how the run ended.
-// Sits one level above where the three import paths diverge, which is why the ImportResult row
-// is opened here rather than inside the import body: the completeness check RUNS that body, so a
-// row minted down there would give every check two.
+// Runs every background import off the request circuit — the Import button, Import and check, and
+// the deep scan are one run at three depths — and is the only place that learns how the run ended:
+// one press, one ImportResult row, one session.
 internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCommand>
 {
     private readonly ICurrentUserAccessor _currentUser;
@@ -42,14 +41,20 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
     public async Task Consume(ConsumeContext<RunOfficialImportCommand> context)
     {
         var message = context.Message;
-        var resultId = await _results.Open(message.UserId, message.Mix, ImportKind.Standard, message.CardId,
-            _dateTime.Now, context.CancellationToken);
-
+        Guid? resultId = null;
         var outcome = ImportOutcome.Completed;
         var reportIt = true;
+        var deepScanSlot = false;
         int? saved = null;
         try
         {
+            // Inside the try, so a database that refuses the row still reaches the finally and hands
+            // the player's slot back. The kind is recorded because the three cost wildly different
+            // amounts of the official site — a deep scan walks every best-score page — so "deep scans
+            // fail" and "everything fails" have to be countable apart.
+            resultId = await _results.Open(message.UserId, message.Mix, message.Kind, message.CardId,
+                _dateTime.Now, context.CancellationToken);
+
             // A bus consumer has no HttpContext, so establish the job's user for this scope; the
             // import's inner handlers (UI settings, game-profile writes) then resolve it as usual.
             // SetScopedUser (not SetCurrentUser) so we never issue a cookie — a request context can
@@ -57,19 +62,32 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
             var user = await _mediator.Send(new GetUserByIdQuery(message.UserId), context.CancellationToken);
             if (user != null) _currentUser.SetScopedUser(user);
 
-            // Opened here rather than inside the import body so this run can point at it. The
-            // check path already worked this way; the body takes a session when handed one and
-            // mints its own otherwise, so the synchronous API path is unaffected.
+            // Deep scans take a site-wide slot as well as the player's own, before the session opens,
+            // so one that waits leaves no empty session row in the player's list. The refusal is an
+            // error rather than a status: a status leaves the check panel spinning with nothing left
+            // to stop it.
+            if (message.Kind == ImportKind.DeepScan)
+            {
+                deepScanSlot = _guard.TryBeginDeepScan();
+                if (!deepScanSlot)
+                {
+                    saved = 0;
+                    await _mediator.Publish(new ImportStatusErrorEvent(message.UserId,
+                            "Another deep scan is running — try again in a few minutes", message.Mix),
+                        context.CancellationToken);
+                    return;
+                }
+            }
+
+            // Opened here rather than inside the import body so this run can point at it before the
+            // scrape starts.
             var sessionId = await _mediator.Send(
                 new BeginScoreSessionCommand(message.UserId, message.Mix, ScoreJournalEntry.OfficialImportSource,
                     message.ExpectedGameTag, message.CardId), context.CancellationToken);
-            await _results.AttachSession(resultId, sessionId, context.CancellationToken);
+            await _results.AttachSession(resultId.Value, sessionId, context.CancellationToken);
 
-            // The run's own count, not the Ledger's: ScoreSession.ScoreCount is written when the
-            // score batch DRAINS, on a ~2 minute in-memory debounce, so an early look or a restart
-            // inside that window leaves it at zero forever while the journal holds the rows.
             saved = await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid,
-                message.CardId, message.ExpectedGameTag, message.IncludeBroken, sessionId),
+                    message.CardId, message.ExpectedGameTag, message.IncludeBroken, sessionId, message.Kind),
                 context.CancellationToken);
         }
         catch (InvalidCredentialException)
@@ -87,11 +105,12 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
                     "No game profile is associated with this account yet.", message.Mix),
                 context.CancellationToken);
         }
-        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        catch (Exception) when (context.CancellationToken.IsCancellationRequested)
         {
-            // The process is going away, not a fault. The row is deliberately left unfinished:
-            // that IS the "never reported back" state, and claiming an outcome here would erase
-            // the one signal that says a deploy landed mid-import.
+            // The process is going away, not a fault — whatever shape the cancellation surfaced in (a
+            // cancelled SQL command is not an OperationCanceledException). The row is deliberately
+            // left unfinished: that IS the "never reported back" state, and claiming an outcome here
+            // would erase the one signal that says a deploy landed mid-import.
             reportIt = false;
         }
         catch (Exception exception)
@@ -102,16 +121,19 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
             // broad on purpose; the classifier decides whose fault it was and the log keeps the
             // detail that must never reach a player's screen.
             outcome = ImportOutcomeClassifier.For(exception);
-            _logger.LogError(exception, "Import failed for {UserId} on {Mix} ({Outcome})", message.UserId,
-                message.Mix, outcome);
+            _logger.LogError(exception, "Import failed for {UserId} on {Mix} ({Kind}, {Outcome})", message.UserId,
+                message.Mix, message.Kind, outcome);
             await _mediator.Publish(new ImportStatusErrorEvent(message.UserId, ImportFailureMessage.For(outcome),
                 message.Mix), context.CancellationToken);
         }
         finally
         {
-            // Free the slot the Start handler took, whatever the outcome — the user can import again.
+            // Free the slots the run took, whatever the outcome — the user can import again, and a
+            // scan that died mid-walk must not hold the site-wide slot until the process restarts.
+            if (deepScanSlot) _guard.EndDeepScan();
             _guard.End(message.UserId);
-            if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, saved, CancellationToken.None);
+            if (reportIt && resultId is { } id)
+                await _results.Close(id, _dateTime.Now, outcome, saved, CancellationToken.None);
         }
     }
 }
