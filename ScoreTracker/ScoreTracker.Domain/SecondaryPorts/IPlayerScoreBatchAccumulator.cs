@@ -48,6 +48,14 @@ public interface IPlayerScoreBatchAccumulator
     DateTime? GetFireAt(MixEnum mix, Guid userId);
 
     /// <summary>
+    /// Brings the (user, mix) batch's fire-at forward to <paramref name="dueAt"/>, so the next
+    /// drain announces it instead of waiting out the quiet window. Never pushes a deadline later.
+    /// Returns false when no batch is open. Nothing is taken: the batch stays where it is until a
+    /// drain takes it.
+    /// </summary>
+    bool MakeDue(MixEnum mix, Guid userId, DateTime dueAt);
+
+    /// <summary>
     /// Atomically removes and returns the (user, mix) pending batch, or null if no batch
     /// is active (e.g. another in-flight drain already took it).
     /// </summary>

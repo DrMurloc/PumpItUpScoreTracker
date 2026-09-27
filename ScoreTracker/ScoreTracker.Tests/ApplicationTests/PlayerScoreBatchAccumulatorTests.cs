@@ -215,4 +215,61 @@ public sealed class PlayerScoreBatchAccumulatorTests
 
         Assert.Equal(new[] { MixEnum.Phoenix }, taken.Select(t => t.Batch.Mix));
     }
+
+    [Fact]
+    public void AChartThatUpscoredAndThenPassedInOneBatchIsANewPass()
+    {
+        // A break raised to a higher break, then passed: without dropping the upscore the chart sat in
+        // both sets and was announced as an upscore.
+        var batcher = new PlayerScoreBatchAccumulator();
+        var chart = Guid.NewGuid();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, chart, false, 900000, Guid.NewGuid());
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, chart, true, null, Guid.NewGuid());
+
+        var batch = batcher.TakeBatch(MixEnum.Phoenix, UserId)!;
+
+        Assert.Equal(new[] { chart }, batch.NewChartIds);
+        Assert.Empty(batch.UpscoredChartIds);
+    }
+
+    [Fact]
+    public void AChartTypedInTwiceKeepsTheScoreItHadBeforeTheBatch()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        var chart = Guid.NewGuid();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, chart, false, 900000, Guid.NewGuid());
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, chart, false, 930000, Guid.NewGuid());
+
+        Assert.Equal(900000, batcher.TakeBatch(MixEnum.Phoenix, UserId)!.UpscoredChartIds[chart]);
+    }
+
+    [Fact]
+    public void MakingABatchDueBringsItsDeadlineForwardAndLeavesItInPlace()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime.AddMinutes(2), Guid.NewGuid(), true, null,
+            Guid.NewGuid());
+
+        Assert.True(batcher.MakeDue(MixEnum.Phoenix, UserId, Now.UtcDateTime));
+
+        Assert.Equal(Now.UtcDateTime, batcher.GetFireAt(MixEnum.Phoenix, UserId));
+        Assert.NotNull(batcher.TakeBatch(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void MakingABatchDueNeverPushesItsDeadlineLater()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, Guid.NewGuid(), true, null, Guid.NewGuid());
+
+        batcher.MakeDue(MixEnum.Phoenix, UserId, Now.UtcDateTime.AddMinutes(1));
+
+        Assert.Equal(Now.UtcDateTime, batcher.GetFireAt(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void ThereIsNothingToMakeDueWithoutAnOpenBatch()
+    {
+        Assert.False(new PlayerScoreBatchAccumulator().MakeDue(MixEnum.Phoenix, UserId, Now.UtcDateTime));
+    }
 }

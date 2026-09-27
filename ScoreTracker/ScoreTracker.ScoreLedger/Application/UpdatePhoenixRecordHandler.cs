@@ -31,11 +31,14 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IChartRepository charts,
         SeasonalBestWriter seasonalBests,
         ILogger<UpdatePhoenixRecordHandler> logger)
-    : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
+    : IRequestHandler<UpdatePhoenixBestAttemptCommand, ScoreSaveResult>,
+        IRequestHandler<AnnounceScoreChangesCommand>,
+        IRequestHandler<DrainScoreBatchCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
 {
-    public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
+    public async Task<ScoreSaveResult> Handle(UpdatePhoenixBestAttemptCommand request,
+        CancellationToken cancellationToken)
     {
         // A legacy mix stores a letter grade in BestAttempt, not a score in PhoenixRecord.
         // Accepting one here writes a real row into a store no legacy read path consults,
@@ -44,18 +47,20 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (request.Mix.UsesLegacyScoring())
             throw new WrongScoringModelException(request.Mix, "letter grade");
 
+        var nothing = new ScoreSaveResult(request.ChartId, ScoreSaveChange.None);
+
         // Every submission — no-ops included — extends the session envelope: activity
         // keeps the session alive even when nothing lands.
         var (sessionId, isNewSession) = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source,
             dateTimeOffset.Now, request.SessionId);
         // Recorded once, on the submission that minted it. Counts and the activity window
-        // follow at batch drain — an import posts thousands of scores and must not post
+        // follow at the announcement — an upload posts thousands of scores and must not post
         // thousands of updates.
         if (isNewSession)
             await sessions.Open(sessionId, user.User.Id, request.Mix, request.Source, null, null,
                 dateTimeOffset.Now, cancellationToken);
         // A break with nothing hit never enters the system, from any source.
-        if (BestAttemptPolicy.IsWalkOff(request.IsBroken, request.Score, request.Judgements)) return;
+        if (BestAttemptPolicy.IsWalkOff(request.IsBroken, request.Score, request.Judgements)) return nothing;
 
         // A stage break is never a best, whatever the opt-in said — but it is a play, and a dated
         // one is journaled as such: it is what "attempts before this clear" counts. Undated ones
@@ -88,7 +93,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                     await SessionStageBreaks.Resolve(journal, user.User.Id, request.Mix, sessionId,
                         new Dictionary<Guid, ChartFacts> { [request.ChartId] = breakFacts }, cancellationToken);
             }
-            return;
+            return nothing;
         }
 
         var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
@@ -99,14 +104,14 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         // may only ever raise a record. Without it the submission is authoritative and
         // overwrites: the manual routes, and the only way a personal best can decrease.
         if (request.KeepBestStats &&
-            !BestAttemptPolicy.Beats(existing, request.Score, plate, request.IsBroken)) return;
+            !BestAttemptPolicy.Beats(existing, request.Score, plate, request.IsBroken)) return nothing;
 
         // Progress only: a submission that leaves the best attempt unchanged is noise
         // (the import deliberately re-scrapes past its cutoff, so repeats are expected),
         // not history — it must not touch the record, the journal, or RecordedDate.
         var recordChanged = existing == null || request.Score != existing.Score || plate != existing.Plate ||
                             request.IsBroken != existing.IsBroken;
-        if (!recordChanged) return;
+        if (!recordChanged) return nothing;
 
         // Judgements decompose one specific play's score. Reaching this line means the result
         // changed, so a different play produced it — the previous play's counts describe the
@@ -147,14 +152,19 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         cache.Remove(LedgerCacheKeys.LimboBoard(request.Mix, request.ChartId));
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
-        if (!isNewScore && !isUpscore) return;
-        // A sitting announces itself when it closes; the batch would announce each play on its own.
-        if (request.DeferAnnouncement) return;
+        if (!isNewScore && !isUpscore) return nothing;
+        PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
+        // A new pass wins over an upscore on the same chart, the rule every fold applies.
+        var result = isNewScore
+            ? new ScoreSaveResult(request.ChartId, ScoreSaveChange.NewPass)
+            : new ScoreSaveResult(request.ChartId, ScoreSaveChange.Upscore, (int)upscoredFrom!.Value);
+        // The caller announces: a sitting when it closes, an import once its last score is saved.
+        // The batch would announce each of their scores on its own schedule.
+        if (request.DeferAnnouncement) return result;
 
-        // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
+        // Batch up typed scores so a burst is one announcement. AddToBatch atomically creates-or-extends
         // the (user, mix) batch; only schedule a drain when this call created the batch.
         var fireAt = dateTimeOffset.Now.UtcDateTime + ScoreBatchPolicy.HoldWindow;
-        PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
         if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom,
                 sessionId))
         {
@@ -162,9 +172,51 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 new TryFireScoreCommand(user.User.Id, request.Mix),
                 cancellationToken);
         }
+
+        return result;
     }
 
-    public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
+    /// <summary>
+    ///     An official import's one announcement (docs/design/import-restart-recovery.md §0): the saves it
+    ///     made, folded, with any typed-entry batch the player has open taken into the same announcement —
+    ///     a score typed in while the run was saving would otherwise capture beside it, each capture
+    ///     reading the other's charts as already held, and a title both crossed would be announced twice.
+    ///     That batch's own scheduled drain then finds nothing. The import's session wins, as the most
+    ///     recent submission always has.
+    /// </summary>
+    public async Task Handle(AnnounceScoreChangesCommand request, CancellationToken cancellationToken)
+    {
+        var fold = new ScoreChangeFold();
+        if (batches.TakeBatch(request.Mix, request.UserId) is { } open) fold.Add(open);
+        foreach (var save in request.Saves) fold.Add(save);
+
+        if (fold.IsEmpty)
+        {
+            // Nothing to capture, so nothing will ever stamp it — and a replay would only find the same.
+            await sessions.MarkProcessed(request.SessionId, dateTimeOffset.Now, cancellationToken);
+            // A run that changed no score still reports the account's titles: badges from events and
+            // play counts are earned without a new best, and with no snapshot card to ride they get
+            // their own.
+            if (request.TitlesFound is { Count: > 0 } titles)
+                await bus.Publish(new TitlesDetectedEvent(request.UserId, titles, request.Mix, request.SessionId),
+                    cancellationToken);
+            return;
+        }
+
+        await PublishScoreEvents(request.UserId, fold.ToBatch(request.Mix, request.SessionId), cancellationToken,
+            request.TitlesFound);
+    }
+
+    /// <summary>
+    ///     A CSV upload that has saved its last row: its batch is due now. Only the deadline moves and
+    ///     the drain goes to the bus — the batch stays in the accumulator until the drain takes it, so
+    ///     if this never lands the timer already scheduled for it still announces it.
+    /// </summary>
+    public async Task Handle(DrainScoreBatchCommand request, CancellationToken cancellationToken)
+    {
+        if (!batches.MakeDue(request.Mix, request.UserId, dateTimeOffset.Now.UtcDateTime)) return;
+        await bus.Publish(new TryFireScoreCommand(request.UserId, request.Mix), cancellationToken);
+    }
 
     public sealed record TryFireScoreCommand(Guid UserId, MixEnum Mix);
 
@@ -191,7 +243,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     // Publishes the fat PlayerScoresUpdatedEvent contract event (C11/C22).
 
     private async Task PublishScoreEvents(Guid userId, PendingScoreBatch batch,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IReadOnlyList<string>? titlesFound = null)
     {
         var involved = batch.NewChartIds.Concat(batch.UpscoredChartIds.Keys).ToHashSet();
         var bests = (await records.GetRecordedScores(batch.Mix, userId, cancellationToken) ?? [])
@@ -205,7 +257,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
             await sessions.Touch(sessionId, dateTimeOffset.Now, batch.NewChartIds.Length,
                 batch.UpscoredChartIds.Count, cancellationToken);
         await bus.Publish(
-            PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
+            PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId,
+                titlesFound: titlesFound),
             cancellationToken);
     }
 

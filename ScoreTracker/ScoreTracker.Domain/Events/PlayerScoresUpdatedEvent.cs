@@ -13,7 +13,10 @@ namespace ScoreTracker.Domain.Events;
 ///     Session Batcher's play-session / import-run id, null on old payloads and on
 ///     batches that predate session capture. Announce is additive too: false only for a
 ///     sitting closed more than a day after its last play, whose Discord card is skipped
-///     while every other consumer runs as usual.
+///     while every other consumer runs as usual. TitlesFound is additive on the same precedent:
+///     the titles piugame showed on the account, carried only by an official import's
+///     announcement so the title step can mint the badges no score can compute; null on every
+///     other event. It is not part of the partner webhook body.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PlayerScoresUpdatedEvent(
@@ -24,15 +27,17 @@ public sealed record PlayerScoresUpdatedEvent(
     MixEnum Mix,
     IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes,
     Guid? SessionId = null,
-    bool Announce = true)
+    bool Announce = true,
+    IReadOnlyList<string>? TitlesFound = null)
 {
     public const int CurrentSchemaVersion = 1;
 
     public static PlayerScoresUpdatedEvent Create(DateTimeOffset occurredAt, Guid userId, MixEnum mix,
-        IReadOnlyList<ScoreChange> changes, Guid? sessionId = null, bool announce = true)
+        IReadOnlyList<ScoreChange> changes, Guid? sessionId = null, bool announce = true,
+        IReadOnlyList<string>? titlesFound = null)
     {
         return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, mix, changes,
-            sessionId, announce);
+            sessionId, announce, titlesFound);
     }
 
     [ExcludeFromCodeCoverage]

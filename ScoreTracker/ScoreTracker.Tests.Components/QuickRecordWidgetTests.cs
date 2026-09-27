@@ -13,6 +13,7 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.HomePage.Contracts;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -52,10 +53,8 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
             .ReturnsAsync(new[] { _chart });
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecordedPhoenixScore?)null);
-        // UpdatePhoenixBestAttemptCommand : IRequest (no response) → the non-generic
-        // Task Send(IRequest, …) overload, so Returns(Task.CompletedTask), not ReturnsAsync.
         _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(default(ScoreSaveResult));
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartCatalogCache>();
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);

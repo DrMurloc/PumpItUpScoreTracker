@@ -1,6 +1,7 @@
 ﻿using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -175,7 +176,7 @@ public sealed class OfficialLeaderboardSagaTests
         var saga = BuildImportSaga(f);
         var sessionIds = new List<Guid?>();
         f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest, CancellationToken>((cmd, _) =>
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
                 sessionIds.Add(((UpdatePhoenixBestAttemptCommand)cmd).SessionId));
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
@@ -212,7 +213,7 @@ public sealed class OfficialLeaderboardSagaTests
         var saga = BuildImportSaga(f);
         Guid? scoreSession = null;
         f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest, CancellationToken>((cmd, _) =>
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
                 scoreSession = ((UpdatePhoenixBestAttemptCommand)cmd).SessionId);
         Guid? titleSession = null;
         f.Bus.Setup(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()))
