@@ -681,9 +681,10 @@ size now comes from the read itself (`GetRecentSessionsQuery.MaxPageSize`).
 1. **Plays keep their own dates.** An old-dated play still lists inside its import's session with
    the site's date, and still pulls that session's printed start, and with it its duration, back to
    that date, as it always did for a single import. Grouping ignores it.
-2. **Only recorded imports group.** Sessions from before 2026-08-01, CSV uploads and API requests
-   show one per stored session, as before. A RISE night groups once its sittings record rows
-   ([rise.md](rise.md) §8.0).
+2. **Only recorded imports group.** Sessions from before 2026-08-01, API requests, and CSV uploads
+   from before they saved as manual entries ([delete-my-data.md](delete-my-data.md) §4) show one per
+   stored session, as before. A CSV upload since then groups like any manual entry. A RISE night
+   groups once its sittings record rows ([rise.md](rise.md) §8.0).
 3. **Nothing about the fold is stored.** It is recomputed from every key the player has on each
    read, so a change to the rule redraws the sessions it covers.
 4. **One stored session is never split.** A single import holding two nights, because the player

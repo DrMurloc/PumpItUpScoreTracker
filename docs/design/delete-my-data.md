@@ -143,6 +143,14 @@ writes on the import path. Insert on session creation; update `LastActivityAt` a
 batch drain, which is already a checkpoint every two minutes. The accumulator stays the source of
 session identity — the table records what it decided.
 
+**A CSV upload is a manual entry with its own source** (owner, 2026-09-26: *"treat CSVs as manual
+uploads but with a different source. we really shouldn't overengineer it. they're rare."*). It sends
+no session id, so the accumulator opens and extends its session exactly as it does a manual entry's,
+keyed by the `csv` source: uploads within eight hours share one session, and Undo lists it as
+**CSV upload** (§6). Until then the upload page sent an id it made up itself, which the accumulator
+takes to mean the caller already opened that session, so no upload ever got a row and none could be
+undone. Those earlier uploads are not backfilled.
+
 **Reads.** The undo list queries this table directly. **The public Sessions page does not** — it
 keeps grouping the journal through `GetSessionGroups`, and that is deliberate. Nothing before this
 ships has a session row, so moving that page onto the table would erase every historical session
