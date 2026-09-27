@@ -187,43 +187,176 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task ImportPublishesDetectedTitlesFromAccountData()
+    public async Task AnImportAnnouncesOnceWithTheTitlesItFound()
     {
+        // The account's titles ride the run's one announcement; the Ledger decides whether that is a
+        // score event or, when nothing changed, the titles on their own. The import never publishes
+        // them itself.
         var f = ArrangeImport();
         var saga = BuildImportSaga(f);
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
-                e.UserId == ImportUserId &&
-                e.TitlesFound.Contains("Title A") && e.TitlesFound.Contains("Title B") &&
-                e.Mix == MixEnum.Phoenix),
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix &&
+                c.TitlesFound!.Contains("Title A") && c.TitlesFound!.Contains("Title B")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Bus.Verify(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheAnnouncementCarriesWhatEverySaveChangedUnderTheRunsSession()
+    {
+        var chartA = new ChartBuilder().Build();
+        var chartB = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartA, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartB, 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var sentSessions = new List<Guid?>();
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
+                sentSessions.Add(((UpdatePhoenixBestAttemptCommand)cmd).SessionId))
+            .ReturnsAsync((IRequest<ScoreSaveResult> cmd, CancellationToken _) =>
+                new ScoreSaveResult(((UpdatePhoenixBestAttemptCommand)cmd).ChartId, ScoreSaveChange.NewPass));
+        AnnounceScoreChangesCommand? announced = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) => announced = (AnnounceScoreChangesCommand)cmd);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.NotNull(announced);
+        Assert.Equal(sentSessions[0], announced!.SessionId);
+        Assert.Equal(new[] { chartA.Id, chartB.Id }.OrderBy(id => id),
+            announced.Saves.Where(r => r.Change == ScoreSaveChange.NewPass).Select(r => r.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task EverySaveAnImportMakesIsLeftForTheRunToAnnounce()
+    {
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => !c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheRunAnnouncesBeforeItReportsThatChartsFinishedSaving()
+    {
+        // "Charts finished saving" is what the page and the nav pulse treat as done; by then the
+        // follow-up must already be on its way. It is sent once, by the run, carrying no scores.
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var order = new List<string>();
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("announce"));
+        f.Mediator.Setup(m => m.Publish(It.IsAny<ImportStatusUpdatedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<ImportStatusUpdatedEvent, CancellationToken>((e, _) =>
+                order.Add(e.Status == "Charts finished saving" ? "finished" : "status"));
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(new[] { "announce", "finished" }, order.Where(o => o != "status"));
+    }
+
+    [Fact]
+    public async Task AnImportThatFailsAfterSavingAnnouncesWhatItSavedOnceAndStillFails()
+    {
+        // The saved score is real and a later import will never bring it back (the record already
+        // matches), so it is announced before the failure is reported.
+        var chartA = new ChartBuilder().Build();
+        var chartB = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartA, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartB, 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        f.Mediator.SetupSequence(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreSaveResult(chartA.Id, ScoreSaveChange.NewPass))
+            .ThrowsAsync(new TimeoutException("sql"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
+
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.Saves.Count == 1 && c.Saves[0].ChartId == chartA.Id && c.TitlesFound!.Contains("Title A")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DetectedTitlesCarryTheRunSessionWhenScoresWereSaved()
+    public async Task AFailureAfterTheAnnouncementNeverAnnouncesASecondTime()
     {
-        // When the run saved scores, the detected titles ride that session's snapshot card —
-        // the event carries the same run id the scores were stamped with.
-        var chart = new ChartBuilder().Build();
         var f = ArrangeImport(
-            officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
             existingScores: Array.Empty<RecordedPhoenixScore>());
         var saga = BuildImportSaga(f);
-        Guid? scoreSession = null;
-        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
-                scoreSession = ((UpdatePhoenixBestAttemptCommand)cmd).SessionId);
-        Guid? titleSession = null;
-        f.Bus.Setup(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()))
-            .Callback<TitlesDetectedEvent, CancellationToken>((e, _) => titleSession = e.SessionId)
-            .Returns(Task.CompletedTask);
+        f.Mediator.Setup(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Status == "Charts finished saving"),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("hub"));
 
-        await saga.Handle(ImportCommand(), CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
 
-        Assert.NotNull(titleSession);
-        Assert.Equal(scoreSession, titleSession);
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AShutdownMidImportLeavesTheAnnouncementToStartupRecovery()
+    {
+        // The token is cancelled: the process is going away, and the startup pass replays the whole
+        // session from the journal. Announcing here would race the shutdown.
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(new ChartBuilder().Build(), 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        using var shutdown = new CancellationTokenSource();
+        f.Mediator.SetupSequence(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreSaveResult(chart.Id, ScoreSaveChange.NewPass))
+            .Returns(() =>
+            {
+                shutdown.Cancel();
+                return Task.FromException<ScoreSaveResult>(new OperationCanceledException(shutdown.Token));
+            });
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => saga.Handle(ImportCommand(), shutdown.Token));
+
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task APageBookmarkFailureStillAnnouncesWhatTheRunSaved()
+    {
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        f.Mediator.Setup(m => m.Send(It.Is<SaveUserUiSettingCommand>(c => c.SettingName == "PreviousPageCount"),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
+
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -404,13 +537,13 @@ public sealed class OfficialLeaderboardSagaTests
                 c.Source == ScoreJournalEntry.OfficialImportSource),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // Status + titles events are Phoenix2-stamped end to end.
+        // Status and the announcement are Phoenix2-stamped end to end.
         f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Mix == MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Mix != MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.Never);
-        f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
-                e.UserId == ImportUserId && e.Mix == MixEnum.Phoenix2),
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

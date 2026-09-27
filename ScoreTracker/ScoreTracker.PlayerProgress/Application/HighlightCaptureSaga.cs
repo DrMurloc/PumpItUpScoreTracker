@@ -165,7 +165,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         try
         {
             var titles = await _mediator.Send(new TitleSaga.CaptureSessionTitles(e.UserId, e.Mix, e.SessionId,
-                e.Changes), context.CancellationToken);
+                e.Changes, e.TitlesFound), context.CancellationToken);
             milestones.AddRange(titles.Milestones);
             titleProgress = titles.Progress;
         }

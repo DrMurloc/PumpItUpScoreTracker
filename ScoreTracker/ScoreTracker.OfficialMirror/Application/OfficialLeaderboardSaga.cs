@@ -192,39 +192,77 @@ namespace ScoreTracker.OfficialMirror.Application
                     : null;
             }
 
-            var scrape = await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
-                cancellationToken);
-            var scores = scrape.Bests.ToArray();
-            // The plays that never became a record are history too — journaled before the
-            // bests, so a play arriving through both paths is one row that the best raises to
-            // IsBest rather than a second row racing it.
-            await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
-                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays, includeBroken),
-                cancellationToken);
-            var toSave = await SaveBests(userId, mix, importSessionId, scores, cancellationToken);
-            // Titles are announced last, now that we know whether this run saved any scores.
-            // With a score batch, they ride its session snapshot card (SessionId flows to the
-            // title path); with none, SessionId stays null and they get their own announcement.
-            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
-                    mix, toSave.Length > 0 ? importSessionId : null),
-                cancellationToken);
-
-            if (maxPages != null)
-                await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
+            // What every save changed, kept by the run itself: nothing waits in the two-minute batch, so
+            // this list is the only record of what the announcement has to say
+            // (docs/design/import-restart-recovery.md §0).
+            var saves = new List<ScoreSaveResult>();
+            var titles = accountData.Titles.Select(t => t.ToString()).ToArray();
+            int saved;
+            try
+            {
+                var scrape = await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
+                    cancellationToken);
+                // The plays that never became a record are history too — journaled before the
+                // bests, so a play arriving through both paths is one row that the best raises to
+                // IsBest rather than a second row racing it.
+                await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
+                    ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays, includeBroken),
+                    cancellationToken);
+                saved = await SaveBests(userId, mix, importSessionId, scrape.Bests.ToArray(), saves,
                     cancellationToken);
 
-            return toSave.Length;
+                if (maxPages != null)
+                    await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
+                        cancellationToken);
+            }
+            catch (Exception) when (saves.Count > 0 && !cancellationToken.IsCancellationRequested)
+            {
+                // What the run saved before it failed is real, and a later import will never bring it
+                // back — those records already match — so it is announced now. Only here or below,
+                // never both: nothing after the announcement can land in this catch. On shutdown the
+                // token is cancelled and the startup pass replays the whole session instead.
+                try
+                {
+                    await Announce(userId, mix, importSessionId, saves, titles, CancellationToken.None);
+                }
+                catch (Exception announceFailure)
+                {
+                    _logger.LogError(announceFailure,
+                        "Could not announce the scores a failed import saved for {UserId} on {Mix}", userId, mix);
+                }
+
+                throw;
+            }
+
+            await Announce(userId, mix, importSessionId, saves, titles, cancellationToken);
+            await _mediator.Publish(new ImportStatusUpdatedEvent(userId, "Charts finished saving",
+                Array.Empty<RecordedPhoenixScore>(), mix), cancellationToken);
+            return saved;
         }
 
         /// <summary>
-        ///     Saves whatever a scrape found that beats what we already hold, announcing progress
-        ///     as it goes. Shared by the import and by the completeness check's repair, so both
-        ///     obey the same rule: a scrape may only ever RAISE a record, and only by the one
-        ///     published policy — a second hand-written copy of that rule is what let plate
-        ///     improvements drag scores down (docs/design/score-truth-model.md).
+        ///     The run's one announcement: what its saves changed, and the titles piugame showed on the
+        ///     account. The Ledger decides whether that is a score event carrying the titles or, when no
+        ///     score changed, the titles on their own.
         /// </summary>
-        internal async Task<OfficialRecordedScore[]> SaveBests(Guid userId, MixEnum mix, Guid sessionId,
-            OfficialRecordedScore[] scores, CancellationToken cancellationToken)
+        private Task Announce(Guid userId, MixEnum mix, Guid sessionId, IReadOnlyList<ScoreSaveResult> saves,
+            IReadOnlyList<string> titles, CancellationToken cancellationToken)
+        {
+            return _mediator.Send(new AnnounceScoreChangesCommand(userId, mix, sessionId, saves, titles),
+                cancellationToken);
+        }
+
+        /// <summary>
+        ///     Saves whatever a scrape found that beats what we already hold, reporting progress as it
+        ///     goes and adding what each save changed to <paramref name="saves" /> the moment it returns,
+        ///     so a failure part-way still leaves the run holding every save that landed. Shared by the
+        ///     import and by the completeness check's repair, so both obey the same rule: a scrape may
+        ///     only ever RAISE a record, and only by the one published policy — a second hand-written
+        ///     copy of that rule is what let plate improvements drag scores down
+        ///     (docs/design/score-truth-model.md). Returns how many records it wrote.
+        /// </summary>
+        internal async Task<int> SaveBests(Guid userId, MixEnum mix, Guid sessionId,
+            OfficialRecordedScore[] scores, ICollection<ScoreSaveResult> saves, CancellationToken cancellationToken)
         {
             var existingScores =
                 (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken))
@@ -238,7 +276,7 @@ namespace ScoreTracker.OfficialMirror.Application
             var batch = new List<RecordedPhoenixScore>();
             foreach (var score in toSave)
             {
-                await _mediator.Send(
+                saves.Add(await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
                         KeepBestStats: true,
                         Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
@@ -248,8 +286,10 @@ namespace ScoreTracker.OfficialMirror.Application
                         // The import already knows: a chart in existingScores is one we held a
                         // record on, so this card raised it rather than being the first we ever
                         // saw. The seasonal counting rule turns on exactly that (D15).
-                        RaisedExistingRecord: existingScores.ContainsKey(score.Chart.Id)),
-                    cancellationToken);
+                        RaisedExistingRecord: existingScores.ContainsKey(score.Chart.Id),
+                        // The run announces once it has saved everything.
+                        DeferAnnouncement: true),
+                    cancellationToken));
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
                     score.RecordedAt ?? _dateTime.Now));
@@ -263,10 +303,15 @@ namespace ScoreTracker.OfficialMirror.Application
                 batch.Clear();
             }
 
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId, "Charts finished saving", batch.ToArray(), mix),
-                cancellationToken);
-            return toSave;
+            // The remainder rides a progress status of its own. "Charts finished saving" is the run's to
+            // send, once, after its announcement — a check saves in two passes and the page must not read
+            // the first as the end.
+            if (batch.Count > 0)
+                await _mediator.Publish(
+                    new ImportStatusUpdatedEvent(userId, $"Saving chart result {count} of {toSave.Length}",
+                        batch.ToArray(), mix),
+                    cancellationToken);
+            return toSave.Length;
         }
 
         /// <summary>
@@ -276,9 +321,14 @@ namespace ScoreTracker.OfficialMirror.Application
         /// </summary>
         public async Task<int> Handle(SaveOfficialScoresCommand request, CancellationToken cancellationToken)
         {
+            var saves = new List<ScoreSaveResult>();
             var saved = await SaveBests(request.UserId, request.Mix, request.SessionId,
-                request.Scores.ToArray(), cancellationToken);
-            return saved.Length;
+                request.Scores.ToArray(), saves, cancellationToken);
+            await Announce(request.UserId, request.Mix, request.SessionId, saves, Array.Empty<string>(),
+                cancellationToken);
+            await _mediator.Publish(new ImportStatusUpdatedEvent(request.UserId, "Charts finished saving",
+                Array.Empty<RecordedPhoenixScore>(), request.Mix), cancellationToken);
+            return saved;
         }
 
         /// <summary>
