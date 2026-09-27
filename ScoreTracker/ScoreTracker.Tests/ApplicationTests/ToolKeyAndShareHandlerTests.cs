@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -31,6 +31,9 @@ public sealed class ToolKeyAndShareHandlerTests
     private static readonly Guid ToolId = Guid.Parse("aaaaaaaa-1111-1111-1111-111111111111");
     private static readonly Guid MakerId = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
+    /// <summary>Whoever made a tool the signed-in player does not own.</summary>
+    private static readonly Guid OtherMakerId = Guid.Parse("cccccccc-3333-3333-3333-333333333333");
+
     /// <summary>
     ///     User.IsAdmin is computed from this id rather than stored, so an admin test has to be
     ///     this person — a bool on the constructor would be IsPublic, which is a different thing.
@@ -55,12 +58,36 @@ public sealed class ToolKeyAndShareHandlerTests
             MakerId, Name.From("DrMurloc"), true, null, new Uri("https://example.com/a.png"), null));
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Tool.Create(ToolId, MakerId, Name.From("Planner"), Now));
+        _tools.Setup(t => t.GetReadablePlayerIds(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Guid>());
+        MakersWithDiscord();
+    }
+
+    private ToolReach Reach()
+    {
+        return new ToolReach(_tools.Object, _users.Object);
+    }
+
+    /// <summary>Which makers have a Discord account linked; everyone else has none.</summary>
+    private void MakersWithDiscord(params Guid[] makers)
+    {
+        _users.Setup(u => u.GetExternalLogins(It.IsAny<IEnumerable<Guid>>(), ToolReach.DiscordProvider,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<Guid> ids, string _, CancellationToken _) =>
+                (IReadOnlyDictionary<Guid, string>)ids.Where(makers.Contains)
+                    .ToDictionary(id => id, id => $"discord-{id:N}"));
+    }
+
+    private void StrangersTool()
+    {
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Tool.Create(ToolId, OtherMakerId, Name.From("Planner"), Now));
     }
 
     private ToolKeySaga KeySaga()
     {
         return new ToolKeySaga(_keys.Object, _tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object, _activity.Object, _cache, NullLogger<ToolKeySaga>.Instance);
+            FakeDateTime.At(Now).Object, _activity.Object, _cache, NullLogger<ToolKeySaga>.Instance, Reach());
     }
 
     [Fact]
@@ -284,7 +311,8 @@ public sealed class ToolKeyAndShareHandlerTests
 
     private ToolAccessSaga AccessSaga()
     {
-        return new ToolAccessSaga(_tools.Object, _users.Object, _currentUser.Object, FakeDateTime.At(Now).Object);
+        return new ToolAccessSaga(_tools.Object, _users.Object, _currentUser.Object, FakeDateTime.At(Now).Object,
+            Reach());
     }
 
     // A player saying "not this one" means it whichever route the tool arrived by, so the block
@@ -370,7 +398,7 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
             FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
-            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object);
+            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object, Reach());
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register
@@ -470,12 +498,10 @@ public sealed class ToolKeyAndShareHandlerTests
     public async Task AClickOnAListedToolIncrementsTheHourlyTally()
     {
         var listed = Tool.Create(ToolId, MakerId, Name.From("Pumpout"), Now,
-            new Uri("https://github.com/errlena/pumpout"), "errlena", Now, ToolKind.ListingOnly);
-        listed.MarkRepositoryReachable(Now);
+            new Uri("https://github.com/errlena/pumpout"), agreedToRulesAt: Now, kind: ToolKind.ListingOnly);
         listed.Describe(Name.From("Pumpout"), "A chart database.",
             new Uri("https://pumpout.example"), new Uri("https://github.com/errlena/pumpout"));
-        listed.MarkRepositoryReachable(Now);
-        listed.RequestListing();
+        listed.RequestListing(makerHasDiscord: true);
         listed.Approve(Now);
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(listed);
 
@@ -499,7 +525,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private void ToolWithRepository(bool alreadyChecked)
     {
         var tool = Tool.Create(ToolId, MakerId, Name.From("Planner"), Now,
-            new Uri("https://github.com/errlena/planner"), "errlena", Now);
+            new Uri("https://github.com/errlena/planner"), agreedToRulesAt: Now);
         if (alreadyChecked) tool.MarkRepositoryReachable(Now);
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
     }
@@ -515,7 +541,7 @@ public sealed class ToolKeyAndShareHandlerTests
             .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None);
 
         Assert.True(result.Reachable);
-        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == Now && x.CanBeSharedWithOthers),
+        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == Now),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -533,7 +559,7 @@ public sealed class ToolKeyAndShareHandlerTests
 
         Assert.False(result.Reachable);
         Assert.Equal(404, result.StatusCode);
-        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == null && !x.CanBeSharedWithOthers),
+        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == null),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -546,32 +572,134 @@ public sealed class ToolKeyAndShareHandlerTests
         _repositories.Verify(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // The default tool in this fixture has no repository and no handle, and the current user is a
-    // stranger to it.
+    // The gate is on acquiring a second player: a stranger is refused while the maker has no Discord
+    // linked, and nothing is granted.
     [Fact]
-    public async Task AStrangerCannotConnectToAToolWithNoPublishedSource()
+    public async Task AStrangerCannotConnectUntilTheMakerLinksDiscord()
     {
-        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Tool.Create(ToolId, Guid.NewGuid(), Name.From("Planner"), Now));
+        StrangersTool();
 
-        await Assert.ThrowsAsync<ToolRepositoryRequiredException>(() => AccessSaga()
+        await Assert.ThrowsAsync<ToolDiscordRequiredException>(() => AccessSaga()
             .Handle(new ConnectToolCommand(ToolId), CancellationToken.None));
 
-        _tools.Verify(t => t.GrantShare(ToolId, MakerId, It.IsAny<ShareSource>(),
+        _tools.Verify(t => t.GrantShare(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ShareSource>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ConnectingGrantsADirectShare above is the other half of this: its tool has no repository
-    // either, and it passes because the connecting user is the maker. The gate is on acquiring a
-    // second player, not on the tool working at all.
+    // No source is asked for: the maker's linked Discord is the whole requirement. The tool in
+    // StrangersTool has no repository at all.
     [Fact]
-    public async Task AStrangerConnectsOnceTheSourceIsPublishedAndChecked()
+    public async Task AStrangerConnectsOnceTheMakerHasLinkedDiscord()
     {
-        ToolWithRepository(alreadyChecked: true);
+        StrangersTool();
+        MakersWithDiscord(OtherMakerId);
 
         await AccessSaga().Handle(new ConnectToolCommand(ToolId), CancellationToken.None);
 
         _tools.Verify(t => t.GrantShare(ToolId, MakerId, ShareSource.Direct, Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnInvitePreviewSaysWhetherTheToolCanTakePlayersYet()
+    {
+        var code = Guid.NewGuid();
+        StrangersTool();
+        _keys.Setup(k => k.ResolveToolByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)ToolId);
+
+        var before = await KeySaga().Handle(new GetToolInvitePreviewQuery(code), CancellationToken.None);
+        MakersWithDiscord(OtherMakerId);
+        var after = await KeySaga().Handle(new GetToolInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.False(before!.CanTakePlayers);
+        Assert.True(after!.CanTakePlayers);
+    }
+
+    // A listed tool whose maker has no Discord linked would refuse everyone who pressed Connect, so
+    // the directory leaves it out.
+    [Fact]
+    public async Task TheDirectoryListsOnlyToolsWhoseMakersCanBeReached()
+    {
+        var reachable = ListedTool(OtherMakerId, "Planner");
+        var unreachable = ListedTool(Guid.NewGuid(), "Digger");
+        _tools.Setup(t => t.GetToolsByVisibility(ToolVisibility.Public, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { reachable, unreachable });
+        MakersWithDiscord(OtherMakerId);
+
+        var directory = await AccessSaga().Handle(new GetPublicToolsQuery(), CancellationToken.None);
+
+        Assert.Equal(new[] { reachable.Id }, directory.Select(t => t.Id));
+    }
+
+    private static Tool ListedTool(Guid maker, string name)
+    {
+        var source = new Uri("https://github.com/errlena/tool");
+        var tool = Tool.Create(Guid.NewGuid(), maker, Name.From(name), Now, source, agreedToRulesAt: Now);
+        tool.Describe(Name.From(name), "A tool.", null, source);
+        tool.RequestListing(makerHasDiscord: true);
+        tool.Approve(Now);
+        return tool;
+    }
+
+    // The pool is only offered to a tool whose maker can be reached; its direct grants always are.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task TheApiReadsThePoolOnlyWhileTheMakerHasDiscordLinked(bool linked)
+    {
+        var direct = Guid.NewGuid();
+        var pooled = Guid.NewGuid();
+        _tools.Setup(t => t.GetOwnerId(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(OtherMakerId);
+        _tools.Setup(t => t.GetReadablePlayerIds(ToolId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { direct, pooled });
+        _tools.Setup(t => t.GetReadablePlayerIds(ToolId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { direct });
+        if (linked) MakersWithDiscord(OtherMakerId);
+
+        var readable = await AccessSaga().Handle(new GetToolReadablePlayersQuery(ToolId), CancellationToken.None);
+        var canReadPooled = await AccessSaga()
+            .Handle(new CanToolReadPlayerQuery(ToolId, pooled), CancellationToken.None);
+
+        Assert.Contains(direct, readable);
+        Assert.Equal(linked, readable.Contains(pooled));
+        Assert.Equal(linked, canReadPooled);
+    }
+
+    // "Share with all tools" reaches a pooled tool only through a maker who can be reached; a player's
+    // direct grants stand either way.
+    [Fact]
+    public async Task APlayerIsReachedOnlyByPooledToolsWhoseMakersCanBeReached()
+    {
+        var player = Guid.NewGuid();
+        var direct = Guid.NewGuid();
+        var reachable = Guid.NewGuid();
+        var unreachable = Guid.NewGuid();
+        _tools.Setup(t => t.GetToolsReaching(player, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolsReaching(new[] { direct },
+                new[] { new PooledTool(reachable, OtherMakerId), new PooledTool(unreachable, Guid.NewGuid()) }));
+        MakersWithDiscord(OtherMakerId);
+
+        var reading = await Reach().ToolIdsReading(player, CancellationToken.None);
+
+        Assert.Equal(new[] { direct, reachable }.OrderBy(id => id), reading.OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task AskingToBeListedNeedsTheMakersDiscordLinked()
+    {
+        var source = new Uri("https://github.com/errlena/planner");
+        var tool = Tool.Create(ToolId, MakerId, Name.From("Planner"), Now, source, agreedToRulesAt: Now);
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, source);
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
+
+        await Assert.ThrowsAsync<ToolDiscordRequiredException>(() => ManagementSaga()
+            .Handle(new RequestToolListingCommand(ToolId), CancellationToken.None));
+
+        MakersWithDiscord(MakerId);
+        await ManagementSaga().Handle(new RequestToolListingCommand(ToolId), CancellationToken.None);
+
+        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.Visibility == ToolVisibility.PendingApproval),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

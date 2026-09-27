@@ -98,37 +98,26 @@ internal sealed class Tool
     public bool RequiresExplicitShare => WebhookMode == WebhookMode.PiuGameSession;
 
     /// <summary>
-    ///     Whether this tool may reach anyone but its own maker.
+    ///     Whether this tool may reach anyone but its own maker: only while the maker has a Discord
+    ///     account linked, so a tool reading other people's scores always has a maker who can be told
+    ///     when it goes wrong.
     ///     <para>
     ///         A tool failing this still works — keys mint, webhooks fire, and the maker is connected
-    ///         to it as always. What it cannot do is acquire a second player. A configured repository
-    ///         is a claim and a checked one is proof, exactly as with <see cref="CanDeliver" />: a
-    ///         private repository answers 404 to the players it is supposed to be readable by, and
-    ///         looks identical to a typo.
-    ///     </para>
-    ///     <para>
-    ///         The handle is here for the same reason the repository is — a tool reading other
-    ///         people's scores needs a maker who can be told when it goes wrong.
+    ///         to it as always. What it cannot do is acquire a second player.
     ///     </para>
     /// </summary>
-    public bool CanBeSharedWithOthers =>
-        Shareable(Id, RepositoryUrl?.ToString(), RepositoryCheckedAt, DiscordHandle);
+    public bool CanTakePlayers(bool makerHasDiscord)
+    {
+        return TakesPlayers(Id, makerHasDiscord);
+    }
 
     /// <summary>
-    ///     The same rule, over raw column values.
-    ///     <para>
-    ///         Effective read access is resolved in SQL against the entity, never against a rehydrated
-    ///         aggregate, so without this the gate would have to be written twice — and the copy that
-    ///         drifted would be the one actually deciding who can read a player's scores.
-    ///     </para>
+    ///     The same rule over a tool id, for reads that resolve access without rehydrating the
+    ///     aggregate — so the gate is written once however a caller arrives at it.
     /// </summary>
-    public static bool Shareable(Guid id, string? repositoryUrl, DateTimeOffset? repositoryCheckedAt,
-        string? discordHandle)
+    public static bool TakesPlayers(Guid toolId, bool makerHasDiscord)
     {
-        return GrandfatheredTools.Exempt(id)
-               || (!string.IsNullOrWhiteSpace(repositoryUrl)
-                   && repositoryCheckedAt is not null
-                   && !string.IsNullOrWhiteSpace(discordHandle));
+        return GrandfatheredTools.Exempt(toolId) || makerHasDiscord;
     }
 
     /// <summary>
@@ -141,9 +130,9 @@ internal sealed class Tool
                               && WebhookUrlVerifiedAt is not null;
 
     /// <summary>
-    ///     A new tool. The repository and handle are optional here on purpose — a maker building
-    ///     against their own scores needs neither, and <see cref="CanBeSharedWithOthers" /> is what
-    ///     holds the line once anyone else's data is involved.
+    ///     A new tool. The repository is optional here on purpose — a maker building against their
+    ///     own scores needs none, and <see cref="CanTakePlayers" /> is what holds the line once anyone
+    ///     else's data is involved.
     /// </summary>
     public static Tool Create(Guid id, Guid ownerUserId, Name name, DateTimeOffset createdAt,
         Uri? repositoryUrl = null, string? discordHandle = null, DateTimeOffset? agreedToRulesAt = null,
@@ -245,7 +234,7 @@ internal sealed class Tool
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
-    public void RequestListing()
+    public void RequestListing(bool makerHasDiscord)
     {
         if (Visibility == ToolVisibility.Public) return;
 
@@ -258,9 +247,13 @@ internal sealed class Tool
             throw new ToolListingException("A listing-only tool needs a link — it is the whole " +
                                            "thing a player is being sent to.");
 
-        // Being listed is an invitation to every player on the site. The source they are invited to
-        // read has to actually be readable, and someone has to be reachable when it goes wrong.
-        if (!CanBeSharedWithOthers) throw ToolRepositoryRequiredException.ForMaker();
+        // Being listed is an invitation to every player on the site: the source is what gets read at
+        // review, and the maker has to be reachable when it goes wrong.
+        if (RepositoryUrl is null)
+            throw new ToolListingException("A listed tool needs a public source repository link. I read " +
+                                           "the source before approving it.");
+
+        if (!CanTakePlayers(makerHasDiscord)) throw ToolDiscordRequiredException.ForMaker();
 
         Visibility = ToolVisibility.PendingApproval;
         RejectionReason = null;

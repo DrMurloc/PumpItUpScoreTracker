@@ -24,16 +24,18 @@ internal sealed class ToolAccessSaga :
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolAccessSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTime)
+        IDateTimeOffsetAccessor dateTime, ToolReach reach)
     {
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
+        _reach = reach;
     }
 
     public async Task Handle(ConnectToolCommand request, CancellationToken cancellationToken)
@@ -51,8 +53,8 @@ internal sealed class ToolAccessSaga :
 
         // The maker is connected to their own tool at registration and stays connected — the gate
         // is on acquiring a second player, not on the tool working at all.
-        if (!tool.CanBeSharedWithOthers && tool.OwnerUserId != _currentUser.User.Id)
-            throw ToolRepositoryRequiredException.ForPlayer(tool.Name.ToString());
+        if (tool.OwnerUserId != _currentUser.User.Id && !await _reach.CanTakePlayers(tool, cancellationToken))
+            throw ToolDiscordRequiredException.ForPlayer(tool.Name.ToString());
 
         await _tools.GrantShare(tool.Id, _currentUser.User.Id, ShareSource.Direct, _dateTime.Now,
             cancellationToken);
@@ -81,7 +83,7 @@ internal sealed class ToolAccessSaga :
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
-        var toolIds = await _tools.GetToolIdsReading(userId, cancellationToken);
+        var toolIds = await _reach.ToolIdsReading(userId, cancellationToken);
         var direct = (await _tools.GetSharesForUser(userId, cancellationToken))
             .ToDictionary(s => s.ToolId);
 
@@ -110,16 +112,17 @@ internal sealed class ToolAccessSaga :
     public async Task<IReadOnlyList<PublicToolRecord>> Handle(GetPublicToolsQuery request,
         CancellationToken cancellationToken)
     {
-        // A listed tool that has since lost its source or its maker's handle is a row nobody can
-        // connect to, so it leaves the directory rather than sitting there refusing everyone.
-        var tools = (await _tools.GetToolsByVisibility(ToolVisibility.Public, cancellationToken))
-            .Where(t => t.CanBeSharedWithOthers);
+        // A listed tool whose maker has since unlinked Discord is a row nobody can connect to, so it
+        // leaves the directory rather than sitting there refusing everyone.
+        var listed = await _tools.GetToolsByVisibility(ToolVisibility.Public, cancellationToken);
+        var linked = await _reach.DiscordAccounts(listed.Select(t => t.OwnerUserId), cancellationToken);
+        var tools = listed.Where(t => t.CanTakePlayers(linked.ContainsKey(t.OwnerUserId)));
         var result = new List<PublicToolRecord>();
         foreach (var tool in tools)
             result.Add(new PublicToolRecord(tool.Id, tool.Name.ToString(), tool.Description,
                 tool.Url?.ToString(), await OwnerName(tool.OwnerUserId, cancellationToken),
                 tool.RequiresExplicitShare,
-                await _tools.CountConnectedPlayers(tool.Id, cancellationToken), tool.ApprovedAt,
+                await _reach.CountConnectedPlayers(tool, true, cancellationToken), tool.ApprovedAt,
                 tool.RepositoryUrl?.ToString(), tool.Kind));
 
         return result.OrderByDescending(r => r.ConnectedPlayers).ToArray();
@@ -128,12 +131,12 @@ internal sealed class ToolAccessSaga :
     public async Task<IReadOnlyList<Guid>> Handle(GetToolReadablePlayersQuery request,
         CancellationToken cancellationToken)
     {
-        return await _tools.GetReadablePlayerIds(request.ToolId, cancellationToken);
+        return await _reach.ReadablePlayerIds(request.ToolId, cancellationToken);
     }
 
     public async Task<bool> Handle(CanToolReadPlayerQuery request, CancellationToken cancellationToken)
     {
-        return await _tools.CanRead(request.ToolId, request.UserId, cancellationToken);
+        return await _reach.CanRead(request.ToolId, request.UserId, cancellationToken);
     }
 
     private async Task<string> OwnerName(Guid ownerUserId, CancellationToken cancellationToken)

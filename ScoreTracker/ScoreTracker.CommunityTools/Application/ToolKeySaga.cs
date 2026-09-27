@@ -41,12 +41,13 @@ internal sealed class ToolKeySaga :
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IToolKeyRepository _keys;
     private readonly ILogger<ToolKeySaga> _logger;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolKeySaga(IToolKeyRepository keys, IToolRepository tools, IUserReader users,
         ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime,
-        IToolActivityRepository activity, IMemoryCache cache, ILogger<ToolKeySaga> logger)
+        IToolActivityRepository activity, IMemoryCache cache, ILogger<ToolKeySaga> logger, ToolReach reach)
     {
         _keys = keys;
         _tools = tools;
@@ -56,6 +57,7 @@ internal sealed class ToolKeySaga :
         _activity = activity;
         _cache = cache;
         _logger = logger;
+        _reach = reach;
     }
 
     public async Task<MintedApiKey> Handle(CreateToolApiKeyCommand request,
@@ -139,11 +141,12 @@ internal sealed class ToolKeySaga :
         if (tool is null) return null;
 
         var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
+        var takesPlayers = await _reach.CanTakePlayers(tool, cancellationToken);
         return new ToolInvitePreview(tool.Id, tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), owner?.Name.ToString() ?? string.Empty,
             tool.Visibility == ToolVisibility.Public, tool.RequiresExplicitShare,
-            await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
-            tool.RepositoryUrl?.ToString(), tool.Kind);
+            await _reach.CountConnectedPlayers(tool, takesPlayers, cancellationToken),
+            tool.RepositoryUrl?.ToString(), tool.Kind, takesPlayers);
     }
 
     public async Task<ToolKeyPrincipal?> Handle(GetToolByApiKeyQuery request,

@@ -14,15 +14,17 @@ internal sealed class ToolConsoleSaga :
     private readonly IToolActivityRepository _activity;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IWebhookDeliveryRepository _deliveries;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
 
     public ToolConsoleSaga(IToolActivityRepository activity, IWebhookDeliveryRepository deliveries,
-        IToolRepository tools, ICurrentUserAccessor currentUser)
+        IToolRepository tools, ICurrentUserAccessor currentUser, ToolReach reach)
     {
         _activity = activity;
         _deliveries = deliveries;
         _tools = tools;
         _currentUser = currentUser;
+        _reach = reach;
     }
 
     public async Task<IReadOnlyList<ToolActivityRecord>> Handle(GetToolActivityQuery request,
@@ -46,7 +48,7 @@ internal sealed class ToolConsoleSaga :
             rows.Count(r => r.Kind is ToolActivityKind.DeliveryTimedOut
                 or ToolActivityKind.DeliveryRejected or ToolActivityKind.DeliveryUnreachable),
             rows.Where(r => r.Kind == ToolActivityKind.RateLimited).Sum(r => r.Count),
-            await _tools.CountConnectedPlayers(request.ToolId, cancellationToken),
+            await _reach.CountConnectedPlayers(request.ToolId, cancellationToken),
             // Roll-ups carry a count per hour, so this is a sum rather than a row count.
             rows.Where(r => r.Kind == ToolActivityKind.KeyUsed).Sum(r => r.Count),
             // Clicks are all-time. It is the only number a listing-only tool ever gets, and a

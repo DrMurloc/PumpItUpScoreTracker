@@ -29,15 +29,17 @@ internal sealed class WebhookDeliverySaga : IConsumer<PlayerScoresUpdatedEvent>
 
     private readonly IWebhookDeliveryDispatcher _dispatcher;
     private readonly ILogger<WebhookDeliverySaga> _logger;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public WebhookDeliverySaga(IToolRepository tools, IWebhookDeliveryDispatcher dispatcher,
-        IUserReader users, ILogger<WebhookDeliverySaga> logger)
+        IUserReader users, ToolReach reach, ILogger<WebhookDeliverySaga> logger)
     {
         _tools = tools;
         _dispatcher = dispatcher;
         _users = users;
+        _reach = reach;
         _logger = logger;
     }
 
@@ -52,7 +54,7 @@ internal sealed class WebhookDeliverySaga : IConsumer<PlayerScoresUpdatedEvent>
         // ScorePush tool would receive an empty changes array saying nothing at all.
         if (message.Changes.Count == 0) return;
 
-        var toolIds = await _tools.GetToolIdsReading(message.UserId, context.CancellationToken);
+        var toolIds = await _reach.ToolIdsReading(message.UserId, context.CancellationToken);
         if (toolIds.Count == 0) return;
 
         var player = await BuildPlayerBlock(message.UserId, message.Mix, context.CancellationToken);

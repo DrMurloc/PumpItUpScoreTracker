@@ -39,7 +39,12 @@ public sealed record ToolRecord(
     ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
     ///     can say why a tool is stuck without guessing at it.
     /// </summary>
-    bool CanBeSharedWithOthers,
+    bool CanTakePlayers,
+    /// <summary>
+    ///     The Discord user id the maker has linked to their account, or null when there is none.
+    ///     The maker's own, or an admin's view of it — never on a player-facing surface.
+    /// </summary>
+    string? MakerDiscordId,
     ToolKind Kind,
     /// <summary>
     ///     Whether the console shows an API group at all. A listing-only tool has none and is not
@@ -172,7 +177,12 @@ public sealed record ToolInvitePreview(
     ///     feature, so it is also the one place a stranger can check the tool before signing in.
     /// </summary>
     string? RepositoryUrl,
-    ToolKind Kind);
+    ToolKind Kind,
+    /// <summary>
+    ///     Whether the tool can take anyone but its maker yet. When it cannot, the page gives the
+    ///     reason instead of a Connect that would be refused.
+    /// </summary>
+    bool CanTakePlayers);
 
 /// <summary>
 ///     A maker's ban, as the admin list shows it. Notes are the owner's own and reach no other

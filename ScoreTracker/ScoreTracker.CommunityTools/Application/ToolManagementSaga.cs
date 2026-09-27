@@ -47,15 +47,17 @@ internal sealed class ToolManagementSaga :
     private readonly IToolSecretReader _secrets;
     private readonly IToolMakerBanRepository _bans;
     private readonly IRepositoryReachabilityClient _repositories;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
         IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
-        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans)
+        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans, ToolReach reach)
     {
         _bans = bans;
+        _reach = reach;
         _repositories = repositories;
         _configuration = configuration;
         _tools = tools;
@@ -228,7 +230,7 @@ internal sealed class ToolManagementSaga :
     public async Task Handle(SetToolWebhookCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        var connected = await _tools.CountConnectedPlayers(request.ToolId, cancellationToken);
+        var connected = await _reach.CountConnectedPlayers(tool, cancellationToken);
         tool.SetWebhook(request.Mode,
             await CheckedTarget(request.Url, cancellationToken), connected,
             hasOutboundHeader: !string.IsNullOrWhiteSpace(
@@ -240,7 +242,7 @@ internal sealed class ToolManagementSaga :
     public async Task Handle(RequestToolListingCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        tool.RequestListing();
+        tool.RequestListing(await _reach.MakerHasDiscord(tool.OwnerUserId, cancellationToken));
         await _tools.Save(tool, cancellationToken);
     }
 
@@ -313,12 +315,18 @@ internal sealed class ToolManagementSaga :
     {
         var keyCounts = await _tools.CountKeysFor(tools.Select(t => t.Id).ToArray(), _dateTime.Now,
             cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts)));
+        var discordAccounts = await _reach.DiscordAccounts(tools.Select(t => t.OwnerUserId), cancellationToken);
+        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts, discordAccounts)));
     }
 
     private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken,
-        IReadOnlyDictionary<Guid, int>? keyCounts = null)
+        IReadOnlyDictionary<Guid, int>? keyCounts = null,
+        IReadOnlyDictionary<Guid, string>? discordAccounts = null)
     {
+        discordAccounts ??= await _reach.DiscordAccounts(new[] { tool.OwnerUserId }, cancellationToken);
+        var makerDiscordId = discordAccounts.GetValueOrDefault(tool.OwnerUserId);
+        var takesPlayers = tool.CanTakePlayers(makerDiscordId is not null);
+
         // Batched by the list handlers; a single-tool read pays for one extra query.
         var keyCount = keyCounts is not null && keyCounts.TryGetValue(tool.Id, out var n)
             ? n
@@ -337,12 +345,12 @@ internal sealed class ToolManagementSaga :
             tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
-            await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
+            await _reach.CountConnectedPlayers(tool, takesPlayers, cancellationToken),
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
             headerName, !string.IsNullOrWhiteSpace(headerValue),
             !string.IsNullOrWhiteSpace(verificationHash),
             tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
-            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers, tool.Kind,
+            tool.DiscordHandle, tool.AgreedToRulesAt, takesPlayers, makerDiscordId, tool.Kind,
             keyCount > 0, tool.WebhookMode != WebhookMode.None);
     }
 

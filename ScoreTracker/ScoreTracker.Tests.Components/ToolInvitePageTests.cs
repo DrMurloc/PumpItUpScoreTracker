@@ -28,7 +28,7 @@ public sealed class ToolInvitePageTests : ComponentTestBase
     private static ToolInvitePreview Preview()
     {
         return new ToolInvitePreview(ToolId, "PandaGames", null, null, "PIU69", false, false, 0,
-            "https://github.com/example/tool", ToolKind.Integrated);
+            "https://github.com/example/tool", ToolKind.Integrated, true);
     }
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>

@@ -82,6 +82,34 @@ internal sealed class ToolRepositoryRequiredException : CommunityToolsException
 }
 
 /// <summary>
+///     The tool's maker has no Discord account linked, so the tool cannot take anyone but its maker.
+///     A linked account is how DrMurloc reaches a maker when something goes wrong.
+/// </summary>
+[ExcludeFromCodeCoverage]
+internal sealed class ToolDiscordRequiredException : CommunityToolsException
+{
+    private ToolDiscordRequiredException(string message) : base(message)
+    {
+    }
+
+    /// <summary>What a player sees. Names the tool, and says nothing about whose fault it is.</summary>
+    public static ToolDiscordRequiredException ForPlayer(string toolName)
+    {
+        return new ToolDiscordRequiredException(
+            $"{toolName} can't connect players yet. Its maker still has to link a Discord account, so " +
+            "DrMurloc can reach them if anything goes wrong. Nothing was shared.");
+    }
+
+    /// <summary>What the maker sees, which is the same rule from the side that can fix it.</summary>
+    public static ToolDiscordRequiredException ForMaker()
+    {
+        return new ToolDiscordRequiredException(
+            "Link your Discord first, from your tool's settings. It's how DrMurloc reaches you if " +
+            "anything goes wrong, for your players or for you.");
+    }
+}
+
+/// <summary>
 ///     A tool the caller may not touch, or that does not exist. One exception for both so a
 ///     probe cannot distinguish "not yours" from "not there".
 /// </summary>

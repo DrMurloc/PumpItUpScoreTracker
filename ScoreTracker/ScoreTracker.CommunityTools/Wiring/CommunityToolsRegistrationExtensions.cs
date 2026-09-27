@@ -18,6 +18,7 @@ public static class CommunityToolsRegistrationExtensions
     public static IServiceCollection AddCommunityTools(this IServiceCollection services)
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
+        services.AddTransient<ToolReach>();
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
         services.AddTransient<IToolSecretProtector, ToolSecretProtector>();
