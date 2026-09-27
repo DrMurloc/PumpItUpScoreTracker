@@ -48,21 +48,34 @@ answer (retries hung off the import-status work) and is deliberately out of scop
 - **What still rides the batch:** the score form and the v1 record API, its original job, and the CSV
   upload, which drains it the moment the upload ends (`DrainScoreBatchCommand`) and falls back to the
   two-minute timer if the page is gone before it can.
+- **Five minutes between imports on a mix** (owner, 2026-09-27: *"i'm preventing people from spamming the
+  button and overloading piugame"*). An Import or an Import and check pressed within five minutes of the
+  last run that started on that mix is refused before anything reaches piugame, with a toast saying how
+  long is left; the v1 import API answers `429` with `Retry-After`. A deep scan is never refused — the
+  monthly allowance already rations it — but it starts the clock like any run. The clock starts when a
+  run is handed off, so a mistyped password or an "already running" refusal starts nothing. Per mix,
+  because each mix is its own piugame site, and in memory beside the one-import-at-a-time slot, so a
+  restart clears both.
+- **Nothing else saves on a mix while it imports** (owner, 2026-09-27). While a player's import runs on a
+  mix, the score form, the CSV upload's Save Scores, the v1 record API and the v2 plays API refuse to save
+  on that same mix — a toast on the site, `409 Conflict` on the API — and every other mix saves as usual.
+  The check is made where each save starts, never inside the Ledger, so the import's own saves pass
+  untouched and a source stays a label. The v1 import API takes the same slot, so it both obeys and
+  raises the lock.
 
 **Known edges, not fixed** (found by the review of this change; each needs two unlikely things at once):
 
-- **A typed entry that announces mid-import.** A score typed in while a deep scan is still reading
-  pages gets its own two-minute announcement before the import's. The import's capture then counts
-  that chart as held, the typed capture counted the import's early saves as held, and a title or
-  folder the two only complete together is announced on both cards. A typed batch still open when
-  the import announces is folded in and does not have this problem.
+- ~~**A typed entry that announces mid-import.**~~ Closed 2026-09-27 by the save lock above: a score
+  can no longer be typed in on a mix while it imports. One is still folded in if it slipped in the
+  moment before the run took the slot.
 - **A re-press inside the startup wait.** A run a restart cut short is replayed three minutes after
   boot. If the player presses Import again before that, the new run captures first, and a title
   the two runs only complete together is announced by both. The wait is there so a deploy's
   outgoing process can finish its own imports before this one replays them.
 - **A database outage that also stops the run closing.** If saves landed, the announcement on the
   way out failed, and closing the `ImportResult` row failed too, the row stays open and only the
-  next startup replays it — and if that is more than a day away, never.
+  next startup replays it — and if that is more than a day away, never. Accepted (owner, 2026-09-27:
+  *"If i'm down for a day, something much bigger is wrong."*).
 
 The sections below are the 2026-08-09 design and its amendments. Where they describe imports riding the
 batch, the session-first candidate query, `GetUnprocessedSessionsQuery`, `StaleAfter` or the 25-session

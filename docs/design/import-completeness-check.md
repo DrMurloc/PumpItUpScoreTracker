@@ -9,6 +9,8 @@ by key-fallback and the locale-parity ratchet stays green because no locale carr
 > carries the `ImportKind`, and `RunOfficialImportConsumer` runs every kind: pass 1 is the ordinary walk and
 > save; pass 2 re-reads the levels the census says disagree (Check) or every best-score page (Deep scan)
 > into the same run, which then announces once ([import-restart-recovery.md](import-restart-recovery.md) §0).
+> An Import and check waits out the same five minutes between runs on a mix as a plain Import; a deep scan
+> never waits, but starts the clock ([import-restart-recovery.md](import-restart-recovery.md) §0).
 > `RunImportCheckCommand`, its consumer, `ExecuteImportCheckCommand` and `SaveOfficialScoresCommand` are
 > gone, and what was `ImportCheckSaga` is now only its start handler (`StartImportCheckHandler`); the start
 > command, the credits and the site-wide deep-scan slot are unchanged. A deep scan that finds the slot taken
