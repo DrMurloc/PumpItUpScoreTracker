@@ -1401,4 +1401,30 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task ARunClaimsTheOpenTypedBatchAsSaveResults()
+    {
+        // A score typed in just before an import began: claimed, it is announced with the run rather than
+        // on its own timer in the middle of it.
+        var ctx = new HandlerContext();
+        var passed = Guid.NewGuid();
+        var raised = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix2, UserId)).Returns(new PendingScoreBatch(MixEnum.Phoenix2,
+            new[] { passed }, new Dictionary<Guid, int> { [raised] = 900000 }, Guid.NewGuid()));
+
+        var claimed = await ctx.Handler.Handle(new ClaimScoreBatchCommand(UserId, MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Contains(new ScoreSaveResult(passed, ScoreSaveChange.NewPass), claimed);
+        Assert.Contains(new ScoreSaveResult(raised, ScoreSaveChange.Upscore, 900000), claimed);
+        Assert.Equal(2, claimed.Count);
+    }
+
+    [Fact]
+    public async Task NothingOpenMeansNothingClaimed()
+    {
+        var ctx = new HandlerContext();
+
+        Assert.Empty(await ctx.Handler.Handle(new ClaimScoreBatchCommand(UserId, MixEnum.Phoenix2), CancellationToken.None));
+    }
 }

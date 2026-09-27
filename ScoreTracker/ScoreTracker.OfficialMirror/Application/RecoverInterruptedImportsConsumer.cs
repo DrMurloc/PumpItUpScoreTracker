@@ -45,10 +45,16 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     }
 
     /// <summary>
-    ///     The startup pass. Every run that began in the day before this process did is replayed —
-    ///     newest first, so the player who just pressed the button hears first — and one that never
-    ///     reported an ending is closed Interrupted after its replay, so the notice telling the player
-    ///     their scores are already in is true by the time they can see it.
+    ///     The startup pass. Every run that began in the day before this process did and never reported
+    ///     an ending is replayed — newest first, so the player who just pressed the button hears first —
+    ///     and closed Interrupted after its replay, so the notice telling the player their scores are
+    ///     already in is true by the time they can see it.
+    ///     <para>
+    ///         A run that reported an ending announced before it did, so it is left alone. Offering it
+    ///         anyway could only re-announce a session from before this shape shipped, whose two-minute
+    ///         batch the old code credited to whichever session saved next — a second Discord card for
+    ///         an import already announced on another.
+    ///     </para>
     ///     <para>
     ///         "Began before this process" and not "is old": at startup the accumulator is empty and
     ///         nothing from the previous process can still announce, while the run this boot actually
@@ -62,7 +68,7 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
         var now = _dateTime.Now;
 
         var abandoned = await _results.CloseAbandoned(bootedAt - Lookback, now, token);
-        var runs = await _results.GetStartedBetween(bootedAt - Lookback, bootedAt, token);
+        var runs = await _results.GetUnfinishedStartedBetween(bootedAt - Lookback, bootedAt, token);
 
         var replayed = 0;
         var closed = 0;
@@ -70,19 +76,13 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
         foreach (var run in runs)
             try
             {
-                // Replayed even when the run finished: the first boot after this shape shipped follows
-                // a process that still held finished imports in a two-minute batch, and for every other
-                // finished run the replay finds the session announced and does nothing.
                 if (run.SessionId is { } sessionId &&
                     await _mediator.Send(new ReplaySessionCommand(run.UserId, sessionId), token) > 0)
                     replayed++;
-                if (run.FinishedAt is null)
-                {
-                    // There is no resuming it — the piugame session is gone and the credential lives
-                    // in the player's browser — so it is closed and the player is told.
-                    await _results.MarkInterrupted(run.Id, now, token);
-                    closed++;
-                }
+                // There is no resuming it — the piugame session is gone and the credential lives in the
+                // player's browser — so it is closed and the player is told.
+                await _results.MarkInterrupted(run.Id, now, token);
+                closed++;
             }
             catch (Exception e) when (!token.IsCancellationRequested)
             {

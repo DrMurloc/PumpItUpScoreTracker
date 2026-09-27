@@ -243,6 +243,10 @@ namespace ScoreTracker.OfficialMirror.Application
             var deeper = (Added: 0, Checked: 0);
             try
             {
+                // A score typed in just before this run began opened a batch that would announce on its own
+                // timer mid-run, beside this run's capture; claimed now, it is announced with the run, and
+                // if the run fails it rides the announcement on the way out like any save.
+                saves.AddRange(await _mediator.Send(new ClaimScoreBatchCommand(userId, mix), cancellationToken));
                 var scrape = await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
                     cancellationToken);
                 // The plays that never became a record are history too — journaled before the

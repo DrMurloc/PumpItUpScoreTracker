@@ -69,12 +69,12 @@ internal sealed class EFImportResultRepository : IImportResultRepository
                 .SetProperty(r => r.AcknowledgedAt, at), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ImportRunForRecovery>> GetStartedBetween(DateTimeOffset from,
+    public async Task<IReadOnlyList<ImportRunForRecovery>> GetUnfinishedStartedBetween(DateTimeOffset from,
         DateTimeOffset before, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.Set<ImportResultEntity>()
-            .Where(r => r.StartedAt >= from && r.StartedAt < before)
+            .Where(r => r.FinishedAt == null && r.StartedAt >= from && r.StartedAt < before)
             .OrderByDescending(r => r.StartedAt)
             .Select(r => new ImportRunForRecovery(r.Id, r.UserId, r.SessionId, r.StartedAt, r.FinishedAt))
             .ToArrayAsync(cancellationToken);

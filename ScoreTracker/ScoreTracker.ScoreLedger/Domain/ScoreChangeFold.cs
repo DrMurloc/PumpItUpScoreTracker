@@ -35,6 +35,13 @@ internal sealed class ScoreChangeFold
         }
     }
 
+    /// <summary>Drops a chart the fold should no longer announce — one an undo has already rebuilt.</summary>
+    public void Remove(Guid chartId)
+    {
+        _newPasses.Remove(chartId);
+        _upscoredFrom.Remove(chartId);
+    }
+
     public void Add(ScoreSaveResult save)
     {
         Add(save.ChartId, save.Change, save.UpscoredFrom);

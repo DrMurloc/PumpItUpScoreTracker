@@ -38,8 +38,10 @@ answer (retries hung off the import-status work) and is deliberately out of scop
   finished run did not mean its batch had drained; now it does. The startup pass runs a few minutes after
   boot, so a process being replaced has finished first. It closes runs that never finished and started
   more than a day earlier silently — `Interrupted`, already acknowledged, no notice about a weeks-old
-  press — then takes every run that began in the day before the boot, newest first: it replays the
-  session and, if the run never finished, closes it `Interrupted`. The five-minute tick replays the
+  press — then takes every run that began in the day before the boot and never finished, newest first:
+  it replays the session and closes the run `Interrupted`. A run that finished announced before it did,
+  so the pass leaves it alone; offering it anyway could only re-announce a session from before this
+  shape, whose batch the old code had credited to whichever session saved next. The five-minute tick replays the
   session of every run that ended with a failure in the last day, the one way an import's announcement
   can go missing on a live process. `ReplaySessionCommand` skips a session that is processed **or already
   announced** (its counts are written at the announcement), so neither pass can post a card twice. There
@@ -47,7 +49,10 @@ answer (retries hung off the import-status work) and is deliberately out of scop
   recovery off completely.
 - **What still rides the batch:** the score form and the v1 record API, its original job, and the CSV
   upload, which drains it the moment the upload ends (`DrainScoreBatchCommand`) and falls back to the
-  two-minute timer if the page is gone before it can.
+  two-minute timer if the page is gone before it can. A batch already open when an import begins is
+  claimed by the run (`ClaimScoreBatchCommand`) and announced with it, so a burst that straddles the
+  start is still one card. Undoing a session also drops it from the envelope that minted it, so the
+  next upload or typed score opens a session of its own instead of saving under one whose row is gone.
 - **Five minutes between imports on a mix** (owner, 2026-09-27: *"i'm preventing people from spamming the
   button and overloading piugame"*). An Import or an Import and check pressed within five minutes of the
   last run that started on that mix is refused before anything reaches piugame, with a toast saying how
@@ -66,9 +71,18 @@ answer (retries hung off the import-status work) and is deliberately out of scop
 
 **Known edges, not fixed** (found by the review of this change; each needs two unlikely things at once):
 
-- ~~**A typed entry that announces mid-import.**~~ Closed 2026-09-27 by the save lock above: a score
-  can no longer be typed in on a mix while it imports. One is still folded in if it slipped in the
-  moment before the run took the slot.
+- ~~**A typed entry that announces mid-import.**~~ Closed 2026-09-27: the save lock above refuses a score
+  typed on the mix while it imports, and a batch opened in the two minutes before the run began is
+  claimed into the run's announcement.
+- **A score saved in the seconds after an import ends.** The save lock opens when the run returns, but the
+  run's capture is still reading the player's bests for a few seconds after (longer for a big import).
+  A score saved in that window is read as already held, so a title that score and the import only reach
+  together can be announced twice or not at all. Open (the bug check of 2026-09-27; closing it means
+  holding the lock until the capture reports back).
+- **The first startup after this change.** An import that finished in the two minutes before the old
+  process stopped was still waiting in the old two-minute batch, and the startup pass no longer replays
+  finished runs. Its scores are saved; its card and highlights are lost, and its rating and titles catch
+  up on the player's next announcement. Once, and only for runs finished in those two minutes.
 - **A re-press inside the startup wait.** A run a restart cut short is replayed three minutes after
   boot. If the player presses Import again before that, the new run captures first, and a title
   the two runs only complete together is announced by both. The wait is there so a deploy's

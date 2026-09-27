@@ -54,7 +54,7 @@ public sealed class RecoverInterruptedImportsConsumerTests
 
         public void WithStarted(params ImportRunForRecovery[] runs)
         {
-            Results.Setup(r => r.GetStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
+            Results.Setup(r => r.GetUnfinishedStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(runs);
         }
@@ -105,7 +105,7 @@ public sealed class RecoverInterruptedImportsConsumerTests
 
         await ctx.Boot();
 
-        ctx.Results.Verify(r => r.GetStartedBetween(BootedAt - Day, BootedAt, It.IsAny<CancellationToken>()),
+        ctx.Results.Verify(r => r.GetUnfinishedStartedBetween(BootedAt - Day, BootedAt, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -121,22 +121,6 @@ public sealed class RecoverInterruptedImportsConsumerTests
         await ctx.Boot();
 
         Assert.Equal(new[] { $"replay {session}", $"close {run.Id}" }, ctx.Calls);
-    }
-
-    [Fact]
-    public async Task AFinishedRunIsOfferedForReplayButNeverClosed()
-    {
-        // The first boot after this shape shipped follows a process that held finished imports in a
-        // two-minute batch; for any other finished run the replay finds it announced and does nothing.
-        var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithStarted(Run(session, finishedAt: BootedAt - TimeSpan.FromSeconds(30)));
-
-        await ctx.Boot();
-
-        ctx.VerifyReplayed(session, Times.Once());
-        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
-            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -222,7 +206,7 @@ public sealed class RecoverInterruptedImportsConsumerTests
 
         await ctx.Tick();
 
-        ctx.Results.Verify(r => r.GetStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
+        ctx.Results.Verify(r => r.GetUnfinishedStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);

@@ -24,7 +24,8 @@ internal sealed class UndoScoreSessionHandler(
         IPhoenixRecordRepository records,
         ISeasonReader seasons,
         IDateTimeOffsetAccessor dateTime,
-        IBus bus)
+        IBus bus,
+        IPlayerScoreBatchAccumulator batches)
     : IRequestHandler<UndoScoreSessionCommand, ScoreSessionUndoResult>
 {
     public async Task<ScoreSessionUndoResult> Handle(UndoScoreSessionCommand request,
@@ -76,6 +77,10 @@ internal sealed class UndoScoreSessionHandler(
         await ReplaySeasons(session.Mix, request.UserId, chartIds, survivors, cancellationToken);
 
         await sessions.Delete(request.SessionId, cancellationToken);
+        // A typed-entry or CSV envelope still holding this id would hand it to the next submission, which
+        // would then save under a session with no row: missing from Undo, ungrouped on the Sessions page.
+        // And a batch still waiting to announce this session would announce the charts just rebuilt.
+        batches.ForgetSession(request.UserId, session.Mix, request.SessionId, chartIds);
         await bus.Publish(new ScoreSessionUndoneEvent(request.UserId, request.SessionId, session.Mix),
             cancellationToken);
         // Stats, Pumbility and titles recompute through the pipeline that already exists.

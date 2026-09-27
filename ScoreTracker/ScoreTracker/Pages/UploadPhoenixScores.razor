@@ -520,7 +520,6 @@
         }
 
         _isImporting = true;
-        _errors.Clear();
         var shown = ClearForImport();
         await RememberSelectedCard();
         var result = await Mediator.Send(new StartOfficialImportCommand(
@@ -556,22 +555,25 @@
     }
 
     // What the page showed before a press, cleared for the run's own results and handed back if the
-    // press is refused: a refusal changes nothing, so the run that just finished stays on screen
-    // rather than giving way to the strip's older, stale verdict.
-    private (RecordedPhoenixScore[] Scores, bool Completed, string? Status) ClearForImport()
+    // press is refused: a refusal changes nothing, so the run that just finished — or the error saying
+    // why it failed — stays on screen rather than giving way to the strip's older, stale verdict.
+    private (RecordedPhoenixScore[] Scores, bool Completed, string? Status, string[] Errors) ClearForImport()
     {
-        var shown = (_scores.ToArray(), _importCompleted, _importStatus);
+        var shown = (_scores.ToArray(), _importCompleted, _importStatus, _errors.ToArray());
         _scores.Clear();
         _importCompleted = false;
         _importStatus = L["Starting Import..."].Value;
+        _errors.Clear();
         return shown;
     }
 
-    private void RestoreAfterRefusal((RecordedPhoenixScore[] Scores, bool Completed, string? Status) shown)
+    private void RestoreAfterRefusal(
+        (RecordedPhoenixScore[] Scores, bool Completed, string? Status, string[] Errors) shown)
     {
         foreach (var score in shown.Scores) _scores.Add(score);
         _importCompleted = shown.Completed;
         _importStatus = shown.Status;
+        _errors.AddRange(shown.Errors);
     }
 
     private async Task ForgetSavedCredentials()
@@ -706,7 +708,6 @@
         // Flip to importing and render before the slow sign-in so the button disables and shows a
         // spinner immediately, instead of looking inert and staying spammable while SignIn runs.
         _isImporting = true;
-        _errors.Clear();
         StateHasChanged();
 
         // A saved credential takes the sealed-blob path; typing takes the credential path below.

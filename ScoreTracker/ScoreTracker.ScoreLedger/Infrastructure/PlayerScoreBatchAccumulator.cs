@@ -66,6 +66,35 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         }
     }
 
+    public void ForgetSession(Guid userId, MixEnum mix, Guid sessionId, IReadOnlyCollection<Guid> chartIds)
+    {
+        foreach (var (key, state) in _sessions.ToArray())
+        {
+            if (key.UserId != userId || key.Mix != mix) continue;
+            lock (state)
+            {
+                if (state.Id == sessionId) _sessions.TryRemove(key, out _);
+            }
+        }
+
+        var batchKey = (userId, mix);
+        if (!_batches.TryGetValue(batchKey, out var batch)) return;
+        lock (batch.Gate)
+        {
+            // Same orphaned-state guard as AddToBatch. A batch the next submission already relabelled
+            // is that submission's to announce, and is left alone.
+            if (!_batches.TryGetValue(batchKey, out var current) || !ReferenceEquals(current, batch) ||
+                batch.SessionId != sessionId)
+                return;
+            foreach (var chartId in chartIds) batch.Changes.Remove(chartId);
+            if (batch.Changes.IsEmpty)
+                _batches.TryRemove(batchKey, out _);
+            else
+                // What is left belongs to no surviving session: announced, but under none.
+                batch.SessionId = null;
+        }
+    }
+
     public bool AddToBatch(MixEnum mix, Guid userId, DateTime fireAt, Guid chartId, bool isNewClear,
         PhoenixScore? upscoredFrom, Guid sessionId)
     {

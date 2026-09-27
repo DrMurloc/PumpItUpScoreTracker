@@ -49,12 +49,12 @@ internal interface IImportResultRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Every run that began at or after <paramref name="from" /> and before
-    ///     <paramref name="before" />, newest first — the startup pass's candidates
+    ///     Every run that began at or after <paramref name="from" /> and before <paramref name="before" />
+    ///     and never reported an ending, newest first — the startup pass's candidates
     ///     (docs/design/import-restart-recovery.md §0).
     /// </summary>
-    Task<IReadOnlyList<ImportRunForRecovery>> GetStartedBetween(DateTimeOffset from, DateTimeOffset before,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ImportRunForRecovery>> GetUnfinishedStartedBetween(DateTimeOffset from,
+        DateTimeOffset before, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Runs that began at or after <paramref name="since" />, saved into a session, and ended in

@@ -118,6 +118,9 @@ public sealed class OfficialLeaderboardSagaTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingScores ?? Array.Empty<RecordedPhoenixScore>());
+        // No typed-entry batch open unless a test opens one.
+        mediator.Setup(m => m.Send(It.IsAny<ClaimScoreBatchCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreSaveResult>());
         mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(settings);
 
@@ -237,6 +240,41 @@ public sealed class OfficialLeaderboardSagaTests
         Assert.Equal(sentSessions[0], announced!.SessionId);
         Assert.Equal(new[] { chartA.Id, chartB.Id }.OrderBy(id => id),
             announced.Saves.Where(r => r.Change == ScoreSaveChange.NewPass).Select(r => r.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task AScoreTypedJustBeforeTheRunIsAnnouncedWithIt()
+    {
+        // Its two-minute batch would otherwise announce mid-run, beside the run's capture: two cards for
+        // one burst, and a title the two only cross together on both.
+        var typed = Guid.NewGuid();
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var order = new List<string>();
+        f.Mediator.Setup(m => m.Send(It.Is<ClaimScoreBatchCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("claim"))
+            .ReturnsAsync(new[] { new ScoreSaveResult(typed, ScoreSaveChange.NewPass) });
+        f.Site.Setup(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1",
+                It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("scrape"))
+            .ReturnsAsync(new ScrapedScores(new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+                Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IRequest<ScoreSaveResult> cmd, CancellationToken _) =>
+                new ScoreSaveResult(((UpdatePhoenixBestAttemptCommand)cmd).ChartId, ScoreSaveChange.NewPass));
+        AnnounceScoreChangesCommand? announced = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) => announced = (AnnounceScoreChangesCommand)cmd);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(new[] { "claim", "scrape" }, order);
+        Assert.Equal(new[] { typed, chart.Id }.OrderBy(id => id),
+            announced!.Saves.Select(r => r.ChartId).OrderBy(id => id));
     }
 
     [Fact]

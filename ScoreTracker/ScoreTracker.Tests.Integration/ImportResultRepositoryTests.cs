@@ -148,22 +148,23 @@ public sealed class ImportResultRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task TheStartupPassGetsEveryRunInsideItsWindowNewestFirst()
+    public async Task TheStartupPassGetsEveryUnfinishedRunInsideItsWindowNewestFirst()
     {
+        // A run that reported an ending announced before it did, so the pass never sees it.
         var repo = Repo();
         var session = Guid.NewGuid();
         var older = await OpenRun(Guid.NewGuid(), Now.AddHours(-20), session);
-        var newer = await OpenRun(Guid.NewGuid(), Now.AddMinutes(-2));
-        await repo.Close(newer, Now.AddMinutes(-1), ImportOutcome.Completed, 3);
+        var newer = await OpenRun(Guid.NewGuid(), Now.AddMinutes(-3));
+        var finished = await OpenRun(Guid.NewGuid(), Now.AddMinutes(-2));
+        await repo.Close(finished, Now.AddMinutes(-1), ImportOutcome.Completed, 3);
         await OpenRun(Guid.NewGuid(), Now.AddHours(-30)); // before the window
         await OpenRun(Guid.NewGuid(), Now); // after the boot — live
 
-        var found = await repo.GetStartedBetween(Now.AddDays(-1), Now);
+        var found = await repo.GetUnfinishedStartedBetween(Now.AddDays(-1), Now);
 
         Assert.Equal(new[] { newer, older }, found.Select(r => r.Id));
         Assert.Equal(session, found[1].SessionId);
-        Assert.Null(found[1].FinishedAt);
-        Assert.NotNull(found[0].FinishedAt);
+        Assert.All(found, r => Assert.Null(r.FinishedAt));
     }
 
     [Fact]

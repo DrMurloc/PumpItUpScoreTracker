@@ -31,6 +31,15 @@ public interface IPlayerScoreBatchAccumulator
         Guid? explicitSessionId = null);
 
     /// <summary>
+    /// Forgets a session that no longer exists — an undone one. The envelope still holding its id stops
+    /// handing it out, so the next submission mints a fresh session and records it rather than joining an
+    /// id whose row is gone (and so never reaching the Undo page again). A batch still announcing for it
+    /// drops the <paramref name="chartIds" /> the undo rebuilt, so its timer never announces them — nor,
+    /// relabelled by the next submission, under that submission's session.
+    /// </summary>
+    void ForgetSession(Guid userId, MixEnum mix, Guid sessionId, IReadOnlyCollection<Guid> chartIds);
+
+    /// <summary>
     /// Atomically adds a chart update to the (user, mix) batch (creating the batch if
     /// needed) and pushes the fire-at time forward. If <paramref name="isNewClear"/>
     /// is true and <paramref name="upscoredFrom"/> is non-null for the same chart,

@@ -34,6 +34,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     : IRequestHandler<UpdatePhoenixBestAttemptCommand, ScoreSaveResult>,
         IRequestHandler<AnnounceScoreChangesCommand>,
         IRequestHandler<DrainScoreBatchCommand>,
+        IRequestHandler<ClaimScoreBatchCommand, IReadOnlyList<ScoreSaveResult>>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
 {
@@ -179,10 +180,11 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     /// <summary>
     ///     An official import's one announcement (docs/design/import-restart-recovery.md §0): the saves it
     ///     made, folded, with any typed-entry batch the player has open taken into the same announcement —
-    ///     a score typed in while the run was saving would otherwise capture beside it, each capture
-    ///     reading the other's charts as already held, and a title both crossed would be announced twice.
-    ///     That batch's own scheduled drain then finds nothing. The import's session wins, as the most
-    ///     recent submission always has.
+    ///     the run claimed the one open when it began (<see cref="ClaimScoreBatchCommand" />), and this takes
+    ///     whatever opened since, a CSV upload already saving when the run started. Captured beside the run
+    ///     instead, each capture would read the other's charts as already held, and a title both crossed
+    ///     would be announced twice. That batch's own scheduled drain then finds nothing. The import's
+    ///     session wins, as the most recent submission always has.
     /// </summary>
     public async Task Handle(AnnounceScoreChangesCommand request, CancellationToken cancellationToken)
     {
@@ -205,6 +207,18 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 
         await PublishScoreEvents(request.UserId, fold.ToBatch(request.Mix, request.SessionId), cancellationToken,
             request.TitlesFound);
+    }
+
+    public Task<IReadOnlyList<ScoreSaveResult>> Handle(ClaimScoreBatchCommand request,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<ScoreSaveResult> claimed = batches.TakeBatch(request.Mix, request.UserId) is { } open
+            ? open.NewChartIds.Select(chartId => new ScoreSaveResult(chartId, ScoreSaveChange.NewPass))
+                .Concat(open.UpscoredChartIds.Select(upscore =>
+                    new ScoreSaveResult(upscore.Key, ScoreSaveChange.Upscore, upscore.Value)))
+                .ToArray()
+            : Array.Empty<ScoreSaveResult>();
+        return Task.FromResult(claimed);
     }
 
     /// <summary>

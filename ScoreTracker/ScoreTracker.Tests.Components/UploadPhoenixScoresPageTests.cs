@@ -680,4 +680,31 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=view-session-link]")));
     }
+
+    [Fact]
+    public async Task ARefusedRetryKeepsTheLineSayingWhyTheLastRunFailed()
+    {
+        // The failure text invites a retry; inside the cooldown that retry is refused, and the page must
+        // not fall back to the strip's older "finished" verdict as if nothing had gone wrong.
+        var errorListeners = new List<Func<ImportStatusErrorEvent, Task>>();
+        _uiHub.Setup(h => h.Subscribe(It.IsAny<string>(), It.IsAny<Func<ImportStatusErrorEvent, Task>>()))
+            .Callback<string, Func<ImportStatusErrorEvent, Task>>((_, handler) => errorListeners.Add(handler))
+            .Returns(Mock.Of<IDisposable>());
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.Started));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+        foreach (var listener in errorListeners)
+            await cut.InvokeAsync(() => listener(new ImportStatusErrorEvent(_me,
+                "PIUGame.com stopped responding, so this import couldn't finish.", MixEnum.Phoenix)));
+        cut.WaitForAssertion(() => Assert.Contains("PIUGame.com stopped responding", cut.Markup));
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.Contains("PIUGame.com stopped responding", cut.Markup));
+    }
 }
