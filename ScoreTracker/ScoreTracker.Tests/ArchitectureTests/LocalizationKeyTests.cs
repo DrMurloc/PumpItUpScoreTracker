@@ -181,7 +181,10 @@ public sealed class LocalizationKeyTests
             // The score formula's credits (the score calculator's Phoenix page): real people,
             // same standing as DrMurloc. MR_WEQ also needs listing because the underscore keeps
             // the acronym scrub from seeing a token boundary.
-            "MR_WEQ", "daryen"
+            "MR_WEQ", "daryen",
+            // The RISE capture app's copy: the system it runs on (a brand, same standing as Discord)
+            // and the game's own name for its mode, as RISE prints it.
+            "Windows", "Warm Up"
         ];
 
         var violations = new List<string>();

@@ -2748,6 +2748,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>Murlg Rglgrglmr</value>
   </data>
+  <data name="Download for Windows" xml:space="preserve">
+    <value>Murlg ba Windows</value>
+  </data>
   <data name="Download image" xml:space="preserve">
     <value>Murlg Blomurg</value>
   </data>
@@ -3214,6 +3217,9 @@
   </data>
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Bloga la orgo murmgl</value>
+  </data>
+  <data name="Fill one in yourself: one row per chart, and a better score replaces a worse one." xml:space="preserve">
+    <value>Glurg mrp gropmur blubmurgl: mrp grolgub ba murgl, ap a mrrgl mrglrgl rorgblarg a mgl mrp.</value>
   </data>
   <data name="Fill out the judgements to see results." xml:space="preserve">
     <value>Marg blarg gro murmgrgl ro glorg murgrorp.</value>
@@ -6892,6 +6898,9 @@
   <data name="Play order" xml:space="preserve">
     <value>Lurg groglar</value>
   </data>
+  <data name="Play RISE. It does the rest." xml:space="preserve">
+    <value>Grrglgrrgl RISE. Ug murgmo gl grolm.</value>
+  </data>
   <data name="Play Session" xml:space="preserve">
     <value>Grrglgrrgl Grrglgrrglgl</value>
   </data>
@@ -8187,6 +8196,9 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>Mgrlgmrg mrplglmagl</value>
   </data>
+  <data name="Scores Watcher Lede" xml:space="preserve">
+    <value>RISE algo ug mgrlgmrg gropmur gl glargmo, murm blu glubmo Windows arg rorgmo ugla blarg gromurp rorgl: olga glorgblub rorgl murgblarg a grrglgrrgl urgbam, mag bam ro prglurg obmur blub grrglgrrgl. Amrog urgmo Warm Up mgrlgmrg? Ug brglmo grorpmurgl rorgmo gromurp mrrglgro blarg gl mrgl grog.</value>
+  </data>
   <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
     <value>Blorgu aluma grabo grob murgl.</value>
   </data>
@@ -8868,9 +8880,6 @@
   </data>
   <data name="Spreadsheet Import Columns" xml:space="preserve">
     <value>Mrgl: Murgro, Gromurp, Mgrlgmrg, Blarg, Mrmurm.</value>
-  </data>
-  <data name="Spreadsheet Import Lede" xml:space="preserve">
-    <value>{0} mrglgl grrgl mgrlgmrg, blub murpgrrgl gromurp grgl ro mrgl: mrp mrp gromurp, murg mrmurm mrgl blarg.</value>
   </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
 	  <value>Blgrlgrrglmaglmorg urg glorgmrblarg ro morgmorg plglglorgmurm...</value>
@@ -10334,6 +10343,9 @@
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Grglargl gro JSON mrblub grgl mrpmurp Phoenix 2 mrgl ro murgl mrp grgllurg.</value>
   </data>
+  <data name="Upload a spreadsheet" xml:space="preserve">
+    <value>Grglargl a blgrlgrrglmaglmorg</value>
+  </data>
   <data name="Upload CSV" xml:space="preserve">
     <value>Grglargl CSV</value>
   </data>
@@ -10666,6 +10678,9 @@
   <data name="What is this tool?" xml:space="preserve">
     <value>Murgm rorgl mo?</value>
   </data>
+  <data name="What it looks at and sends" xml:space="preserve">
+    <value>Gro ug blomorg og ap murpglub</value>
+  </data>
   <data name="What It Takes" xml:space="preserve">
     <value>Rglmorg Gl Mrpplgl</value>
   </data>
@@ -10884,6 +10899,9 @@
   </data>
   <data name="Window full" xml:space="preserve">
     <value>Grolab morg</value>
+  </data>
+  <data name="Windows 10 or 11. When it asks for your token, get it from {0}." xml:space="preserve">
+    <value>Windows 10 ol 11. Ob ug argmo ba gromurp gurgmo, grolgo ug blarg {0}.</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>blgrlblarg mrp blubmrgl</value>
@@ -12131,6 +12149,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} Pump It Up plglmurpmurm murgl grglmrp plglmorg, gro gromorg murgl glgrgl mrmrp murmblubgrrgl, ro mrp blubglplgl PUMBILITY mrglblarg.</value>
+  </data>
+  <data name="{0} records your RISE plays as you play." xml:space="preserve">
+    <value>{0} blubgrorp gromurp RISE blub ulo blub grrglgrrgl.</value>
   </data>
   <data name="{0} repeat plays — only your best on each chart is added." xml:space="preserve">
     <value>{0} brob lurg — argl blub mrrglgro ogrob murgl ograb.</value>

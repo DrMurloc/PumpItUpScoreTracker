@@ -101,19 +101,38 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     [Theory]
     [InlineData(MixEnum.Rise)]
     [InlineData(MixEnum.RiseArcade)]
-    public void ASiteLessPhoenixMixGetsTheSpreadsheetUploadAlone(MixEnum mix)
+    public void ARiseMixOffersTheCaptureAppBesideTheSpreadsheetUpload(MixEnum mix)
     {
         _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
 
         var cut = RenderComponent<UploadPhoenixScores>();
 
-        // Nothing to pull from piugame: no credentials, no Import seat, no console script —
-        // the CSV upload is the page (docs/design/rise.md §11.2).
+        // Nothing to pull from piugame: no credentials, no Import seat, no console script
+        // (docs/design/rise.md §11.2). The capture app leads, the spreadsheet beside it (§6.4).
         Assert.DoesNotContain(cut.FindAll("input"), i => i.GetAttribute("type") == "password");
         Assert.Empty(ImportButtons(cut));
-        Assert.Contains("Upload CSV", cut.Markup);
         Assert.DoesNotContain("Manual import", cut.Markup);
+        Assert.Equal(CommunityToolLinks.ScoresWatcherInstaller,
+            cut.Find("[data-testid=scores-watcher-download]").GetAttribute("href"));
+        var privacy = cut.Find($"a[href='{CommunityToolLinks.ScoresWatcherPrivacy}']");
+        Assert.Equal("_blank", privacy.GetAttribute("target"));
+        Assert.Single(cut.FindAll("a[href='/Account?tab=api']"));
+        Assert.Contains("Upload CSV", cut.Markup);
         Assert.Single(cut.FindAll("input#uploadInput"));
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.Phoenix2)]
+    public void AMixWithAnOfficialSiteOffersNoCaptureApp(MixEnum mix)
+    {
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+
+        // The app reads RISE and nothing else (docs/design/rise.md D26).
+        Assert.Single(ImportButtons(cut));
+        Assert.Empty(cut.FindAll("[data-testid=scores-watcher-download]"));
     }
 
     [Fact]

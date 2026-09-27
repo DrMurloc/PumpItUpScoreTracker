@@ -306,7 +306,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | OfficialMirror | Benchmark player | 🔮 | rivals-lite on mirror data; decided during the catalog walk (D18), rival machinery stays out until the Rivals project |
 | WeeklyChallenge | Weekly Challenge | ✅ | shell trio (W3) |
 | WeeklyChallenge | Daily Step | ✅ | D12 — shipped: per-mix daily board + Limbo Day + widget ([daily-step.md](../daily-step.md)) |
-| OfficialMirror | Import Scores | ✅ | **BUILT** — 1x1 credentialed import (background job + remembered password, [import-widget-remember-password.md](../import-widget-remember-password.md)); XX/older route to the spreadsheet upload |
+| OfficialMirror | Import Scores | ✅ | **BUILT** — 1x1 credentialed import (background job + remembered password, [import-widget-remember-password.md](../import-widget-remember-password.md)); XX/older route to the spreadsheet upload; the two RISE mixes offer the PIU Scores Watcher download instead ([rise.md §6.4](../rise.md)) |
 | WeeklyChallenge | Per-player daily challenge | 🔮 | owner has plans — separate concept from Daily Step; its own future session (D12/D18) |
 | EventCompetition | Active tournaments | ⏸ | HELD (D8) |
 | EventCompetition | Qualifiers countdown | ⏸ | HELD (D8) |

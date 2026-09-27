@@ -96,6 +96,14 @@ public sealed class MixProfilesTests
         Assert.True(profile.Art.HasHalfDoubleBubble);
     }
 
+    [Theory]
+    [MemberData(nameof(EveryMix))]
+    public void OnlyTheRiseMixesOfferTheScoresWatcher(MixEnum mix)
+    {
+        // The capture app reads RISE's result screens and nothing else (docs/design/rise.md D26).
+        Assert.Equal(mix is MixEnum.Rise or MixEnum.RiseArcade, mix.HasScoresWatcher());
+    }
+
     [Fact]
     public void RiseGradesOnItsOwnLadderWithMarksAndItsOwnLetters()
     {

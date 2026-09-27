@@ -2734,6 +2734,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>Fallos de descarga</value>
   </data>
+  <data name="Download for Windows" xml:space="preserve">
+    <value>Descargar para Windows</value>
+  </data>
   <data name="Download image" xml:space="preserve">
     <value>Descargar imagen</value>
   </data>
@@ -3198,6 +3201,9 @@
   </data>
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Rellena los seis recuentos</value>
+  </data>
+  <data name="Fill one in yourself: one row per chart, and a better score replaces a worse one." xml:space="preserve">
+    <value>Rellénala tú: una fila por chart, y un score mejor sustituye a uno peor.</value>
   </data>
   <data name="Fill out the judgements to see results." xml:space="preserve">
     <value>Rellena los juicios para ver los resultados.</value>
@@ -6856,6 +6862,9 @@
   <data name="Play order" xml:space="preserve">
     <value>Orden de juego</value>
   </data>
+  <data name="Play RISE. It does the rest." xml:space="preserve">
+    <value>Juega a RISE. Del resto se encarga la aplicación.</value>
+  </data>
   <data name="Play Session" xml:space="preserve">
     <value>Sesión de juego</value>
   </data>
@@ -8140,6 +8149,9 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>Puntuaciones guardadas</value>
   </data>
+  <data name="Scores Watcher Lede" xml:space="preserve">
+    <value>RISE guarda los scores dentro del juego, así que esta aplicación gratuita para Windows los lee de tu pantalla: cada pantalla de resultados se convierte en un intento aquí, sin nada que pulsar mientras juegas. ¿Ya tienes scores de Warm Up? Su captura masiva lee tus mejores scores de la lista de canciones.</value>
+  </data>
   <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
     <value>Las puntuaciones que hayas añadido desde esta importación se quedan tal cual.</value>
   </data>
@@ -8814,9 +8826,6 @@
   </data>
   <data name="Spreadsheet Import Columns" xml:space="preserve">
     <value>Columnas: Song, Difficulty (S16, HDB23, D20), Score, Plate (PG, FC o NM; el código de la placa en una versión de arcade), IsBroken.</value>
-  </data>
-  <data name="Spreadsheet Import Lede" xml:space="preserve">
-    <value>{0} guarda sus récords dentro del juego, así que el sitio los lee de una hoja de cálculo que rellenas tú: una fila por chart, y una puntuación mejor sustituye a una peor.</value>
   </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>La hoja de cálculo se está subiendo y procesando...</value>
@@ -10273,6 +10282,9 @@
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Sube un archivo JSON para crear canciones y charts de Phoenix 2 en masa.</value>
   </data>
+  <data name="Upload a spreadsheet" xml:space="preserve">
+    <value>Subir una hoja de cálculo</value>
+  </data>
   <data name="Upload CSV" xml:space="preserve">
     <value>Subir CSV</value>
   </data>
@@ -10603,6 +10615,9 @@
   <data name="What is this tool?" xml:space="preserve">
     <value>¿Qué es esta herramienta?</value>
   </data>
+  <data name="What it looks at and sends" xml:space="preserve">
+    <value>Qué mira y qué envía</value>
+  </data>
   <data name="What It Takes" xml:space="preserve">
     <value>Lo que hace falta</value>
   </data>
@@ -10821,6 +10836,9 @@
   </data>
   <data name="Window full" xml:space="preserve">
     <value>Ventana llena</value>
+  </data>
+  <data name="Windows 10 or 11. When it asks for your token, get it from {0}." xml:space="preserve">
+    <value>Windows 10 u 11. Cuando te pida tu token, consíguelo en {0}.</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>victorias en tu rango</value>
@@ -12063,6 +12081,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts de desafío de Pump It Up esta semana, un chart diario con posiciones en vivo y el tablero mensual PUMBILITY.</value>
+  </data>
+  <data name="{0} records your RISE plays as you play." xml:space="preserve">
+    <value>{0} registra tus intentos de RISE mientras juegas.</value>
   </data>
   <data name="{0} repeat plays — only your best on each chart is added." xml:space="preserve">
     <value>{0} jugadas repetidas: solo se añade tu mejor marca en cada chart.</value>

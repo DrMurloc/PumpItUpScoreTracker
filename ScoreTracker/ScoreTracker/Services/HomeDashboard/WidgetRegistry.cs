@@ -315,7 +315,8 @@ public static class WidgetRegistry
             // 1x1 only, like Quick Record.
             new[] { SizePreset.OneByOne },
             SizePreset.OneByOne,
-            // Every mix: Phoenix 1/2 import with credentials, XX and older via spreadsheet upload.
+            // Every mix: Phoenix 1/2 import with credentials, the RISE mixes through the capture app's
+            // download, XX and older via spreadsheet upload.
             Enum.GetValues<MixEnum>(),
             typeof(ImportScoresWidget),
             typeof(ImportScoresConfigPanel),
