@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -15,8 +16,9 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     {
         public readonly object Gate = new();
         public DateTime FireAt;
-        public readonly HashSet<Guid> NewCharts = new();
-        public readonly Dictionary<Guid, PhoenixScore> UpscoreCharts = new();
+        // The same fold an import's announcement uses, so a batch and an import count one chart the
+        // same way: a new pass wins, an upscore keeps the score it had before the batch.
+        public readonly ScoreChangeFold Changes = new();
         public Guid? SessionId;
     }
 
@@ -24,12 +26,6 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     {
         public Guid Id;
         public DateTimeOffset LastActivity;
-    }
-
-    private sealed class DetectedTitleState
-    {
-        public readonly object Gate = new();
-        public readonly HashSet<string> Titles = new();
     }
 
     // A session envelope groups journal rows across event batches: same (user, mix,
@@ -44,11 +40,6 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), BatchState> _batches = new();
 
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix, string Source), SessionState> _sessions = new();
-
-    // Site-detected badges waiting for their batch's card. Keyed like the batches but held
-    // separately, because TakeBatch destroys the BatchState at drain time and the title step
-    // that reads these runs after that.
-    private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), DetectedTitleState> _detectedTitles = new();
 
     public (Guid Id, bool IsNew) GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
         Guid? explicitSessionId = null)
@@ -75,6 +66,35 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         }
     }
 
+    public void ForgetSession(Guid userId, MixEnum mix, Guid sessionId, IReadOnlyCollection<Guid> chartIds)
+    {
+        foreach (var (key, state) in _sessions.ToArray())
+        {
+            if (key.UserId != userId || key.Mix != mix) continue;
+            lock (state)
+            {
+                if (state.Id == sessionId) _sessions.TryRemove(key, out _);
+            }
+        }
+
+        var batchKey = (userId, mix);
+        if (!_batches.TryGetValue(batchKey, out var batch)) return;
+        lock (batch.Gate)
+        {
+            // Same orphaned-state guard as AddToBatch. A batch the next submission already relabelled
+            // is that submission's to announce, and is left alone.
+            if (!_batches.TryGetValue(batchKey, out var current) || !ReferenceEquals(current, batch) ||
+                batch.SessionId != sessionId)
+                return;
+            foreach (var chartId in chartIds) batch.Changes.Remove(chartId);
+            if (batch.Changes.IsEmpty)
+                _batches.TryRemove(batchKey, out _);
+            else
+                // What is left belongs to no surviving session: announced, but under none.
+                batch.SessionId = null;
+        }
+    }
+
     public bool AddToBatch(MixEnum mix, Guid userId, DateTime fireAt, Guid chartId, bool isNewClear,
         PhoenixScore? upscoredFrom, Guid sessionId)
     {
@@ -93,11 +113,13 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
                     continue;
                 state.FireAt = fireAt;
                 // Last submission wins: a batch that mixes sources (rare — a manual entry
-                // landing mid-import) attributes to the most recent session.
+                // landing mid-upload) attributes to the most recent session.
                 state.SessionId = sessionId;
-                if (isNewClear) state.NewCharts.Add(chartId);
-                if (upscoredFrom.HasValue && !state.NewCharts.Contains(chartId))
-                    state.UpscoreCharts[chartId] = upscoredFrom.Value;
+                state.Changes.Add(chartId,
+                    isNewClear ? ScoreSaveChange.NewPass
+                    : upscoredFrom.HasValue ? ScoreSaveChange.Upscore
+                    : ScoreSaveChange.None,
+                    upscoredFrom.HasValue ? (int)upscoredFrom.Value : null);
                 return isNew;
             }
         }
@@ -109,6 +131,21 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         lock (state.Gate) return state.FireAt;
     }
 
+    public bool MakeDue(MixEnum mix, Guid userId, DateTime dueAt)
+    {
+        var key = (userId, mix);
+        if (!_batches.TryGetValue(key, out var state)) return false;
+        lock (state.Gate)
+        {
+            // Same orphaned-state guard as AddToBatch: a drain may have taken this batch between the
+            // lookup and the gate, and bringing a dead batch's deadline forward would drain nothing.
+            if (!_batches.TryGetValue(key, out var current) || !ReferenceEquals(current, state))
+                return false;
+            if (state.FireAt > dueAt) state.FireAt = dueAt;
+            return true;
+        }
+    }
+
     public PendingScoreBatch? TakeBatch(MixEnum mix, Guid userId)
     {
         var key = (userId, mix);
@@ -117,34 +154,9 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         {
             if (!_batches.TryGetValue(key, out var current) || !ReferenceEquals(current, state))
                 return null;
-            var newCharts = state.NewCharts.ToArray();
-            var upscores = state.UpscoreCharts.ToDictionary(kv => kv.Key, kv => (int)kv.Value);
             _batches.TryRemove(key, out _);
-            return new PendingScoreBatch(mix, newCharts, upscores, state.SessionId);
+            return state.Changes.ToBatch(mix, state.SessionId);
         }
-    }
-
-    public bool TryAddDetectedTitles(MixEnum mix, Guid userId, IEnumerable<string> titles)
-    {
-        var names = titles.Distinct().ToArray();
-        if (names.Length == 0) return false;
-        // Only worth parking when a batch is open to carry them. Checking rather than locking
-        // the batch is deliberate: losing the microsecond race against a concurrent drain costs
-        // the caller a fallback card, never a lost badge.
-        if (!_batches.ContainsKey((userId, mix))) return false;
-        var state = _detectedTitles.GetOrAdd((userId, mix), _ => new DetectedTitleState());
-        lock (state.Gate)
-        {
-            foreach (var name in names) state.Titles.Add(name);
-        }
-
-        return true;
-    }
-
-    public string[] TakeDetectedTitles(MixEnum mix, Guid userId)
-    {
-        if (!_detectedTitles.TryRemove((userId, mix), out var state)) return Array.Empty<string>();
-        lock (state.Gate) return state.Titles.ToArray();
     }
 
     public IReadOnlyCollection<DueScoreBatch> TakeDueBatches(DateTime dueBefore)
@@ -160,11 +172,8 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
                 // FireAt is stamped under this gate, and AddToBatch publishes the state before
                 // taking it — so an unstamped batch is brand new, not overdue since year one.
                 if (state.FireAt == default || state.FireAt > dueBefore) continue;
-                var newCharts = state.NewCharts.ToArray();
-                var upscores = state.UpscoreCharts.ToDictionary(kv => kv.Key, kv => (int)kv.Value);
                 _batches.TryRemove(key, out _);
-                taken.Add(new DueScoreBatch(key.UserId,
-                    new PendingScoreBatch(key.Mix, newCharts, upscores, state.SessionId)));
+                taken.Add(new DueScoreBatch(key.UserId, state.Changes.ToBatch(key.Mix, state.SessionId)));
             }
 
         return taken;
@@ -176,10 +185,9 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         {
             lock (kv.Value.Gate)
             {
-                var newCharts = kv.Value.NewCharts.ToArray();
-                var upscores = kv.Value.UpscoreCharts.ToDictionary(e => e.Key, e => (int)e.Value);
-                return new BatchAccumulatorSnapshotEntry(kv.Key.UserId, kv.Key.Mix, kv.Value.FireAt, newCharts,
-                    upscores);
+                return new BatchAccumulatorSnapshotEntry(kv.Key.UserId, kv.Key.Mix, kv.Value.FireAt,
+                    kv.Value.Changes.NewPasses.ToArray(),
+                    kv.Value.Changes.UpscoredFrom.ToDictionary(e => e.Key, e => e.Value));
             }
         }).ToArray();
     }

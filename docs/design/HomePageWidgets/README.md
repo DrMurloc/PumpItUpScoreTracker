@@ -94,7 +94,7 @@ whose content is deterministic doesn't render a shuffle that re-rolls into the i
 Auto-refresh is **two opt-in signals** (owner, 2026-08-30, replacing the earlier fire-on-both):
 `RefreshOnScoreImport` bumps the widget the moment the viewer's import finishes saving — for
 widgets that read the scores themselves — and `RefreshOnStatsUpdate` bumps when the recalculated
-stats land (~2 minutes after the batch settles) — only for the few whose data IS that analysis
+stats land (as soon as an import finishes saving; ~2 minutes after a typed entry's batch settles) — only for the few whose data IS that analysis
 (Account Stats, the Competitive Level graph; Suggested Charts declares both because Pumbility Push
 gains ride the projections). The host coalesces event bursts into one reload (2s debounce) and
 holds a bump that arrives mid-edit until Done.

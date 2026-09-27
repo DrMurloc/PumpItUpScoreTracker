@@ -17,6 +17,7 @@
 @inject BrokenScorePreference BrokenScores
 @inject IUiNotificationHub UiHub
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
 @* Import Scores — 1x1. Mirrors quick-record's mix handling. Never stores credentials (that is the
    configurator's job); it imports from a stored credential or a one-time typed one, and hands the
@@ -159,6 +160,7 @@ else
     private string _password = "";
     private string? _status;
     private string? _error;
+    private string? _errorBeforePress;
     private int _importedCount;
     private Guid _userId;
     private readonly List<IDisposable> _subscriptions = new();
@@ -261,6 +263,9 @@ else
     private bool BeginImport()
     {
         if (_state == ImportUiState.Importing) return false;
+        // Handed back if the press is refused: a refusal changes nothing, so the line saying why the last
+        // run failed stays.
+        _errorBeforePress = _error;
         _error = null;
         _importedCount = 0;
         _status = L["Starting import…"].Value;
@@ -293,8 +298,16 @@ else
                 _state = ImportUiState.UnlockFailed;
                 break;
             case ImportStartOutcome.AlreadyRunning:
+                // A refusal changes nothing: the line about the last run stays, and the refusal is a toast,
+                // as it is on the upload page — an inline line here outlived the run it described.
                 _state = ImportUiState.Idle;
-                _error = L["An import is already running"].Value;
+                _error = _errorBeforePress;
+                Snackbar.Add(L["An import is already running"].Value, Severity.Info);
+                break;
+            case ImportStartOutcome.CoolingDown:
+                _state = ImportUiState.Idle;
+                _error = _errorBeforePress;
+                Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
                 break;
         }
     }

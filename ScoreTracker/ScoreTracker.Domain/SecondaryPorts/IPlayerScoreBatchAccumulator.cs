@@ -18,7 +18,7 @@ public interface IPlayerScoreBatchAccumulator
     /// <summary>
     /// Returns the open session id for (user, mix, source), extending its activity
     /// window — or mints a new one when none is open or the gap (8 h) has elapsed.
-    /// An explicit id (an import/CSV run id) takes over the envelope. Session
+    /// An explicit id (an import run's, or a sitting's) takes over the envelope. Session
     /// envelopes are identity only: they group journal rows and never delay the
     /// event batches below.
     ///
@@ -29,6 +29,15 @@ public interface IPlayerScoreBatchAccumulator
     /// </summary>
     (Guid Id, bool IsNew) GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
         Guid? explicitSessionId = null);
+
+    /// <summary>
+    /// Forgets a session that no longer exists — an undone one. The envelope still holding its id stops
+    /// handing it out, so the next submission mints a fresh session and records it rather than joining an
+    /// id whose row is gone (and so never reaching the Undo page again). A batch still announcing for it
+    /// drops the <paramref name="chartIds" /> the undo rebuilt, so its timer never announces them — nor,
+    /// relabelled by the next submission, under that submission's session.
+    /// </summary>
+    void ForgetSession(Guid userId, MixEnum mix, Guid sessionId, IReadOnlyCollection<Guid> chartIds);
 
     /// <summary>
     /// Atomically adds a chart update to the (user, mix) batch (creating the batch if
@@ -48,27 +57,18 @@ public interface IPlayerScoreBatchAccumulator
     DateTime? GetFireAt(MixEnum mix, Guid userId);
 
     /// <summary>
+    /// Brings the (user, mix) batch's fire-at forward to <paramref name="dueAt"/>, so the next
+    /// drain announces it instead of waiting out the quiet window. Never pushes a deadline later.
+    /// Returns false when no batch is open. Nothing is taken: the batch stays where it is until a
+    /// drain takes it.
+    /// </summary>
+    bool MakeDue(MixEnum mix, Guid userId, DateTime dueAt);
+
+    /// <summary>
     /// Atomically removes and returns the (user, mix) pending batch, or null if no batch
     /// is active (e.g. another in-flight drain already took it).
     /// </summary>
     PendingScoreBatch? TakeBatch(MixEnum mix, Guid userId);
-
-    /// <summary>
-    /// Parks site-detected title names (the badges no score can compute) so the open
-    /// (user, mix) batch's snapshot card can announce them instead of a card of their own.
-    /// Returns false when no batch is open to carry them — the caller announces them
-    /// itself. Deposits accumulate, so a name is never dropped by a second deposit.
-    /// Held in a slot of its own rather than on the batch: the drain removes the batch
-    /// before the title step that reads these runs.
-    /// </summary>
-    bool TryAddDetectedTitles(MixEnum mix, Guid userId, IEnumerable<string> titles);
-
-    /// <summary>
-    /// Atomically removes and returns the parked site-detected titles for the (user, mix),
-    /// or empty when none were parked. Removing on read is what keeps a title from being
-    /// announced twice across a session's successive batches.
-    /// </summary>
-    string[] TakeDetectedTitles(MixEnum mix, Guid userId);
 
     /// <summary>
     /// Atomically removes and returns every batch whose fire-at has passed

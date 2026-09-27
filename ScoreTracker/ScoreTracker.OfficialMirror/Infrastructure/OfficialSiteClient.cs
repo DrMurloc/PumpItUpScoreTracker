@@ -358,11 +358,12 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IReadOnlyList<OfficialRecordedScore>> GetBestScoresIn(MixEnum mix, Guid userId, string sid,
         IReadOnlyCollection<string> buckets, bool includeBroken, CancellationToken cancellationToken)
     {
+        if (buckets.Count == 0) return Array.Empty<OfficialRecordedScore>();
+
         var client = _piuGame.ClientForSid(mix, sid);
         var cards = new List<PiuGameGetBestScoresResult.ScoreDto>();
-        var walked = buckets.Count == 0 ? new[] { CensusBuckets.All } : buckets.ToArray();
 
-        foreach (var bucket in walked)
+        foreach (var bucket in buckets)
         {
             var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
             for (var page = 1; page <= MaxRepairPagesPerBucket; page++)

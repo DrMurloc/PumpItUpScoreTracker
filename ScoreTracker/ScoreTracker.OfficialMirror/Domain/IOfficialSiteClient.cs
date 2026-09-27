@@ -44,8 +44,9 @@ internal interface IOfficialSiteClient
 
     /// <summary>
     ///     Every best card at the given <c>?lv=</c> buckets, walked to the end of each — the
-    ///     evidence-driven repair for what a census localised. Pass an empty bucket list to walk
-    ///     the whole account, which is the deep scan.
+    ///     evidence-driven repair for what a census localised. Pass <see cref="CensusBuckets.All" /> to
+    ///     walk the whole account, which is the deep scan. An empty list reads nothing: a census that
+    ///     found every level in agreement must never turn into a walk of everything.
     ///     <para>
     ///         The best list is the only surface carrying a SCORE: the play-log modal behind a
     ///         count tile names charts and shows a grade, but nothing that could be saved.

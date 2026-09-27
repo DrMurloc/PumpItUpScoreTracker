@@ -520,10 +520,7 @@
         }
 
         _isImporting = true;
-        _errors.Clear();
-        _scores.Clear();
-        _importCompleted = false;
-        _importStatus = L["Starting Import..."].Value;
+        var shown = ClearForImport();
         await RememberSelectedCard();
         var result = await Mediator.Send(new StartOfficialImportCommand(
             new StoredCredentialSource(blob.KeyId, blob.Ciphertext), _currentMix, _selectedId, _selectedGameTag,
@@ -546,9 +543,37 @@
                 break;
             case ImportStartOutcome.AlreadyRunning:
                 _isImporting = false;
+                RestoreAfterRefusal(shown);
                 Snackbar.Add(L["An import is already running"].Value, Severity.Info);
                 break;
+            case ImportStartOutcome.CoolingDown:
+                _isImporting = false;
+                RestoreAfterRefusal(shown);
+                Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
+                break;
         }
+    }
+
+    // What the page showed before a press, cleared for the run's own results and handed back if the
+    // press is refused: a refusal changes nothing, so the run that just finished — or the error saying
+    // why it failed — stays on screen rather than giving way to the strip's older, stale verdict.
+    private (RecordedPhoenixScore[] Scores, bool Completed, string? Status, string[] Errors) ClearForImport()
+    {
+        var shown = (_scores.ToArray(), _importCompleted, _importStatus, _errors.ToArray());
+        _scores.Clear();
+        _importCompleted = false;
+        _importStatus = L["Starting Import..."].Value;
+        _errors.Clear();
+        return shown;
+    }
+
+    private void RestoreAfterRefusal(
+        (RecordedPhoenixScore[] Scores, bool Completed, string? Status, string[] Errors) shown)
+    {
+        foreach (var score in shown.Scores) _scores.Add(score);
+        _importCompleted = shown.Completed;
+        _importStatus = shown.Status;
+        _errors.AddRange(shown.Errors);
     }
 
     private async Task ForgetSavedCredentials()
@@ -683,7 +708,6 @@
         // Flip to importing and render before the slow sign-in so the button disables and shows a
         // spinner immediately, instead of looking inert and staying spammable while SignIn runs.
         _isImporting = true;
-        _errors.Clear();
         StateHasChanged();
 
         // A saved credential takes the sealed-blob path; typing takes the credential path below.
@@ -715,9 +739,7 @@
             }
             await RememberSelectedCard();
 
-            _scores.Clear();
-            _importCompleted = false;
-            _importStatus = L["Starting Import..."].Value;
+            var shown = ClearForImport();
             // Hand the scrape to the background job: SignIn runs now (a bad password is caught
             // immediately), then status + completion arrive over the hub while the page stays
             // usable — the user can leave. Terminal state is flipped by StatusUpdate/ImportError.
@@ -739,7 +761,13 @@
                     break;
                 case ImportStartOutcome.AlreadyRunning:
                     _isImporting = false;
+                    RestoreAfterRefusal(shown);
                     Snackbar.Add(L["An import is already running"].Value, Severity.Info);
+                    break;
+                case ImportStartOutcome.CoolingDown:
+                    _isImporting = false;
+                    RestoreAfterRefusal(shown);
+                    Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
                     break;
             }
         }
@@ -876,13 +904,44 @@
 
     private async Task SaveScores()
     {
+        // Nothing else saves on a mix while it imports (docs/design/import-restart-recovery.md §0). Asked
+        // once, at the press: an import started mid-upload lets the upload finish.
+        if (await Mediator.Send(new GetImportInProgressQuery(_userId, _currentMix)))
+        {
+            Snackbar.Add(L["An import is running on this mix. Save again once it finishes."].Value, Severity.Error);
+            return;
+        }
+
         _csvStep = CsvStep.Saving;
         _currentCancellation = new CancellationTokenSource();
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        // One upload = one session.
-        var uploadSessionId = Guid.NewGuid();
+        var mix = _currentMix;
+        try
+        {
+            await SaveRows(startTime, cancellationToken);
+        }
+        finally
+        {
+            // The rows ride the Ledger's CSV session and its two-minute batch, like typed entries, so
+            // the Ledger opens the session Undo lists. But a file is the whole burst — nobody uploads a
+            // second one a minute later — so the batch is announced the moment the upload ends:
+            // finished, cancelled or failed. Not the page's token: a cancelled upload still announces
+            // what it saved. If the circuit is gone before this runs, the batch's own timer does it.
+            try
+            {
+                await Mediator.Send(new DrainScoreBatchCommand(_userId, mix), CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning(e, "Could not announce the CSV upload right away; its batch timer will");
+            }
+        }
+    }
+
+    private async Task SaveRows(DateTimeOffset startTime, CancellationToken cancellationToken)
+    {
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
         // A CSV is a manual submission: a passing row is what the player wants shown, so it is
         // authoritative and may lower a record (docs/design/score-truth-model.md D9). A broken row is
@@ -916,8 +975,7 @@
             try
             {
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
-                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix,
-                    SessionId: uploadSessionId),
+                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix),
                     cancellationToken);
             }
             catch (OperationCanceledException)

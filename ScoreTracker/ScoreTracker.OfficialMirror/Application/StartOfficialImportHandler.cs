@@ -17,23 +17,29 @@ internal sealed class StartOfficialImportHandler : IRequestHandler<StartOfficial
     private readonly IBus _bus;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IImportConcurrencyGuard _guard;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public StartOfficialImportHandler(IOfficialSiteClient officialSite, IMediator mediator, IBus bus,
-        ICurrentUserAccessor currentUser, IImportConcurrencyGuard guard)
+        ICurrentUserAccessor currentUser, IImportConcurrencyGuard guard, IDateTimeOffsetAccessor dateTime)
     {
         _officialSite = officialSite;
         _mediator = mediator;
         _bus = bus;
         _currentUser = currentUser;
         _guard = guard;
+        _dateTime = dateTime;
     }
 
     public async Task<ImportStartResult> Handle(StartOfficialImportCommand request,
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
-        if (!_guard.TryBegin(userId))
+        // Before the credential and the sign-in, so a press refused here costs piugame nothing.
+        var slot = _guard.TryBegin(userId, request.Mix, _dateTime.Now, cooldownApplies: true);
+        if (slot.Outcome == ImportSlotOutcome.AlreadyRunning)
             return new ImportStartResult(ImportStartOutcome.AlreadyRunning);
+        if (slot.Outcome == ImportSlotOutcome.CoolingDown)
+            return new ImportStartResult(ImportStartOutcome.CoolingDown, slot.RetryAfter);
 
         // The slot is held until the background job releases it; only the pre-flight failure
         // paths below hand it back, so a second scrape can't start while one is in flight.

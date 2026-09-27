@@ -33,11 +33,12 @@ public sealed class UndoScoreSessionHandlerTests
     private readonly Mock<IScoreJournalRepository> _journal = new();
     private readonly Mock<IPhoenixRecordRepository> _records = new();
     private readonly Mock<IScoreSessionRepository> _sessions = new();
+    private readonly Mock<IPlayerScoreBatchAccumulator> _batches = new();
 
     private UndoScoreSessionHandler Build(Mock<ISeasonReader>? seasons = null)
     {
         return new UndoScoreSessionHandler(_sessions.Object, _journal.Object, _records.Object,
-            (seasons ?? FakeSeasons.None()).Object, FakeDateTime.At(Now).Object, _bus.Object);
+            (seasons ?? FakeSeasons.None()).Object, FakeDateTime.At(Now).Object, _bus.Object, _batches.Object);
     }
 
     private static ScoreSessionRecord Session(DateTimeOffset startedAt, Guid? owner = null)
@@ -257,6 +258,10 @@ public sealed class UndoScoreSessionHandlerTests
 
         _journal.Verify(j => j.DeleteSession(UserId, SessionId, It.IsAny<CancellationToken>()), Times.Once);
         _sessions.Verify(s => s.Delete(SessionId, It.IsAny<CancellationToken>()), Times.Once);
+        // An envelope still holding the id would hand it to the next upload or typed score, which would
+        // then save under a session with no row — missing from Undo from then on.
+        _batches.Verify(b => b.ForgetSession(UserId, MixEnum.Phoenix, SessionId,
+            It.Is<IReadOnlyCollection<Guid>>(charts => charts.SequenceEqual(new[] { ChartA }))), Times.Once);
         // Highlights and milestones are PlayerProgress's and are not recomputed, so they have to
         // be told rather than left to fall out.
         _bus.Verify(b => b.Publish(It.Is<ScoreSessionUndoneEvent>(e =>

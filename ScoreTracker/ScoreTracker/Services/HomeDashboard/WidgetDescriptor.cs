@@ -88,8 +88,8 @@ public sealed record WidgetDescriptor(
     // refresh rides the IMPORT; the post-batch analysis is a separate, later signal).
     bool RefreshOnScoreImport = false,
     // When true, the host auto-bumps RefreshToken when the viewer's recalculated stats
-    // land (~2 minutes after the batch settles) — only for the few widgets whose data IS
-    // that analysis: stored ratings, competitive-level history, projection-fed gains.
+    // land (after the scores are announced and captured) — only for the few widgets whose data
+    // IS that analysis: stored ratings, competitive-level history, projection-fed gains.
     bool RefreshOnStatsUpdate = false,
     // Optional config-aware visibility for the refresh action: some goals of a type are
     // deterministic, and a shuffle that re-rolls into the identical list is a lie. Null =

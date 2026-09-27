@@ -140,7 +140,7 @@ would couple two verticals' entity models for no gain.
 **Write path.** [`GetOrExtendSession`](../../ScoreTracker/ScoreTracker.ScoreLedger/Infrastructure/PlayerScoreBatchAccumulator.cs)
 is called on *every* submission including no-ops, so a row write per call would put thousands of
 writes on the import path. Insert on session creation; update `LastActivityAt` and the counts at
-batch drain, which is already a checkpoint every two minutes. The accumulator stays the source of
+each announcement — an import's one, sent when it finishes saving, or a typed batch's drain. The accumulator stays the source of
 session identity — the table records what it decided.
 
 **Reads.** The undo list queries this table directly. **The public Sessions page does not** — it

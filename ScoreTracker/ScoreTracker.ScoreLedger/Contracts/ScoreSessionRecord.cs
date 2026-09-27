@@ -22,9 +22,9 @@ public sealed record ScoreSessionRecord(
     int NewCount,
     int UpscoreCount,
     /// <summary>
-    ///     When everything downstream of this session's batch finished. Null means it never did —
-    ///     a restart inside the batch hold window
-    ///     (docs/design/import-restart-recovery.md).
+    ///     When everything downstream of this session's announcement finished. Null means it has
+    ///     not — still in flight, never announced, or a typed entry that changed nothing
+    ///     (docs/design/import-restart-recovery.md §0).
     /// </summary>
     DateTimeOffset? ProcessedAt = null)
 {

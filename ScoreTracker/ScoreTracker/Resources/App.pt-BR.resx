@@ -922,6 +922,9 @@
   <data name="An import is already running" xml:space="preserve">
     <value>Uma importação já está em andamento</value>
   </data>
+  <data name="An import is running on this mix. Save again once it finishes." xml:space="preserve">
+    <value>Uma importação está em andamento nesta versão. Salve de novo quando ela terminar.</value>
+  </data>
   <data name="an SSS+" xml:space="preserve">
     <value>um SSS+</value>
   </data>
@@ -10971,6 +10974,9 @@
   </data>
   <data name="You call the API when you want it. Skip this screen." xml:space="preserve">
     <value>Você chama a API quando quiser. Pule esta tela.</value>
+  </data>
+  <data name="You can import again in {0} min." xml:space="preserve">
+    <value>Você poderá importar de novo em {0} min.</value>
   </data>
   <data name="You can leave once your key exists." xml:space="preserve">
     <value>Você poderá sair assim que a sua chave existir.</value>

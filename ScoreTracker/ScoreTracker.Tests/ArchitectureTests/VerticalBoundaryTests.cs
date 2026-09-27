@@ -92,6 +92,10 @@ public sealed class VerticalBoundaryTests
         Assert.Contains(services,
             d => d.ServiceType
                  == typeof(ScoreTracker.OfficialMirror.Application.RecoverInterruptedImportsConsumer));
+        // Every background import — the Import button, Import and check, and the deep scan — is this
+        // one consumer. Unregistered, every press sits at "Importing your scores…" forever.
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.RunOfficialImportConsumer));
     }
 
     [Fact]

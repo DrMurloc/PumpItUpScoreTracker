@@ -13,6 +13,8 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.HomePage.Contracts;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -37,6 +39,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
     private readonly Chart _chart = MakeChart();
+    private readonly Guid _me = Guid.NewGuid();
 
     public QuickRecordWidgetTests()
     {
@@ -52,13 +55,12 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
             .ReturnsAsync(new[] { _chart });
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecordedPhoenixScore?)null);
-        // UpdatePhoenixBestAttemptCommand : IRequest (no response) → the non-generic
-        // Task Send(IRequest, …) overload, so Returns(Task.CompletedTask), not ReturnsAsync.
         _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(default(ScoreSaveResult));
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartCatalogCache>();
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(_me, "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
         // Last: reading the renderer locks the service collection. The widget's bubble gates
         // its tooltip on RendererInfo; render it interactive.
         this.RenderInteractive();
@@ -175,6 +177,45 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
                 && c.Plate == PhoenixPlate.MarvelousGame
                 && c.Score != null && (int)c.Score.Value == 985320),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ASaveWhileTheMixIsImportingSavesNothingAndSaysWhy()
+    {
+        // Owner, 2026-09-27: nothing else saves on a mix while it imports. Every record form in the
+        // site is this one component, so this is the check for all of them.
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RecordedPhoenixScore(_chart.Id, 985320, PhoenixPlate.MarvelousGame, false,
+                new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.UserId == _me && q.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var cut = Render();
+        await Pick(cut, _chart);
+
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        var toast = Assert.Single(Services.GetRequiredService<ISnackbar>().ShownSnackbars);
+        Assert.Equal("An import is running on this mix. Save again once it finishes.", toast.Message);
+        Assert.Equal(Severity.Error, toast.Severity);
+    }
+
+    [Fact]
+    public async Task AnImportOnAnotherMixLeavesThisOneSaving()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RecordedPhoenixScore(_chart.Id, 985320, PhoenixPlate.MarvelousGame, false,
+                new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var cut = Render();
+        await Pick(cut, _chart);
+
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

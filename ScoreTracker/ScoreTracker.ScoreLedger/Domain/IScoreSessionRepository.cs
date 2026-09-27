@@ -19,8 +19,8 @@ internal interface IScoreSessionRepository
         DateTimeOffset startedAt, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Extends a session and adds to its counts, at batch drain rather than per submission —
-    ///     an import posts thousands of scores and must not post thousands of updates.
+    ///     Extends a session and adds to its counts, once per announcement rather than per
+    ///     submission — an upload posts thousands of scores and must not post thousands of updates.
     /// </summary>
     Task Touch(Guid id, DateTimeOffset at, int newCount, int upscoreCount,
         CancellationToken cancellationToken = default);
@@ -39,13 +39,6 @@ internal interface IScoreSessionRepository
     ///     session already stamped keeps its first timestamp.
     /// </summary>
     Task MarkProcessed(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    ///     Sessions whose derived work never ran. Naturally tiny — every session predating the
-    ///     column is backfilled as processed — so this is the cheap end to start a recovery pass
-    ///     from (docs/design/import-restart-recovery.md §3.1).
-    /// </summary>
-    Task<IReadOnlyList<ScoreSessionRecord>> ListUnprocessed(CancellationToken cancellationToken = default);
 
     Task<ScoreSessionRecord?> Get(Guid id, CancellationToken cancellationToken = default);
 

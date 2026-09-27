@@ -57,12 +57,10 @@ internal sealed class ImportResultEntity
     /// <summary>
     ///     How many records this run actually changed, stamped when the run closes.
     ///     <para>
-    ///         Recorded here rather than read off <c>ScoreSession.ScoreCount</c>, which cannot
-    ///         answer for a run that just finished: that counter is written when the score batch
-    ///         DRAINS, on a ~2 minute in-memory debounce, so an early look or an app restart
-    ///         inside the window leaves it at zero forever while the journal holds the rows
-    ///         (observed 2026-08-08: a run with 7 journal rows and a ScoreCount of 0). The import
-    ///         already knows what it saved, so it says so itself.
+    ///         Recorded here rather than read off <c>ScoreSession.ScoreCount</c>, which counts
+    ///         something else — the new passes and upscores the announcement carried, not every
+    ///         record the run raised — and which a run cut short by a restart only gets from the
+    ///         startup replay. The import already knows what it saved, so it says so itself.
     ///     </para>
     ///     Null on a run that never reported back, which is the one case nobody can count.
     /// </summary>

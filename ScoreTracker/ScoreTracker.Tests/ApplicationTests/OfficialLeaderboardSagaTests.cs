@@ -1,7 +1,10 @@
 ﻿using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
@@ -11,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -65,7 +69,7 @@ public sealed class OfficialLeaderboardSagaTests
 
     private static ImportOfficialPlayerScoresCommand ImportCommand(MixEnum mix = MixEnum.Phoenix)
     {
-        return new ImportOfficialPlayerScoresCommand("user", "pass", "card1", "NEWTAG", false, mix);
+        return new ImportOfficialPlayerScoresCommand("user", "pass", "NEWTAG", false, mix);
     }
 
     private sealed record ImportFixture(
@@ -107,12 +111,16 @@ public sealed class OfficialLeaderboardSagaTests
                 It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ScrapedScores((officialScores ?? Array.Empty<OfficialRecordedScore>()).ToArray(),
                 Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
+        // The card the v1 import picks off the same sign-in: the one tagged NEWTAG.
         site.Setup(s => s.GetGameCards(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<GameCardRecord>());
+            .ReturnsAsync(new[] { new GameCardRecord(Name.From("NEWTAG"), Id: cardId, IsActive: true) });
 
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingScores ?? Array.Empty<RecordedPhoenixScore>());
+        // No typed-entry batch open unless a test opens one.
+        mediator.Setup(m => m.Send(It.IsAny<ClaimScoreBatchCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreSaveResult>());
         mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(settings);
 
@@ -175,7 +183,7 @@ public sealed class OfficialLeaderboardSagaTests
         var saga = BuildImportSaga(f);
         var sessionIds = new List<Guid?>();
         f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest, CancellationToken>((cmd, _) =>
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
                 sessionIds.Add(((UpdatePhoenixBestAttemptCommand)cmd).SessionId));
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
@@ -186,43 +194,211 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task ImportPublishesDetectedTitlesFromAccountData()
+    public async Task AnImportAnnouncesOnceWithTheTitlesItFound()
     {
+        // The account's titles ride the run's one announcement; the Ledger decides whether that is a
+        // score event or, when nothing changed, the titles on their own. The import never publishes
+        // them itself.
         var f = ArrangeImport();
         var saga = BuildImportSaga(f);
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
-                e.UserId == ImportUserId &&
-                e.TitlesFound.Contains("Title A") && e.TitlesFound.Contains("Title B") &&
-                e.Mix == MixEnum.Phoenix),
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix &&
+                c.TitlesFound!.Contains("Title A") && c.TitlesFound!.Contains("Title B")),
             It.IsAny<CancellationToken>()), Times.Once);
+        f.Bus.Verify(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task DetectedTitlesCarryTheRunSessionWhenScoresWereSaved()
+    public async Task TheAnnouncementCarriesWhatEverySaveChangedUnderTheRunsSession()
     {
-        // When the run saved scores, the detected titles ride that session's snapshot card —
-        // the event carries the same run id the scores were stamped with.
+        var chartA = new ChartBuilder().Build();
+        var chartB = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartA, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartB, 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var sentSessions = new List<Guid?>();
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((cmd, _) =>
+                sentSessions.Add(((UpdatePhoenixBestAttemptCommand)cmd).SessionId))
+            .ReturnsAsync((IRequest<ScoreSaveResult> cmd, CancellationToken _) =>
+                new ScoreSaveResult(((UpdatePhoenixBestAttemptCommand)cmd).ChartId, ScoreSaveChange.NewPass));
+        AnnounceScoreChangesCommand? announced = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) => announced = (AnnounceScoreChangesCommand)cmd);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.NotNull(announced);
+        Assert.Equal(sentSessions[0], announced!.SessionId);
+        Assert.Equal(new[] { chartA.Id, chartB.Id }.OrderBy(id => id),
+            announced.Saves.Where(r => r.Change == ScoreSaveChange.NewPass).Select(r => r.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task AScoreTypedJustBeforeTheRunIsAnnouncedWithIt()
+    {
+        // Its two-minute batch would otherwise announce mid-run, beside the run's capture: two cards for
+        // one burst, and a title the two only cross together on both.
+        var typed = Guid.NewGuid();
         var chart = new ChartBuilder().Build();
         var f = ArrangeImport(
             officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
             existingScores: Array.Empty<RecordedPhoenixScore>());
         var saga = BuildImportSaga(f);
-        Guid? scoreSession = null;
+        var order = new List<string>();
+        f.Mediator.Setup(m => m.Send(It.Is<ClaimScoreBatchCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("claim"))
+            .ReturnsAsync(new[] { new ScoreSaveResult(typed, ScoreSaveChange.NewPass) });
+        f.Site.Setup(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1",
+                It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("scrape"))
+            .ReturnsAsync(new ScrapedScores(new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+                Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
         f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest, CancellationToken>((cmd, _) =>
-                scoreSession = ((UpdatePhoenixBestAttemptCommand)cmd).SessionId);
-        Guid? titleSession = null;
-        f.Bus.Setup(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()))
-            .Callback<TitlesDetectedEvent, CancellationToken>((e, _) => titleSession = e.SessionId)
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync((IRequest<ScoreSaveResult> cmd, CancellationToken _) =>
+                new ScoreSaveResult(((UpdatePhoenixBestAttemptCommand)cmd).ChartId, ScoreSaveChange.NewPass));
+        AnnounceScoreChangesCommand? announced = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) => announced = (AnnounceScoreChangesCommand)cmd);
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        Assert.NotNull(titleSession);
-        Assert.Equal(scoreSession, titleSession);
+        Assert.Equal(new[] { "claim", "scrape" }, order);
+        Assert.Equal(new[] { typed, chart.Id }.OrderBy(id => id),
+            announced!.Saves.Select(r => r.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task EverySaveAnImportMakesIsLeftForTheRunToAnnounce()
+    {
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => !c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheRunAnnouncesBeforeItReportsThatChartsFinishedSaving()
+    {
+        // "Charts finished saving" is what the page and the nav pulse treat as done; by then the
+        // follow-up must already be on its way. It is sent once, by the run, carrying no scores.
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var order = new List<string>();
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("announce"));
+        f.Mediator.Setup(m => m.Publish(It.IsAny<ImportStatusUpdatedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<ImportStatusUpdatedEvent, CancellationToken>((e, _) =>
+                order.Add(e.Status == "Charts finished saving" ? "finished" : "status"));
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(new[] { "announce", "finished" }, order.Where(o => o != "status"));
+    }
+
+    [Fact]
+    public async Task AnImportThatFailsAfterSavingAnnouncesWhatItSavedOnceAndStillFails()
+    {
+        // The saved score is real and a later import will never bring it back (the record already
+        // matches), so it is announced before the failure is reported.
+        var chartA = new ChartBuilder().Build();
+        var chartB = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartA, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartB, 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        f.Mediator.SetupSequence(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreSaveResult(chartA.Id, ScoreSaveChange.NewPass))
+            .ThrowsAsync(new TimeoutException("sql"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
+
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.Saves.Count == 1 && c.Saves[0].ChartId == chartA.Id && c.TitlesFound!.Contains("Title A")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailureAfterTheAnnouncementNeverAnnouncesASecondTime()
+    {
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        f.Mediator.Setup(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Status == "Charts finished saving"),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("hub"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
+
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AShutdownMidImportLeavesTheAnnouncementToStartupRecovery()
+    {
+        // The token is cancelled: the process is going away, and the startup pass replays the whole
+        // session from the journal. Announcing here would race the shutdown.
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(new ChartBuilder().Build(), 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        using var shutdown = new CancellationTokenSource();
+        f.Mediator.SetupSequence(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreSaveResult(chart.Id, ScoreSaveChange.NewPass))
+            .Returns(() =>
+            {
+                shutdown.Cancel();
+                return Task.FromException<ScoreSaveResult>(new OperationCanceledException(shutdown.Token));
+            });
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => saga.Handle(ImportCommand(), shutdown.Token));
+
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task APageBookmarkFailureStillAnnouncesWhatTheRunSaved()
+    {
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(new ChartBuilder().Build(), 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        f.Mediator.Setup(m => m.Send(It.Is<SaveUserUiSettingCommand>(c => c.SettingName == "PreviousPageCount"),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => saga.Handle(ImportCommand(), CancellationToken.None));
+
+        f.Mediator.Verify(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -256,8 +432,8 @@ public sealed class OfficialLeaderboardSagaTests
         var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
             sessionDelivery: f.SessionDelivery, bus: f.Bus, identity: identity);
 
-        await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "", "", false),
-            CancellationToken.None);
+        await saga.Handle(new ExecuteImportCommand(ImportUserId, MixEnum.Phoenix, "sid123", "", "", false,
+            Guid.NewGuid(), ImportKind.Standard), CancellationToken.None);
 
         f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chart.Id),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -403,13 +579,13 @@ public sealed class OfficialLeaderboardSagaTests
                 c.Source == ScoreJournalEntry.OfficialImportSource),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // Status + titles events are Phoenix2-stamped end to end.
+        // Status and the announcement are Phoenix2-stamped end to end.
         f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Mix == MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(e => e.Mix != MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.Never);
-        f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
-                e.UserId == ImportUserId && e.Mix == MixEnum.Phoenix2),
+        f.Mediator.Verify(m => m.Send(It.Is<AnnounceScoreChangesCommand>(c =>
+                c.UserId == ImportUserId && c.Mix == MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -452,7 +628,7 @@ public sealed class OfficialLeaderboardSagaTests
     {
         // Locked decision: /Login/PiuGame stays pinned to Phoenix 1 as the identity source,
         // so P2 card aliases enter through the first P2 import — additively only.
-        var f = ArrangeImport(mix: MixEnum.Phoenix2);
+        var f = ArrangeImport(mix: MixEnum.Phoenix2, cardId: "7770001");
         f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix2, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -486,10 +662,367 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
+        // Once, for the v1 import's own card choice; a backfill would be a second read.
         f.Site.Verify(s => s.GetGameCards(It.IsAny<MixEnum>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>()), Times.Once);
         f.Mediator.Verify(m => m.Send(It.IsAny<CreateExternalLoginCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // One run, three depths: Import and check and the deep scan are the import with a second pass
+    // into the same session and the same announcement (docs/design/import-completeness-check.md).
+
+    private static readonly Guid CensusChartId = Guid.NewGuid();
+    private static readonly Guid MissingChartId = Guid.NewGuid();
+
+    private static ExecuteImportCommand Execute(ImportKind kind, Guid? sessionId = null, bool includeBroken = false)
+    {
+        return new ExecuteImportCommand(ImportUserId, MixEnum.Phoenix, "sid123", "card1", "NEWTAG", includeBroken,
+            sessionId ?? Guid.NewGuid(), kind);
+    }
+
+    private static Chart LevelEighteen(Guid id)
+    {
+        return new ChartBuilder().WithId(id).WithType(ChartType.Single).WithLevel(18).Build();
+    }
+
+    // The account piugame reports: one level-18 bucket with this many passes.
+    private static void ArrangeCensus(ImportFixture f, int passes,
+        params OfficialRecordedScore[] reread)
+    {
+        f.Site.Setup(s => s.GetOfficialCensus(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AccountCensus(MixEnum.Phoenix,
+                new Dictionary<string, CensusBucket>(StringComparer.Ordinal)
+                {
+                    ["18"] = new("18", passes, new Dictionary<string, int>(), new Dictionary<string, int>())
+                }, 64466));
+        f.Site.Setup(s => s.GetBestScoresIn(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reread);
+    }
+
+    // What we hold: one level-18 pass.
+    private static ImportFixture ArrangeCheck()
+    {
+        return ArrangeImport(existingScores: new[]
+        {
+            new RecordedPhoenixScore(CensusChartId, PhoenixScore.From(990000), PhoenixPlate.MarvelousGame, false,
+                DateTimeOffset.UnixEpoch)
+        });
+    }
+
+    private static OfficialLeaderboardSaga BuildCheckSaga(ImportFixture f)
+    {
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { LevelEighteen(CensusChartId), LevelEighteen(MissingChartId) });
+        return BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, charts: charts);
+    }
+
+    [Fact]
+    public async Task ACheckImportsBeforeItCounts()
+    {
+        // Counting an account that played twenty minutes ago against scores we have not fetched yet
+        // reports charts that are simply not imported yet.
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 1);
+        var order = new List<string>();
+        f.Site.Setup(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1",
+                It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("import"))
+            .ReturnsAsync(new ScrapedScores(Array.Empty<OfficialRecordedScore>(),
+                Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
+        f.Site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("census"))
+            .ReturnsAsync(new AccountCensus(MixEnum.Phoenix, new Dictionary<string, CensusBucket>(), 0));
+
+        await BuildCheckSaga(f).Handle(Execute(ImportKind.Check), CancellationToken.None);
+
+        Assert.Equal(new[] { "import", "census" }, order);
+    }
+
+    [Fact]
+    public async Task AStandardImportNeverCountsOrReReads()
+    {
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 2);
+
+        await BuildCheckSaga(f).Handle(Execute(ImportKind.Standard), CancellationToken.None);
+
+        f.Site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+        f.Mediator.Verify(m => m.Publish(It.IsAny<ImportCheckCompletedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ACleanAccountIsCountedAndNothingMoreIsRead()
+    {
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 1);
+
+        await BuildCheckSaga(f).Handle(Execute(ImportKind.Check), CancellationToken.None);
+
+        // Nothing persists a check: this notification IS the result, and it carries a count because the
+        // scores themselves are the answer.
+        f.Mediator.Verify(m => m.Publish(
+            It.Is<ImportCheckCompletedEvent>(e => e.UserId == ImportUserId && e.Added == 0 && e.Checked == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AShortLevelIsReReadAndWhatItYieldsIsSavedIntoTheRunsSession()
+    {
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 2, new OfficialRecordedScore(LevelEighteen(MissingChartId), PhoenixScore.From(996408),
+            PhoenixPlate.MarvelousGame));
+        var sessionId = Guid.NewGuid();
+
+        var written = await BuildCheckSaga(f).Handle(Execute(ImportKind.Check, sessionId), CancellationToken.None);
+
+        // Nobody is asked to approve their own score from the official site — it just lands, in the
+        // same session as the import before it, for the run to announce.
+        f.Site.Verify(s => s.GetBestScoresIn(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(),
+            It.Is<IReadOnlyCollection<string>>(b => b.SequenceEqual(new[] { "18" })), It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.ChartId == MissingChartId && c.SessionId == sessionId && c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportCheckCompletedEvent>(e => e.Added == 1 && e.Checked == 2),
+            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(1, written);
+    }
+
+    [Fact]
+    public async Task ADeepScanWalksEverythingWithoutCountingFirst()
+    {
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 1, new OfficialRecordedScore(LevelEighteen(CensusChartId), PhoenixScore.From(990000),
+            PhoenixPlate.MarvelousGame));
+
+        await BuildCheckSaga(f).Handle(Execute(ImportKind.DeepScan), CancellationToken.None);
+
+        // The walk finds everything a count would have pointed at, so the census is wasted work.
+        f.Site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Site.Verify(s => s.GetBestScoresIn(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(),
+            It.Is<IReadOnlyCollection<string>>(b => b.SequenceEqual(new[] { CensusBuckets.All })), It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Checked is the bests the walk read; nothing beat what we hold.
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportCheckCompletedEvent>(e => e.Added == 0 && e.Checked == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(ImportKind.Check, true)]
+    [InlineData(ImportKind.Check, false)]
+    [InlineData(ImportKind.DeepScan, true)]
+    [InlineData(ImportKind.DeepScan, false)]
+    public async Task BothPassesReadBrokenBestsExactlyWhenThePlayerChose(ImportKind kind, bool includeBroken)
+    {
+        // The check told the player their account was complete while walking past every broken best a
+        // Phoenix 2 import saves — and the import half once passed a hardcoded true, re-recording every
+        // break the Your Data cleanup had just withdrawn. Both reads take the player's choice.
+        var f = ArrangeCheck();
+        ArrangeCensus(f, 2);
+
+        await BuildCheckSaga(f).Handle(Execute(kind, includeBroken: includeBroken), CancellationToken.None);
+
+        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1",
+            includeBroken, It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
+        f.Site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), includeBroken, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACheckAnnouncesBothPassesOnceAndFinishesOnce()
+    {
+        // The import used to announce and report "Charts finished saving" after its own pass, then the
+        // repair did both again: two cards for one press, and a page that read the first as the end.
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+            existingScores: new[]
+            {
+                new RecordedPhoenixScore(CensusChartId, PhoenixScore.From(990000), PhoenixPlate.MarvelousGame,
+                    false, DateTimeOffset.UnixEpoch)
+            });
+        ArrangeCensus(f, 2, new OfficialRecordedScore(LevelEighteen(MissingChartId), PhoenixScore.From(996408),
+            PhoenixPlate.MarvelousGame));
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IRequest<ScoreSaveResult> cmd, CancellationToken _) =>
+                new ScoreSaveResult(((UpdatePhoenixBestAttemptCommand)cmd).ChartId, ScoreSaveChange.NewPass));
+        var order = new List<string>();
+        AnnounceScoreChangesCommand? announced = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<AnnounceScoreChangesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) =>
+            {
+                announced = (AnnounceScoreChangesCommand)cmd;
+                order.Add("announce");
+            });
+        f.Mediator.Setup(m => m.Publish(It.IsAny<ImportStatusUpdatedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<ImportStatusUpdatedEvent, CancellationToken>((e, _) =>
+            {
+                if (e.Status == "Charts finished saving") order.Add("finished");
+            });
+        f.Mediator.Setup(m => m.Publish(It.IsAny<ImportCheckCompletedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("checked"));
+
+        var written = await BuildCheckSaga(f).Handle(Execute(ImportKind.Check), CancellationToken.None);
+
+        Assert.Equal(new[] { "announce", "finished", "checked" }, order);
+        Assert.Equal(new[] { chart.Id, MissingChartId }.OrderBy(id => id),
+            announced!.Saves.Select(r => r.ChartId).OrderBy(id => id));
+        Assert.Equal(2, written);
+    }
+
+    [Fact]
+    public async Task AnAccountPiugameCannotResolveIsNeverCounted()
+    {
+        // The error already told the player; counting a hollow account would report every chart missing.
+        var f = ArrangeImport(accountName: "INVALID");
+        ArrangeCensus(f, 2);
+
+        await BuildCheckSaga(f).Handle(Execute(ImportKind.Check), CancellationToken.None);
+
+        f.Site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Mediator.Verify(m => m.Publish(It.IsAny<ImportCheckCompletedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // The v1 import API obeys the Import button's slot and cooldown (owner, 2026-09-27).
+
+    private static Mock<IImportConcurrencyGuard> GuardAnswering(ImportSlot slot)
+    {
+        var guard = new Mock<IImportConcurrencyGuard>();
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<bool>())).Returns(slot);
+        return guard;
+    }
+
+    [Theory]
+    [InlineData(false, OfficialImportOutcome.AlreadyRunning)]
+    [InlineData(true, OfficialImportOutcome.CoolingDown)]
+    public async Task AV1ImportRefusedByTheSlotNeverSignsIn(bool coolingDown, OfficialImportOutcome outcome)
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(coolingDown
+            ? new ImportSlot(ImportSlotOutcome.CoolingDown, TimeSpan.FromMinutes(3))
+            : ImportSlot.AlreadyRunning);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(outcome, result.Outcome);
+        // The wait rides back to the API's Retry-After; without it a script is told to retry in a second.
+        Assert.Equal(coolingDown ? TimeSpan.FromMinutes(3) : null, result.RetryAfter);
+        f.Site.Verify(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        guard.Verify(g => g.TryBegin(ImportUserId, MixEnum.Phoenix, Now, true), Times.Once);
+        guard.Verify(g => g.End(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AV1ImportStartsTheClockAndHandsTheSlotBack()
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.Imported, result.Outcome);
+        guard.Verify(g => g.Started(ImportUserId, MixEnum.Phoenix, Now), Times.Once);
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportThatFailsStillHandsTheSlotBack()
+    {
+        var f = ArrangeImport();
+        f.Site.Setup(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidCredentialException("no"));
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        await Assert.ThrowsAsync<InvalidCredentialException>(() => saga.Handle(ImportCommand(),
+            CancellationToken.None));
+
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
+        // A mistyped password is not an import: the clock never starts.
+        guard.Verify(g => g.Started(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AV1ImportPicksTheNamedCardOffItsOwnSignIn()
+    {
+        var f = ArrangeImport(cardId: "card2");
+        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new GameCardRecord(Name.From("OTHER"), Id: "card1", IsActive: true),
+                new GameCardRecord(Name.From("NEWTAG"), Id: "card2", IsActive: false)
+            });
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Site.Verify(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()), Times.Once);
+        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix, It.IsAny<string>(), "card2",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportNamingNoCardTakesTheAccountsFirst()
+    {
+        // The DTO's GameTag defaults to empty, so most scripts name no card at all.
+        var f = ArrangeImport(cardId: "card7");
+        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new GameCardRecord(Name.From("FIRST"), Id: "card7", IsActive: false),
+                new GameCardRecord(Name.From("SECOND"), Id: "card8", IsActive: true)
+            });
+        var saga = BuildImportSaga(f);
+
+        var result = await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "", false),
+            CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.Imported, result.Outcome);
+        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix, It.IsAny<string>(), "card7",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportNamingACardTheAccountLacksImportsNothing()
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "NOBODY", false),
+            CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.GameTagNotFound, result.Outcome);
+        f.Site.Verify(s => s.GetAccountData(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
     }
 
     private static OfficialLeaderboardSaga BuildSaga(
@@ -501,7 +1034,8 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IBus>? bus = null,
         Mock<IFileUploadClient>? files = null,
         Mock<IChartRepository>? charts = null,
-        Mock<IDateTimeOffsetAccessor>? dateTime = null)
+        Mock<IDateTimeOffsetAccessor>? dateTime = null,
+        Mock<IImportConcurrencyGuard>? guard = null)
     {
         officialSite ??= new Mock<IOfficialSiteClient>();
         identity ??= new Mock<IOfficialPlayerIdentityRepository>();
@@ -515,6 +1049,6 @@ public sealed class OfficialLeaderboardSagaTests
         return new OfficialLeaderboardSaga(officialSite.Object,
             identity.Object, currentUser.Object, mediator.Object, sessionDelivery.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
-            dateTime.Object);
+            dateTime.Object, (guard ?? new Mock<IImportConcurrencyGuard>()).Object);
     }
 }

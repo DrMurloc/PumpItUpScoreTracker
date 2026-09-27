@@ -626,6 +626,35 @@ public sealed class HighlightCaptureSagaTests
     }
 
     /// <summary>
+    ///     The titles piugame showed on the account reach the title step only through the score event:
+    ///     an import that changed scores publishes nothing else about them, so dropping them here would
+    ///     lose every event and play-count badge that import earned, with no card saying so.
+    /// </summary>
+    [Fact]
+    public async Task TheTitlesAnImportReportedReachTheTitleStepWithItsSession()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var sessionId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenTitleStep(Array.Empty<PlayerMilestoneRecord>());
+        var e = PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Phoenix,
+            new[]
+            {
+                new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, IsNewPass: true, OldScore: null,
+                    NewScore: 910000, Plate: "FairGame", IsBroken: false)
+            }, sessionId, titlesFound: new[] { "RISE CHALLENGER" });
+
+        await ctx.Saga.Consume(ctx.Context(e));
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<TitleSaga.CaptureSessionTitles>(c =>
+                c.SessionId == sessionId && c.TitlesFound != null &&
+                c.TitlesFound.SequenceEqual(new[] { "RISE CHALLENGER" })),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
     ///     ⚠ Load-bearing far beyond the Discord card. SessionRecoverySaga stamps a session's
     ///     "derived work finished" marker by consuming this event, so a session that produces no
     ///     flags, no milestones and no title movement must STILL publish — otherwise it is never

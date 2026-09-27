@@ -2,9 +2,11 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using System.ComponentModel;
+using System.Globalization;
 using System.Security.Authentication;
 using CsvHelper.Configuration.Attributes;
 using MediatR;
@@ -46,21 +48,26 @@ public sealed class PhoenixScoresController : Controller
         if (string.IsNullOrWhiteSpace(body.Password)) return BadRequest("Missing Password.");
         try
         {
-            var cards = (await _mediator.Send(new GetGameCardsQuery(body.Username, body.Password))).ToArray();
-            var gameTag = cards.First();
-            if (!string.IsNullOrWhiteSpace(body.GameTag))
-            {
-                var match = cards.FirstOrDefault(c => c.GameTag == body.GameTag);
-                if (match == null) return BadRequest($"GameTag {body.GameTag} couldn't be found for {body.Username}.");
-
-                gameTag = match;
-            }
-
             // body.SyncScoreTracker is accepted and ignored — see the DTO. Session delivery is
             // decided by the player's shares now, so the flag has nowhere to go.
-            await _mediator.Send(new ImportOfficialPlayerScoresCommand(body.Username, body.Password, gameTag.Id,
-                gameTag.GameTag, body.IncludeBroken));
-            return Ok();
+            var result = await _mediator.Send(new ImportOfficialPlayerScoresCommand(body.Username, body.Password,
+                body.GameTag, body.IncludeBroken));
+            switch (result.Outcome)
+            {
+                case OfficialImportOutcome.GameTagNotFound:
+                    return BadRequest($"GameTag {body.GameTag} couldn't be found for {body.Username}.");
+                case OfficialImportOutcome.AlreadyRunning:
+                    return Conflict("An import is already running for this account. Try again when it finishes.");
+                case OfficialImportOutcome.CoolingDown:
+                    // Five minutes between imports on a mix, the Import button's rule: a script gets the same
+                    // answer the button does, with the wait in seconds.
+                    var seconds = Math.Max(1, (int)Math.Ceiling((result.RetryAfter ?? TimeSpan.Zero).TotalSeconds));
+                    Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+                    return StatusCode(StatusCodes.Status429TooManyRequests,
+                        $"An import started less than five minutes ago. Try again in {seconds} seconds.");
+                default:
+                    return Ok();
+            }
         }
         catch (InvalidCredentialException)
         {
@@ -88,6 +95,9 @@ public sealed class PhoenixScoresController : Controller
 
         var chart = await _mediator.Send(new GetChartQuery(mix, songName, level, chartType));
         if (chart == null) return NotFound("Chart not found");
+        // Nothing else saves on a mix while it imports (docs/design/import-restart-recovery.md §0).
+        if (await _mediator.Send(new GetImportInProgressQuery(_currentUser.User.Id, mix)))
+            return Conflict("An import is running for this mix. Try again when it finishes.");
 
         await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, body.IsBroken, body.Score,
             body.Plate == null ? null : Enum.Parse<PhoenixPlate>(body.Plate), keepBestStats, Mix: mix));

@@ -31,17 +31,18 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     ///     paragon gains for the batch (WITHOUT the legacy Discord announcement — the
     ///     snapshot card carries them) and computes the per-title progress deltas from
     ///     the batch's old→new scores. Dispatched in-process by the capture
-    ///     orchestrator; this saga no longer consumes the raw score event. The legacy
-    ///     announcement survives only on the <see cref="TitlesDetectedEvent" /> path —
-    ///     titles granted by the official site have no session, so no card covers them.
+    ///     orchestrator; this saga no longer consumes the raw score event.
+    ///     <paramref name="TitlesFound" /> is what piugame showed on the account when an official
+    ///     import announced — the badges no score can compute ride the same card. An import that
+    ///     changed no score has no card, so its titles come through <see cref="TitlesDetectedEvent" />.
     /// </summary>
     public sealed record CaptureSessionTitles(Guid UserId, MixEnum Mix, Guid? SessionId,
-        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes) : IRequest<SessionTitlesResult>;
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes, IReadOnlyList<string>? TitlesFound = null)
+        : IRequest<SessionTitlesResult>;
 
     public sealed record SessionTitlesResult(
         IReadOnlyList<PlayerMilestoneRecord> Milestones, IReadOnlyList<TitleProgressDelta> Progress);
 
-    private readonly IPlayerScoreBatchAccumulator _batches;
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IScoreReader _phoenixScores;
@@ -58,10 +59,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         ITitleRepository titles,
         IPlayerMilestoneRepository milestones,
         IDateTimeOffsetAccessor dateTime,
-        IPlayerScoreBatchAccumulator batches,
         IBus bus)
     {
-        _batches = batches;
         _currentUser = currentUser;
         _phoenixScores = phoenixScores;
         _charts = charts;
@@ -146,35 +145,36 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         };
     }
 
+    /// <summary>
+    ///     The titles of an official import that changed no score. With no score event there is no
+    ///     snapshot card for them to ride, so the badges this run earned — the ones no score can
+    ///     compute: events, play and plate counts, staff — get a card of their own. An import that did
+    ///     change scores carries its titles on that announcement instead (<see cref="CaptureSessionTitles" />).
+    /// </summary>
     public async Task Consume(ConsumeContext<TitlesDetectedEvent> context)
     {
-        // The site path owns only the badges the score pipeline can't compute
-        // (CompletionRequired == 0): events, play/plate counts, staff. Rather than announce them
-        // itself, it parks them on the open score batch so the ONE snapshot card carries them
-        // alongside the scores. This is safe on timing, not luck: the import publishes this
-        // event immediately after its last score save, and that batch does not drain for
-        // another two minutes.
-        //
-        // It deliberately does NOT read the session's milestone rows to find them — that is what
-        // made every card in a session repeat the previous ones' titles, since a session
-        // envelope spans 8 hours while a batch drains after 2 minutes.
         var e = context.Message;
-        var minted = await ProcessCharts(e.Mix, e.UserId, e.TitlesFound.Select(Name.From),
-            context.CancellationToken, sessionId: e.SessionId,
-            announceLegacy: false, siteOnlyAnnounce: true);
+        var minted = await ProcessCharts(e.Mix, e.UserId, SiteTitles(e.TitlesFound), context.CancellationToken,
+            sessionId: e.SessionId, announceLegacy: false, siteOnlyAnnounce: true);
         if (minted.Count == 0) return;
 
-        var completed = minted.Where(m => m.Kind == MilestoneKind.TitleCompleted)
-            .Select(m => m.Title!)
-            .ToArray();
-        if (_batches.TryAddDetectedTitles(e.Mix, e.UserId, completed)) return;
-
-        // No batch to carry them — an import that saved no scores at all, so no snapshot card is
-        // coming. They get their own card, exactly as before. Paragon levels are retired, so the
-        // event's upgrade map is always empty now.
+        // Paragon levels are retired, so the event's upgrade map is always empty now.
         await _bus.Publish(
-            new NewTitlesAcquiredEvent(e.UserId, completed, new Dictionary<string, string>(), e.Mix, e.SessionId),
+            new NewTitlesAcquiredEvent(e.UserId,
+                minted.Where(m => m.Kind == MilestoneKind.TitleCompleted).Select(m => m.Title!).ToArray(),
+                new Dictionary<string, string>(), e.Mix, e.SessionId),
             context.CancellationToken);
+    }
+
+    /// <summary>
+    ///     The site's title strings as names. A blank or unparseable one is dropped rather than allowed
+    ///     to throw — it would cost the whole title step, and with it the card's ladder crossings.
+    /// </summary>
+    private static IEnumerable<Name> SiteTitles(IEnumerable<string>? titles)
+    {
+        foreach (var title in titles ?? Array.Empty<string>())
+            if (Name.TryParse(title, out var name))
+                yield return name;
     }
 
     private ParagonLevel GetLevel(TitleProgress tp)
@@ -275,12 +275,14 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         if (request.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2))
             return new SessionTitlesResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<TitleProgressDelta>());
 
-        // Persist the up-to-date title set (SaveTitles + highest) WITHOUT minting or
-        // announcing — the card's title milestones come from this batch's before→after
-        // crossing, which surfaces a completion even when the site-detection path already
-        // saved the same title (it fires first during imports).
-        await ProcessCharts(request.Mix, request.UserId, Array.Empty<Name>(), cancellationToken,
-            request.SessionId, announceLegacy: false, mint: false);
+        // Persist the up-to-date title set (SaveTitles + highest) first, with the titles the official
+        // site reported when an import announced — so everything below reads the set as it now
+        // stands. Only those site-only badges (no score can compute them) are minted here; the score
+        // ladders' completions come from this batch's before→after crossing below, which surfaces a
+        // completion whatever the saved set already says.
+        var siteTitles = SiteTitles(request.TitlesFound).ToArray();
+        var badges = await ProcessCharts(request.Mix, request.UserId, siteTitles, cancellationToken,
+            request.SessionId, announceLegacy: false, mint: siteTitles.Length > 0, siteOnlyAnnounce: true);
 
         // The card shows the completions THIS BATCH crossed, and only those. Reading the whole
         // session back out of the milestone table instead made every card in a session repeat
@@ -289,18 +291,11 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         // earned since the session opened.
         var crossings = await ComputeBatchCompletions(request, cancellationToken);
 
-        // Plus whatever the site path parked on this batch. Taking them removes them, so the next
-        // batch in the same session cannot announce them again. They are already persisted as
-        // milestones by the site path — these records exist only to reach the card. Site badges
-        // carry no requirement to climb, so they trail the ladders, alphabetically.
-        var badges = _batches.TakeDetectedTitles(request.Mix, request.UserId)
-            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
-            .Select(t => new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, request.SessionId,
-                _dateTime.Now, null, null, t, null));
-
         var progress = await ComputeProgressDeltas(request, cancellationToken);
         await PersistProgress(request, progress, cancellationToken);
-        return new SessionTitlesResult(crossings.Concat(badges).ToArray(), progress);
+        // Site badges carry no requirement to climb, so they trail the ladders, alphabetically.
+        return new SessionTitlesResult(
+            crossings.Concat(badges.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase)).ToArray(), progress);
     }
 
     /// <summary>

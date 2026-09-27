@@ -2967,7 +2967,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("FinishedAt");
 
                     b.HasIndex("UserId", "StartedAt");
 

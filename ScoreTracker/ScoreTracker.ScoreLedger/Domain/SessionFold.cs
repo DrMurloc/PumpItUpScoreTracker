@@ -91,7 +91,7 @@ internal static class SessionFold
 
 /// <summary>
 ///     When a stored session's import ran, by the wall clock — its <c>ScoreSession</c> row, from the
-///     moment the run opened to its last batch drain. Distinct from the plays' own dates on purpose.
+///     moment the run opened to its last announcement. Distinct from the plays' own dates on purpose.
 /// </summary>
 internal sealed record ImportWindow(DateTimeOffset StartedAt, DateTimeOffset LastActivityAt);
 

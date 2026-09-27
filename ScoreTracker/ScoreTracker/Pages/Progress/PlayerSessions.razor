@@ -166,12 +166,12 @@
     /// <summary>
     ///     Capture announces itself when it finishes, so the page listens instead of asking.
     ///     <para>
-    ///         Polling could never work here, and the reason is worth keeping: scores are held as
-    ///         a batch for two minutes past the LAST of them before capture even begins
-    ///         (<see cref="ScoreBatchPolicy" />), an import writes in phases minutes apart, and
-    ///         each phase is a separate batch and a separate capture. Every timer aimed at that
-    ///         was guessing at another component's schedule, and each guess failed differently —
-    ///         clearing the card mid-pipeline, between batches, or never watching at all.
+    ///         Polling could never work here, and the reason is worth keeping: when capture begins
+    ///         depends on the source — an import the moment its last score saves, typed entries two
+    ///         minutes past the last of them (<see cref="ScoreBatchPolicy" />) — and each announcement
+    ///         is a separate capture. Every timer aimed at that was guessing at another component's
+    ///         schedule, and each guess failed differently — clearing the card mid-pipeline, between
+    ///         batches, or never watching at all.
     ///     </para>
     ///     <para>
     ///         Same shape as the randomizer's draw view: a bus consumer bridges the event onto

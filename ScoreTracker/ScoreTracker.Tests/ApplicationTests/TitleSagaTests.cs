@@ -244,7 +244,6 @@ public sealed class TitleSagaTests
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<ITitleRepository> Titles { get; } = new();
         public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
-        public Mock<IPlayerScoreBatchAccumulator> Batches { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public TitleSaga Saga { get; }
 
@@ -260,25 +259,9 @@ public sealed class TitleSagaTests
                 .ReturnsAsync(Array.Empty<TitleAchievedRecord>());
             Scores.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
-            // Default: nothing parked, and no batch open to park into — the fallback path.
-            Batches.Setup(b => b.TakeDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>()))
-                .Returns(Array.Empty<string>());
-
             Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object,
                 Milestones.Object, FakeDateTime.At(new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero)).Object,
-                Batches.Object, Bus.Object);
-        }
-
-        /// <summary>An open score batch accepts the parked badges (the import saved scores).</summary>
-        public void GivenAnOpenBatch()
-        {
-            Batches.Setup(b => b.TryAddDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
-                It.IsAny<IEnumerable<string>>())).Returns(true);
-        }
-
-        public void GivenParkedBadges(params string[] titles)
-        {
-            Batches.Setup(b => b.TakeDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>())).Returns(titles);
+                Bus.Object);
         }
 
         public void GivenBestScores(params RecordedPhoenixScore[] scores)
@@ -298,9 +281,9 @@ public sealed class TitleSagaTests
     [Fact]
     public async Task DetectedBasicBadgesAreCapturedAsMilestonesAndAnnounced()
     {
-        // The fallback route for site-only badges (CompletionRequired == 0: events, play/plate
-        // counts): an import that saved no scores has no open batch to park them on and no
-        // snapshot card coming, so they must take a card of their own rather than be swallowed.
+        // The route for site-only badges (CompletionRequired == 0: events, play/plate counts) when
+        // an import changed no score: no snapshot card is coming, so they must take a card of their
+        // own rather than be swallowed.
         var ctx = new SagaContext(MixEnum.Phoenix);
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
@@ -336,14 +319,12 @@ public sealed class TitleSagaTests
     }
 
     [Fact]
-    public async Task DetectedBadgesParkOnTheOpenBatchInsteadOfTakingTheirOwnCard()
+    public async Task ABadgeFromAnImportThatChangedNoScoreBelongsToItsSessionAndGetsItsOwnCard()
     {
-        // With a score batch open, a site-only badge is parked on it so the ONE snapshot card
-        // carries it alongside the scores — no card of its own. Still written as a milestone
-        // against the session so the Sessions page groups it.
+        // No score event means no snapshot card, so the badge takes a card of its own — and it is
+        // written against the run that found it, so the Sessions page can group it.
         var sessionId = Guid.NewGuid();
         var ctx = new SagaContext(MixEnum.Phoenix);
-        ctx.GivenAnOpenBatch();
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
             new[] { "RISE CHALLENGER" }, MixEnum.Phoenix, sessionId)));
@@ -353,40 +334,57 @@ public sealed class TitleSagaTests
                 x.Kind == MilestoneKind.TitleCompleted && x.Title == "RISE CHALLENGER"
                 && x.SessionId == sessionId)),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Batches.Verify(b => b.TryAddDetectedTitles(MixEnum.Phoenix, ctx.UserId,
-            It.Is<IEnumerable<string>>(t => t.Contains("RISE CHALLENGER"))), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(It.Is<NewTitlesAcquiredEvent>(e => e.SessionId == sessionId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TitlesOnAnImportsAnnouncementRideItsCardAfterTheLadders()
+    {
+        // The site-only badges the import reported are minted in the title step itself, against the
+        // run's session, and trail the ladder crossings alphabetically — no card of their own.
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).Build();
+        var ctx = new SagaContext(MixEnum.Phoenix, chart);
+        ctx.GivenBestScores(Score(chart.Id, 950000));
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
+                sessionId,
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false)
+                }, new[] { "RISE CHALLENGER", "LOVERS (Silver)", " " }),
+            CancellationToken.None);
+
+        var titles = result.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted)
+            .Select(m => m.Title).ToArray();
+        Assert.Equal(new[] { "LOVERS (Silver)", "RISE CHALLENGER" }, titles.TakeLast(2));
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Count(x => x.SessionId == sessionId &&
+                (x.Title == "RISE CHALLENGER" || x.Title == "LOVERS (Silver)")) == 2),
+            It.IsAny<CancellationToken>()), Times.Once);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
-    public async Task ParkedBadgesRideTheCardAfterTheLaddersAndAreTakenOnlyOnce()
+    public async Task ACaptureWithNoReportedTitlesMintsNoBadges()
     {
-        // The title step collects whatever the site path parked. Badges carry no requirement to
-        // climb, so they trail the ladder crossings, alphabetically. Taking them is what stops the
-        // next batch in the same session from announcing them again.
+        // Typed entries, sittings and replays carry no titles; the step still saves the title set.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).Build();
         var ctx = new SagaContext(MixEnum.Phoenix, chart);
         ctx.GivenBestScores(Score(chart.Id, 950000));
-        ctx.GivenParkedBadges("THE BLACK", "LOVERS (Silver)");
 
-        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
-                Guid.NewGuid(),
-                new[]
-                {
-                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false)
-                }),
+        await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix, Guid.NewGuid(),
+            new[] { new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false) }),
             CancellationToken.None);
 
-        var titles = result.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted)
-            .Select(m => m.Title).ToArray();
-        Assert.Equal(new[] { "LOVERS (Silver)", "THE BLACK" }, titles.TakeLast(2));
-        ctx.Batches.Verify(b => b.TakeDetectedTitles(MixEnum.Phoenix, ctx.UserId), Times.Once);
-        // Parked badges are already persisted by the site path — the card records must not
-        // re-append them.
+        ctx.Titles.Verify(t => t.SaveTitles(MixEnum.Phoenix, ctx.UserId, It.IsAny<IEnumerable<TitleAchievedRecord>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The ladders' completions come from the batch's crossings and are never written here; with no
+        // reported titles there is nothing else to write.
         ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
-            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x => x.Title == "THE BLACK")),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

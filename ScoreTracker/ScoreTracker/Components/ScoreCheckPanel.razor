@@ -6,6 +6,7 @@
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Events
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.UiNotifications
 
 @* Finds scores PIUGAME has that never reached us and adds them, as a normal import. Nothing is
@@ -120,6 +121,9 @@
         // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
         _running = true;
         _status = null;
+        // Handed back if the press is refused: a refusal changes nothing, so the last check's result
+        // stays on screen.
+        var shown = _finished;
         _finished = null;
         StateHasChanged();
 
@@ -132,14 +136,17 @@
         if (result.Outcome == ImportCheckStartOutcome.Started) return;
 
         _running = false;
+        _finished = shown;
         Snackbar.Add(result.Outcome switch
         {
             ImportCheckStartOutcome.InvalidCredentials => L["Invalid Username/Password"],
             ImportCheckStartOutcome.CredentialUnlockFailed => L["Couldn't unlock your saved password. Enter it to import."],
             ImportCheckStartOutcome.AlreadyRunning => L["An import is already running"],
             ImportCheckStartOutcome.NoDeepScansLeft => L["None left — next on {0}", NextUnlock],
+            ImportCheckStartOutcome.CoolingDown => L["You can import again in {0} min.",
+                ImportCooldown.MinutesLeft(result.RetryAfter)],
             _ => L["Something went wrong."]
-        }, Severity.Warning);
+        }, result.Outcome == ImportCheckStartOutcome.CoolingDown ? Severity.Error : Severity.Warning);
     }
 
     private Task OnStatus(ImportStatusUpdatedEvent update)

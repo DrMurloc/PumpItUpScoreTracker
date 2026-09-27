@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -7,74 +7,65 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
-using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Events;
-using ScoreTracker.ScoreLedger.Contracts.Queries;
-using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
 /// <summary>
-///     The startup recovery pass: which interrupted sessions get replayed, which runs get closed,
-///     and — just as important — what it leaves alone
-///     (docs/design/import-restart-recovery.md §4).
+///     Import recovery, read from the runs: which sessions the startup pass and the five-minute tick
+///     replay, which runs the startup pass closes, and what neither touches
+///     (docs/design/import-restart-recovery.md §0). Whether a replay announces anything is the
+///     Ledger's call (SessionRecoverySagaTests); this pins what gets offered to it.
 /// </summary>
 public sealed class RecoverInterruptedImportsConsumerTests
 {
-    private static readonly DateTimeOffset Now = new(2026, 8, 9, 12, 0, 0, TimeSpan.Zero);
-    private static readonly Guid UserId = Guid.NewGuid();
-
-    // The pass runs at boot; anything that began before that instant belonged to the process
-    // that just died.
-    private static readonly DateTimeOffset BootedAt = Now;
-    // Comfortably past ScoreBatchPolicy.StaleAfter, so the sweep's gate is unambiguous rather
-    // than sitting on its boundary.
-    private static readonly TimeSpan LongAgo = TimeSpan.FromMinutes(45);
+    private static readonly DateTimeOffset Now = new(2026, 9, 26, 12, 3, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset BootedAt = Now - TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan Day = TimeSpan.FromDays(1);
 
     private sealed class PassContext
     {
         public readonly Mock<IMediator> Mediator = new();
         public readonly Mock<IImportResultRepository> Results = new();
+        public readonly List<string> Calls = new();
         public readonly RecoverInterruptedImportsConsumer Consumer;
 
         public PassContext()
         {
             Consumer = new RecoverInterruptedImportsConsumer(Mediator.Object, Results.Object,
                 FakeDateTime.At(Now).Object, NullLogger<RecoverInterruptedImportsConsumer>.Instance);
-            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)Array.Empty<ScoreSessionRecord>());
-            Results.Setup(r => r.GetForSessions(It.IsAny<IReadOnlyCollection<Guid>>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<ImportRunForSession>());
             Mediator.Setup(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()))
+                .Callback<IRequest<int>, CancellationToken>((c, _) =>
+                    Calls.Add($"replay {((ReplaySessionCommand)c).SessionId}"))
                 .ReturnsAsync(1);
+            Results.Setup(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Guid, DateTimeOffset, CancellationToken>((id, _, _) => Calls.Add($"close {id}"))
+                .Returns(Task.CompletedTask);
+            WithStarted();
+            WithFailed();
         }
 
-        public void WithUnprocessed(params Guid[] sessionIds)
+        public void WithStarted(params ImportRunForRecovery[] runs)
         {
-            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessionIds
-                    .Select(id => new ScoreSessionRecord(id, UserId, MixEnum.Phoenix,
-                        ScoreJournalEntry.OfficialImportSource, null, null, Now - LongAgo, Now - LongAgo,
-                        0, 0, 0))
-                    .ToArray());
-        }
-
-        public void WithRuns(params ImportRunForSession[] runs)
-        {
-            Results.Setup(r => r.GetForSessions(It.IsAny<IReadOnlyCollection<Guid>>(),
+            Results.Setup(r => r.GetUnfinishedStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(runs);
         }
 
-        public Task Run()
+        public void WithFailed(params ImportRunForRecovery[] runs)
+        {
+            Results.Setup(r => r.GetFailedSince(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(runs);
+        }
+
+        public Task Boot()
         {
             var ctx = new Mock<ConsumeContext<RecoverInterruptedImportsCommand>>();
             ctx.SetupGet(c => c.Message).Returns(new RecoverInterruptedImportsCommand(BootedAt));
@@ -82,7 +73,7 @@ public sealed class RecoverInterruptedImportsConsumerTests
             return Consumer.Consume(ctx.Object);
         }
 
-        public Task Sweep()
+        public Task Tick()
         {
             var ctx = new Mock<ConsumeContext<OverdueScoreBatchesFlushedEvent>>();
             ctx.SetupGet(c => c.Message).Returns(new OverdueScoreBatchesFlushedEvent(Now));
@@ -90,263 +81,151 @@ public sealed class RecoverInterruptedImportsConsumerTests
             return Consumer.Consume(ctx.Object);
         }
 
-        /// <summary>Unprocessed sessions, each a minute older than the one before it.</summary>
-        public void WithUnprocessedAged(params Guid[] sessionIds)
+        public void VerifyReplayed(Guid sessionId, Times times)
         {
-            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessionIds
-                    .Select((id, i) => new ScoreSessionRecord(id, UserId, MixEnum.Phoenix,
-                        ScoreJournalEntry.OfficialImportSource, null, null,
-                        Now - LongAgo + TimeSpan.FromMinutes(i), Now - LongAgo, 0, 0, 0))
-                    .ToArray());
-        }
-
-        /// <summary>Unprocessed sessions carrying counts, i.e. a batch that already announced.</summary>
-        public void WithDrainedSessions(params Guid[] sessionIds)
-        {
-            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessionIds
-                    .Select(id => new ScoreSessionRecord(id, UserId, MixEnum.Phoenix,
-                        ScoreJournalEntry.OfficialImportSource, null, null, Now - LongAgo, Now - LongAgo,
-                        4, 3, 1))
-                    .ToArray());
+            Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == sessionId),
+                It.IsAny<CancellationToken>()), times);
         }
     }
 
-    /// <summary>
-    ///     The mid-life sweep replays a run whose batch has had its whole window to drain and did
-    ///     not — the shape of a lost drain schedule inside a process that never restarted.
-    /// </summary>
-    [Fact]
-    public async Task TheSweepReplaysARunWhoseDrainWindowHasPassed()
+    private static ImportRunForRecovery Run(Guid? sessionId, DateTimeOffset? finishedAt,
+        DateTimeOffset? startedAt = null)
     {
-        var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
-
-        await ctx.Sweep();
-
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
-            It.IsAny<CancellationToken>()), Times.Once);
+        return new ImportRunForRecovery(Guid.NewGuid(), Guid.NewGuid(), sessionId,
+            startedAt ?? BootedAt - TimeSpan.FromMinutes(1), finishedAt);
     }
 
-    /// <summary>
-    ///     ⚠ The mirror of the boot pass's guard. Mid-life every run began after the boot, so the
-    ///     boot test would skip all of them — but staleness cuts the other way too: a run that
-    ///     finished a minute ago still has a live batch counting down, and replaying it would
-    ///     announce the same scores the drain is about to.
-    /// </summary>
+    // ---- the startup pass ----
+
     [Fact]
-    public async Task TheSweepLeavesARunWhoseBatchIsStillCountingDown()
+    public async Task TheStartupPassAsksForTheDayOfRunsBeforeTheBootNotBeforeItRuns()
     {
+        // The pass runs minutes after the boot, and an import pressed in between is live.
+        var ctx = new PassContext();
+
+        await ctx.Boot();
+
+        ctx.Results.Verify(r => r.GetUnfinishedStartedBetween(BootedAt - Day, BootedAt, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ARunThatNeverReportedBackIsReplayedAndThenClosed()
+    {
+        // Replay first: closing it raises the notice that says its scores are already in.
         var ctx = new PassContext();
         var session = Guid.NewGuid();
-        var justFinished = Now - TimeSpan.FromMinutes(1);
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, justFinished));
+        var run = Run(session, finishedAt: null);
+        ctx.WithStarted(run);
 
-        await ctx.Sweep();
+        await ctx.Boot();
+
+        Assert.Equal(new[] { $"replay {session}", $"close {run.Id}" }, ctx.Calls);
+    }
+
+    [Fact]
+    public async Task ARunThatDiedBeforeItsSessionOpenedIsClosedWithNothingToReplay()
+    {
+        var ctx = new PassContext();
+        var run = Run(sessionId: null, finishedAt: null);
+        ctx.WithStarted(run);
+
+        await ctx.Boot();
 
         ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
-    }
-
-    /// <summary>
-    ///     ⚠ ProcessedAt is an END marker, so on its own it cannot tell "the batch never drained"
-    ///     from "the batch drained and capture is still working". A first full-account import can
-    ///     spend minutes in capture; replaying underneath it publishes the same scores twice and
-    ///     posts a second card. The counts are the discriminator — Touch writes them when a batch
-    ///     announces, long before ProcessedAt lands.
-    /// </summary>
-    [Fact]
-    public async Task TheSweepLeavesASessionWhoseBatchAlreadyAnnounced()
-    {
-        var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithDrainedSessions(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
-
-        await ctx.Sweep();
-
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    /// <summary>
-    ///     Every replay drops a full capture chain on the bus, and the failure this recovers from
-    ///     strands sessions site-wide — so a pass sheds the newest rather than herding the whole
-    ///     backlog through one tick.
-    /// </summary>
-    [Fact]
-    public async Task TheSweepCapsOnePassAndTakesTheOldestFirst()
-    {
-        var ctx = new PassContext();
-        var sessions = Enumerable.Range(0, 30).Select(_ => Guid.NewGuid()).ToArray();
-        ctx.WithUnprocessedAged(sessions);
-        ctx.WithRuns(sessions.Select(s => new ImportRunForSession(Guid.NewGuid(), s, Now - LongAgo,
-            Now - LongAgo)).ToArray());
-
-        await ctx.Sweep();
-
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(25));
-        // Oldest first, so the newest five are what gets deferred to the next pass.
-        foreach (var deferred in sessions.TakeLast(5))
-            ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == deferred),
-                It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    /// <summary>
-    ///     A run with no ending is either still scraping — a deep scan outlives this window with no
-    ///     batch open yet — or died with its process, which is the boot pass's candidate. Either
-    ///     way the sweep must not close it out from under a player mid-import.
-    /// </summary>
-    [Fact]
-    public async Task TheSweepNeitherClosesNorReplaysARunThatNeverReportedAnEnding()
-    {
-        var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, null));
-
-        await ctx.Sweep();
-
-        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
-            It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        ctx.Results.Verify(r => r.MarkInterrupted(run.Id, Now, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ARunThatFinishedLongAgoWithUnprocessedWorkIsReplayed()
+    public async Task RunsOlderThanADayAreClosedWithoutANotice()
     {
         var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
 
-        await ctx.Run();
+        await ctx.Boot();
 
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Results.Verify(r => r.CloseAbandoned(BootedAt - Day, Now, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    /// <summary>
-    ///     ⚠ The regression that shipped. A run the restart itself killed is, at the moment the
-    ///     pass runs, SECONDS old — so an age-based guard ("younger than the batch hold window,
-    ///     leave it alone") skipped precisely the runs this feature exists for, and nothing looked
-    ///     again until the next restart. Observed in the field 2026-08-10: three interrupted runs
-    ///     sitting at a null outcome with the dialog never firing.
-    ///     <para>
-    ///         Age is the wrong test. At boot the accumulator is empty, so nothing from the
-    ///         previous process can drain however recently it ran.
-    ///     </para>
-    /// </summary>
     [Fact]
-    public async Task ARunTheRestartItselfKilledSecondsAgoIsStillRecovered()
+    public async Task EveryRunIsTakenWhateverTheCount()
     {
+        // The old pass took the 25 oldest unprocessed sessions before skipping any, so 25 typed
+        // entries that never announced walled every interrupted import off for good.
         var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        var runId = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(runId, session, BootedAt.AddSeconds(-10), null));
+        var sessions = Enumerable.Range(0, 40).Select(_ => Guid.NewGuid()).ToArray();
+        ctx.WithStarted(sessions.Select(s => Run(s, finishedAt: null)).ToArray());
 
-        await ctx.Run();
+        await ctx.Boot();
 
-        ctx.Results.Verify(r => r.MarkInterrupted(runId, Now, It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
-            It.IsAny<CancellationToken>()), Times.Once);
+        foreach (var session in sessions) ctx.VerifyReplayed(session, Times.Once());
     }
 
-    /// <summary>
-    ///     A run that began AFTER this boot is live: its batch is in memory with a real deadline,
-    ///     and replaying it would announce a session about to announce itself. A future restart
-    ///     recovers it if one interrupts it.
-    /// </summary>
     [Fact]
-    public async Task ARunThatStartedAfterThisBootIsLeftAlone()
+    public async Task OneRunsFailureCostsNoOtherRunItsRecovery()
     {
         var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, BootedAt.AddSeconds(5), null));
+        var broken = Run(Guid.NewGuid(), finishedAt: null);
+        var healthy = Run(Guid.NewGuid(), finishedAt: null);
+        ctx.WithStarted(broken, healthy);
+        ctx.Mediator.Setup(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == broken.SessionId),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
 
-        await ctx.Run();
+        await ctx.Boot();
 
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
+        ctx.VerifyReplayed(healthy.SessionId!.Value, Times.Once());
+        ctx.Results.Verify(r => r.MarkInterrupted(healthy.Id, Now, It.IsAny<CancellationToken>()), Times.Once);
+        // Left open, so the notice never promises scores whose derived work did not run.
+        ctx.Results.Verify(r => r.MarkInterrupted(broken.Id, It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>
-    ///     Interrupted mid-scrape: closed AND replayed. The replay matters more than it looks —
-    ///     re-importing will not recover the derived work for the scores it already saved, because
-    ///     the records match and those charts never re-enter a batch.
-    /// </summary>
-    [Fact]
-    public async Task ARunThatNeverFinishedIsClosedAndStillReplayed()
-    {
-        var ctx = new PassContext();
-        var session = Guid.NewGuid();
-        var runId = Guid.NewGuid();
-        ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(runId, session, Now - LongAgo, null));
-
-        await ctx.Run();
-
-        ctx.Results.Verify(r => r.MarkInterrupted(runId, Now, It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    /// <summary>
-    ///     Manual entry, CSV upload and API submissions never mint an ImportResult, so nothing here
-    ///     can say whether their batch has had its chance. Deliberately out of scope (§3).
-    /// </summary>
-    [Fact]
-    public async Task ASessionWithNoImportRunBehindItIsSkipped()
-    {
-        var ctx = new PassContext();
-        ctx.WithUnprocessed(Guid.NewGuid());
-        ctx.WithRuns();
-
-        await ctx.Run();
-
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
+    // ---- the five-minute tick ----
 
     [Fact]
-    public async Task NothingUnprocessedMeansNoWorkAtAll()
-    {
-        var ctx = new PassContext();
-
-        await ctx.Run();
-
-        ctx.Results.Verify(r => r.GetForSessions(It.IsAny<IReadOnlyCollection<Guid>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task EverySessionInTheBacklogIsHandled()
+    public async Task TheTickReplaysEveryRunThatFailedInTheLastDay()
     {
         var ctx = new PassContext();
         var a = Guid.NewGuid();
         var b = Guid.NewGuid();
-        ctx.WithUnprocessed(a, b);
-        ctx.WithRuns(
-            new ImportRunForSession(Guid.NewGuid(), a, Now - LongAgo, Now - LongAgo),
-            new ImportRunForSession(Guid.NewGuid(), b, Now - LongAgo, Now - LongAgo));
+        ctx.WithFailed(Run(a, Now - TimeSpan.FromHours(3)), Run(b, Now - TimeSpan.FromMinutes(4)));
 
-        await ctx.Run();
+        await ctx.Tick();
 
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == a),
-            It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == b),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Results.Verify(r => r.GetFailedSince(Now - Day, It.IsAny<CancellationToken>()), Times.Once);
+        ctx.VerifyReplayed(a, Times.Once());
+        ctx.VerifyReplayed(b, Times.Once());
+    }
+
+    [Fact]
+    public async Task TheTickNeverClosesARun()
+    {
+        // A run with no ending mid-life is still working, or belongs to the startup pass.
+        var ctx = new PassContext();
+        ctx.WithFailed(Run(Guid.NewGuid(), Now - TimeSpan.FromHours(1)));
+
+        await ctx.Tick();
+
+        ctx.Results.Verify(r => r.GetUnfinishedStartedBetween(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Results.Verify(r => r.CloseAbandoned(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheTickKeepsGoingPastAReplayThatThrows()
+    {
+        var ctx = new PassContext();
+        var broken = Guid.NewGuid();
+        var healthy = Guid.NewGuid();
+        ctx.WithFailed(Run(broken, Now - TimeSpan.FromHours(1)), Run(healthy, Now - TimeSpan.FromHours(2)));
+        ctx.Mediator.Setup(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == broken),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
+
+        await ctx.Tick();
+
+        ctx.VerifyReplayed(healthy, Times.Once());
     }
 }

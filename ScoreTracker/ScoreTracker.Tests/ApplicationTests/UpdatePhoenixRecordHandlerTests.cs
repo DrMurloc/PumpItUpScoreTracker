@@ -1049,6 +1049,199 @@ public sealed class UpdatePhoenixRecordHandlerTests
         Assert.Null(resolved.Cause.PassPlate);
     }
 
+    [Fact]
+    public async Task AFirstPassHandsBackANewPass()
+    {
+        var ctx = new HandlerContext();
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000, Plate: PhoenixPlate.FairGame),
+            CancellationToken.None);
+
+        Assert.Equal(new ScoreSaveResult(ChartId, ScoreSaveChange.NewPass), result);
+    }
+
+    [Fact]
+    public async Task AHigherPassHandsBackTheScoreItReplaced()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.FairGame, isBroken: false);
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 970000, Plate: PhoenixPlate.FairGame,
+                KeepBestStats: true),
+            CancellationToken.None);
+
+        Assert.Equal(new ScoreSaveResult(ChartId, ScoreSaveChange.Upscore, 950000), result);
+    }
+
+    [Fact]
+    public async Task APassOverAHigherScoringBreakIsANewPassNotAnUpscore()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.RoughGame, isBroken: true);
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000, Plate: PhoenixPlate.FairGame,
+                KeepBestStats: true),
+            CancellationToken.None);
+
+        Assert.Equal(ScoreSaveChange.NewPass, result.Change);
+        Assert.Null(result.UpscoredFrom);
+    }
+
+    [Fact]
+    public async Task AScoreThatDidNotBeatTheRecordHandsBackNothing()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 990000, plate: PhoenixPlate.SuperbGame, isBroken: false);
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000, Plate: PhoenixPlate.FairGame,
+                KeepBestStats: true),
+            CancellationToken.None);
+
+        Assert.Equal(ScoreSaveChange.None, result.Change);
+    }
+
+    [Fact]
+    public async Task AScoreThatOnlyMovedThePlateHandsBackNothing()
+    {
+        // Journaled, and deliberately never announced — the batch never carried it either.
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.FairGame, isBroken: false);
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame, KeepBestStats: true),
+            CancellationToken.None);
+
+        Assert.Equal(ScoreSaveChange.None, result.Change);
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ASaveTheCallerAnnouncesHandsBackItsChangeAndStaysOutOfTheBatch()
+    {
+        var ctx = new HandlerContext();
+
+        var result = await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000, Plate: PhoenixPlate.FairGame,
+                KeepBestStats: true, Source: ScoreJournalEntry.OfficialImportSource, SessionId: Guid.NewGuid(),
+                DeferAnnouncement: true),
+            CancellationToken.None);
+
+        Assert.Equal(ScoreSaveChange.NewPass, result.Change);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnImportsAnnouncementIsOneEventCarryingItsChangesAndTheTitlesItFound()
+    {
+        var ctx = new HandlerContext();
+        var session = Guid.NewGuid();
+        var passed = Guid.NewGuid();
+        var raised = Guid.NewGuid();
+        ctx.GivenRecords(passed, raised);
+
+        await ctx.Handler.Handle(new AnnounceScoreChangesCommand(UserId, MixEnum.Phoenix, session, new[]
+        {
+            new ScoreSaveResult(passed, ScoreSaveChange.NewPass),
+            new ScoreSaveResult(raised, ScoreSaveChange.Upscore, 930000),
+            new ScoreSaveResult(Guid.NewGuid(), ScoreSaveChange.None)
+        }, new[] { "Title A" }), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.Is<PlayerScoresUpdatedEvent>(e =>
+            e.UserId == UserId && e.SessionId == session && e.Changes.Count == 2 &&
+            e.Changes.Single(c => c.ChartId == passed).IsNewPass &&
+            e.Changes.Single(c => c.ChartId == raised).OldScore == 930000 &&
+            e.TitlesFound!.Single() == "Title A"), It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Sessions.Verify(s => s.Touch(session, Now, 1, 1, It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AScoreTypedInWhileTheImportSavedRidesTheImportsAnnouncement()
+    {
+        // Two announcements for one player at once would each read the other's charts as already held,
+        // and a title both crossed would be announced twice.
+        var ctx = new HandlerContext();
+        var session = Guid.NewGuid();
+        var typed = Guid.NewGuid();
+        var imported = Guid.NewGuid();
+        ctx.GivenRecords(typed, imported);
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, UserId))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, new[] { typed }, new Dictionary<Guid, int>(),
+                Guid.NewGuid()));
+
+        await ctx.Handler.Handle(new AnnounceScoreChangesCommand(UserId, MixEnum.Phoenix, session,
+            new[] { new ScoreSaveResult(imported, ScoreSaveChange.NewPass) }), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.Is<PlayerScoresUpdatedEvent>(e =>
+                e.SessionId == session && e.Changes.Select(c => c.ChartId).OrderBy(id => id)
+                    .SequenceEqual(new[] { typed, imported }.OrderBy(id => id))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportThatChangedNothingSendsItsTitlesOnTheirOwnAndIsDone()
+    {
+        var ctx = new HandlerContext();
+        var session = Guid.NewGuid();
+
+        await ctx.Handler.Handle(new AnnounceScoreChangesCommand(UserId, MixEnum.Phoenix2, session,
+            new[] { new ScoreSaveResult(Guid.NewGuid(), ScoreSaveChange.None) }, new[] { "Title A" }),
+            CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
+            e.UserId == UserId && e.Mix == MixEnum.Phoenix2 && e.SessionId == session &&
+            e.TitlesFound.Single() == "Title A"), It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Sessions.Verify(s => s.MarkProcessed(session, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportWithNothingNewAndNoTitlesPublishesNothing()
+    {
+        var ctx = new HandlerContext();
+        var session = Guid.NewGuid();
+
+        await ctx.Handler.Handle(new AnnounceScoreChangesCommand(UserId, MixEnum.Phoenix, session,
+            Array.Empty<ScoreSaveResult>()), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Sessions.Verify(s => s.MarkProcessed(session, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DrainingAnUploadsBatchMakesItDueAndHandsTheDrainToTheBus()
+    {
+        var ctx = new HandlerContext();
+        ctx.Batches.Setup(b => b.MakeDue(MixEnum.Phoenix, UserId, Now.UtcDateTime)).Returns(true);
+
+        await ctx.Handler.Handle(new DrainScoreBatchCommand(UserId, MixEnum.Phoenix), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m =>
+            m.UserId == UserId && m.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()), Times.Once);
+        // Nothing is taken here: the batch stays for the drain, so a lost drain still has the timer.
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DrainingWithNoOpenBatchDoesNothing()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(new DrainScoreBatchCommand(UserId, MixEnum.Phoenix), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<IPhoenixRecordRepository> Records { get; } = new();
@@ -1101,6 +1294,14 @@ public sealed class UpdatePhoenixRecordHandlerTests
         {
             Charts.Setup(c => c.GetChart(MixEnum.Phoenix, ChartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ChartBuilder().WithId(ChartId).WithNoteCount(noteCount).Build());
+        }
+
+        /// <summary>The records an announcement reads its "after" state from.</summary>
+        public void GivenRecords(params Guid[] chartIds)
+        {
+            Records.Setup(r => r.GetRecordedScores(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(chartIds.Select(id =>
+                    new RecordedPhoenixScore(id, 960000, PhoenixPlate.FairGame, false, Now)).ToArray());
         }
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken,
@@ -1199,5 +1400,31 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ARunClaimsTheOpenTypedBatchAsSaveResults()
+    {
+        // A score typed in just before an import began: claimed, it is announced with the run rather than
+        // on its own timer in the middle of it.
+        var ctx = new HandlerContext();
+        var passed = Guid.NewGuid();
+        var raised = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix2, UserId)).Returns(new PendingScoreBatch(MixEnum.Phoenix2,
+            new[] { passed }, new Dictionary<Guid, int> { [raised] = 900000 }, Guid.NewGuid()));
+
+        var claimed = await ctx.Handler.Handle(new ClaimScoreBatchCommand(UserId, MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Contains(new ScoreSaveResult(passed, ScoreSaveChange.NewPass), claimed);
+        Assert.Contains(new ScoreSaveResult(raised, ScoreSaveChange.Upscore, 900000), claimed);
+        Assert.Equal(2, claimed.Count);
+    }
+
+    [Fact]
+    public async Task NothingOpenMeansNothingClaimed()
+    {
+        var ctx = new HandlerContext();
+
+        Assert.Empty(await ctx.Handler.Handle(new ClaimScoreBatchCommand(UserId, MixEnum.Phoenix2), CancellationToken.None));
     }
 }

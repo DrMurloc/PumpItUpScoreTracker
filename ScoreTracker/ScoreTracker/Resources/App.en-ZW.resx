@@ -924,6 +924,9 @@
   <data name="An import is already running" xml:space="preserve">
     <value>Blgrl glorggl urg glglgrrgl grorpgrglmrgl</value>
   </data>
+  <data name="An import is running on this mix. Save again once it finishes." xml:space="preserve">
+    <value>Blgrl glorggl urg grorpgrglmrgl ap grogl mrg. Glmurp murgl ogro ug morgrorp.</value>
+  </data>
   <data name="an SSS+" xml:space="preserve">
     <value>a SSS+</value>
   </data>
@@ -11039,6 +11042,9 @@
   </data>
   <data name="You call the API when you want it. Skip this screen." xml:space="preserve">
     <value>Bloop am olo API la golba. Marogl mo pragl.</value>
+  </data>
+  <data name="You can import again in {0} min." xml:space="preserve">
+    <value>Blub grorp glorggl murgl gropmur {0} magl.</value>
   </data>
   <data name="You can leave once your key exists." xml:space="preserve">
     <value>Bloop golba mo grumb marogl.</value>

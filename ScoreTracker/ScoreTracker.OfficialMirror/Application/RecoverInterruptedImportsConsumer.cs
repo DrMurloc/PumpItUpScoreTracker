@@ -1,40 +1,34 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
-using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Events;
-using ScoreTracker.ScoreLedger.Contracts.Queries;
 
 namespace ScoreTracker.OfficialMirror.Application;
 
 /// <summary>
-///     Import-side recovery, on two triggers that ask different questions of the same candidates
-///     (docs/design/import-restart-recovery.md §4 and §4.3): the boot pass, once per process start,
-///     for work a restart interrupted; and the five-minute sweep, for a drain that never happened
-///     inside a process that is still running. Each gates on its own predicate — see the two
-///     <c>Consume</c> overloads — and shares everything after it.
+///     Import recovery, read from the import runs themselves (docs/design/import-restart-recovery.md §0).
+///     An import announces the moment its last score saves, so a run that reported an ending has, in
+///     every way but one, already announced: the startup pass catches the runs a restart cut short,
+///     and the five-minute tick catches the one way a live process can lose an announcement — a run
+///     that failed after saving, and then failed to announce what it saved.
 ///     <para>
-///         Reads its candidates from the Ledger — sessions whose derived work never ran — rather
-///         than enumerating import runs by time. That order matters: the marker and the run's end
-///         time live in different verticals, so a time-first query cannot filter on the marker and
-///         would match every run ever completed, which is what an arbitrary "only the last N hours"
-///         window would then exist to paper over. Unprocessed sessions are tiny by construction.
+///         Both replay through <see cref="ReplaySessionCommand" />, which does nothing for a session
+///         already announced or already processed, so a run can be offered to it any number of times
+///         and post at most one card.
 ///     </para>
 /// </summary>
 internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInterruptedImportsCommand>,
     IConsumer<OverdueScoreBatchesFlushedEvent>
 {
     /// <summary>
-    ///     Sessions a single pass will replay before leaving the rest to the next one. Every replay
-    ///     drops a whole capture chain — rating recalc plus every title ladder — onto the bus, and
-    ///     the failure this recovers from strands sessions site-wide, so an uncapped first tick
-    ///     after a long outage would herd the entire site through at once.
+    ///     How far back either pass looks. A session older than this is not worth a card: a run that
+    ///     never finished and started earlier is closed without one, and without a notice.
     /// </summary>
-    private const int MaxSessionsPerPass = 25;
+    private static readonly TimeSpan Lookback = TimeSpan.FromDays(1);
 
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly ILogger<RecoverInterruptedImportsConsumer> _logger;
@@ -51,102 +45,85 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     }
 
     /// <summary>
-    ///     The mid-life sweep: sessions whose run finished long enough ago that its batch has
-    ///     demonstrably had its chance to drain and did not take it. Runs after the in-memory half,
-    ///     never beside it — see <see cref="OverdueScoreBatchesFlushedEvent" />.
+    ///     The startup pass. Every run that began in the day before this process did and never reported
+    ///     an ending is replayed — newest first, so the player who just pressed the button hears first —
+    ///     and closed Interrupted after its replay, so the notice telling the player their scores are
+    ///     already in is true by the time they can see it.
     ///     <para>
-    ///         Staleness is the right test here and the boot instant is not, for the mirror image
-    ///         of §3.0's reason: mid-life, <em>every</em> run started after the boot, so the boot
-    ///         test would skip all of them.
+    ///         A run that reported an ending announced before it did, so it is left alone. Offering it
+    ///         anyway could only re-announce a session from before this shape shipped, whose two-minute
+    ///         batch the old code credited to whichever session saved next — a second Discord card for
+    ///         an import already announced on another.
     ///     </para>
     ///     <para>
-    ///         Only runs that reported an ending are in scope. A run with no <c>FinishedAt</c> is
-    ///         either still scraping — and a long deep scan legitimately outlives this window with
-    ///         no batch open yet — or died with its process, which is the boot pass's candidate,
-    ///         not this one's. So this half never closes a run, it only replays.
+    ///         "Began before this process" and not "is old": at startup the accumulator is empty and
+    ///         nothing from the previous process can still announce, while the run this boot actually
+    ///         interrupted is seconds old. A run that started after the boot is live.
     ///     </para>
     /// </summary>
-    public Task Consume(ConsumeContext<OverdueScoreBatchesFlushedEvent> context)
+    public async Task Consume(ConsumeContext<RecoverInterruptedImportsCommand> context)
     {
-        var staleBefore = context.Message.FlushedAt - ScoreBatchPolicy.StaleAfter;
-        return Sweep(run => run.FinishedAt is { } finished && finished < staleBefore,
-            closeUnfinished: false, "Stalled-batch", context.CancellationToken);
-    }
-
-    public Task Consume(ConsumeContext<RecoverInterruptedImportsCommand> context)
-    {
-        // Orphaned means "began before this process did", NOT "is older than the batch hold
-        // window". At startup the accumulator is empty, so nothing from a previous process can
-        // ever drain no matter how recently it ran — and the run this boot actually interrupted
-        // is, at this moment, seconds old. An age-based guard skips precisely the runs the restart
-        // just killed and nothing looks again until the next restart, which is the bug this shape
-        // replaced (docs/design/import-restart-recovery.md §4.2).
-        //
-        // A run that started AFTER this boot is live: its batch is in memory with a real deadline,
-        // and the mid-life sweep above will reach it once that deadline passes unmet.
         var bootedAt = context.Message.BootedAt;
-        return Sweep(run => run.StartedAt < bootedAt, closeUnfinished: true, "Startup",
-            context.CancellationToken);
-    }
-
-    private async Task Sweep(Func<ImportRunForSession, bool> isOrphaned, bool closeUnfinished,
-        string pass, CancellationToken token)
-    {
-        var unprocessed = await _mediator.Send(new GetUnprocessedSessionsQuery(), token);
-        if (unprocessed.Count == 0) return;
-
-        // Oldest first, so a backlog drains in the order it accumulated rather than by whatever
-        // the index hands back — and so the cap below sheds the newest, which the next tick
-        // reaches soonest.
-        var candidates = unprocessed.OrderBy(s => s.StartedAt).ToArray();
-        var deferred = Math.Max(0, candidates.Length - MaxSessionsPerPass);
-        if (deferred > 0) candidates = candidates.Take(MaxSessionsPerPass).ToArray();
-
-        var runs = (await _results.GetForSessions(candidates.Select(s => s.Id).ToArray(), token))
-            .GroupBy(r => r.SessionId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.StartedAt).First());
-
+        var token = context.CancellationToken;
         var now = _dateTime.Now;
+
+        var abandoned = await _results.CloseAbandoned(bootedAt - Lookback, now, token);
+        var runs = await _results.GetUnfinishedStartedBetween(bootedAt - Lookback, bootedAt, token);
+
         var replayed = 0;
         var closed = 0;
-        foreach (var session in candidates)
-        {
-            // ⚠ The drain marker, and the reason a session can be unprocessed yet out of scope.
-            // ProcessedAt is an END marker — the capture chain stamps it when it finishes — so on
-            // its own it cannot tell "the batch never drained" from "the batch drained and capture
-            // is still working". Touch and SetCounts both write these counts at the moment a batch
-            // is announced, so a non-zero count means the announcement already happened and the
-            // only thing outstanding is the chain that follows it. Replaying on top of that
-            // publishes the same scores twice and posts a second card.
-            if (session.NewCount > 0 || session.UpscoreCount > 0) continue;
-            // No run behind it: a manual entry, a CSV upload or an API submission. Those never
-            // mint an ImportResult, so there is nothing here that can say whether their batch has
-            // had its chance yet, and they are deliberately out of scope.
-            if (!runs.TryGetValue(session.Id, out var run)) continue;
-
-            if (!isOrphaned(run)) continue;
-
-            if (closeUnfinished && run.FinishedAt is null)
+        var failed = 0;
+        foreach (var run in runs)
+            try
             {
-                // Interrupted mid-scrape. There is no resuming it — the piugame session is gone
-                // and the credential lives in the player's browser — so it is closed and the
-                // player is told. It still gets replayed: the scores it DID save are in a real
-                // session, and re-importing will not recover their derived work, because the
-                // records already match and those charts never re-enter a batch.
+                if (run.SessionId is { } sessionId &&
+                    await _mediator.Send(new ReplaySessionCommand(run.UserId, sessionId), token) > 0)
+                    replayed++;
+                // There is no resuming it — the piugame session is gone and the credential lives in the
+                // player's browser — so it is closed and the player is told.
                 await _results.MarkInterrupted(run.Id, now, token);
                 closed++;
             }
-
-            var count = await _mediator.Send(new ReplaySessionCommand(session.UserId, session.Id), token);
-            if (count > 0) replayed++;
-        }
+            catch (Exception e) when (!token.IsCancellationRequested)
+            {
+                // One run's failure must not cost every run after it; the log keeps the detail.
+                failed++;
+                _logger.LogError(e, "Startup recovery could not finish import run {RunId}", run.Id);
+            }
 
         // Ask before boxing for a line nobody may be listening to (CA1873).
-        if ((replayed > 0 || closed > 0 || deferred > 0) && _logger.IsEnabled(LogLevel.Information))
-            // A pass that silently stops at the cap reads exactly like a pass that found nothing
-            // left, so what was left behind is said out loud.
+        if ((replayed > 0 || closed > 0 || abandoned > 0 || failed > 0) && _logger.IsEnabled(LogLevel.Information))
             _logger.LogInformation(
-                "{Pass} recovery: replayed {Replayed} interrupted session(s), closed {Closed} run(s) that never reported back, deferred {Deferred} to the next pass",
-                pass, replayed, closed, deferred);
+                "Startup recovery: replayed {Replayed} session(s), closed {Closed} run(s) that never reported back, closed {Abandoned} older than a day without notice, {Failed} failed",
+                replayed, closed, abandoned, failed);
+    }
+
+    /// <summary>
+    ///     The five-minute tick: replays the session of every run that began in the last day, saved,
+    ///     and then ended in a failure. Such a run announces what it saved on its way out, and this is
+    ///     for when that announcement itself failed. Never closes a run — a run with no ending is
+    ///     still working, or belongs to the startup pass — and never reaches one the startup pass
+    ///     closed for being older than a day, however recently it stamped that ending.
+    /// </summary>
+    public async Task Consume(ConsumeContext<OverdueScoreBatchesFlushedEvent> context)
+    {
+        var token = context.CancellationToken;
+        var runs = await _results.GetFailedSince(context.Message.FlushedAt - Lookback, token);
+
+        var replayed = 0;
+        foreach (var run in runs)
+            try
+            {
+                if (await _mediator.Send(new ReplaySessionCommand(run.UserId, run.SessionId!.Value), token) > 0)
+                    replayed++;
+            }
+            catch (Exception e) when (!token.IsCancellationRequested)
+            {
+                _logger.LogError(e, "Could not replay the session of failed import run {RunId}", run.Id);
+            }
+
+        if (replayed > 0 && _logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Replayed {Replayed} session(s) of import runs that failed after saving",
+                replayed);
     }
 }

@@ -4,6 +4,19 @@ Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. 
 (2051 / 148 / 557 / 209). **Deferred: the nine-locale sweep** — the panel's strings render English
 by key-fallback and the locale-parity ratchet stays green because no locale carries the keys yet.
 
+> **One run, three depths** (owner, 2026-09-26: *"just make the deep scan a bool that tells the import to
+> go further"*). A check and a deep scan are the import itself with a second pass. `RunOfficialImportCommand`
+> carries the `ImportKind`, and `RunOfficialImportConsumer` runs every kind: pass 1 is the ordinary walk and
+> save; pass 2 re-reads the levels the census says disagree (Check) or every best-score page (Deep scan)
+> into the same run, which then announces once ([import-restart-recovery.md](import-restart-recovery.md) §0).
+> An Import and check waits out the same five minutes between runs on a mix as a plain Import; a deep scan
+> never waits, but starts the clock ([import-restart-recovery.md](import-restart-recovery.md) §0).
+> `RunImportCheckCommand`, its consumer, `ExecuteImportCheckCommand` and `SaveOfficialScoresCommand` are
+> gone, and what was `ImportCheckSaga` is now only its start handler (`StartImportCheckHandler`); the start
+> command, the credits and the site-wide deep-scan slot are unchanged. A deep scan that finds the slot taken
+> now ends in an error the panel can see, instead of a status that left it spinning. Where the sections
+> below say the check runs an import and then its own step, those are now pass 1 and pass 2 of one run.
+
 > **A check saves what it finds** (owner call, 2026-08-03). Nobody looks at a list of their own
 > scores from the official site and declines one, so anything a run recovers is written on the spot
 > as a normal import — same session, same journal, same rating sweep — and lands on the player's
@@ -243,7 +256,7 @@ Everything scraping-side is **OfficialMirror** — it is the PiuGame anti-corrup
 |---|---|
 | `GetPlayDataCensus(mix, sid, ct)`, `GetPumbilityTotal(mix, sid, ct)`, `GetPlayLogPage(...)` | `IPiuGameApi` (internal) + `PiuGameApi` |
 | Census normalisation (cumulative→exact, bucket→level) | `OfficialMirror/Domain`, pure and unit-testable |
-| `StartImportCheckCommand` → `RunImportCheckCommand` (bus) → consumer → saga | mirrors `StartOfficialImportCommand` exactly, including `SetScopedUser` |
+| `StartImportCheckCommand` → `RunOfficialImportCommand(Kind)` (bus) → `RunOfficialImportConsumer` | the check's start handler spends the credit; everything after it is the import's own run (2026-09-26) |
 | `ImportCheckCompletedEvent` (a count, not a verdict) | `OfficialMirror/Contracts/Events` |
 | `ImportCheckCompletedEvent` (the verdict itself — nothing stores it) | `OfficialMirror/Contracts/Events`, bridged to `UiTopics.User` |
 | `User.DeepScansRemaining` + `SpendDeepScanCommand` / `GetDeepScansRemainingQuery` / `ResetDeepScansCommand` | `ScoreTracker.Data` entity; Identity owns the operations |
@@ -289,9 +302,9 @@ with **no new project reference and no new cross-vertical port**. Nothing is add
 
 | Layer | Location | New types |
 |---|---|---|
-| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckStartResult`, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
+| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckStartResult`, `Events/ImportCheckCompletedEvent`; `Messages/RunOfficialImportCommand` carries the `ImportKind` |
 | Domain *(internal)* | `OfficialMirror/Domain` | `AccountCensus`/`CensusBucket`, `CensusBuckets`, `LocalCensusBuilder`, `CensusDiff`, `IOfficialSiteClient` additions |
-| Application *(internal)* | `OfficialMirror/Application` | `ImportCheckSaga`, `StartImportCheckHandler`, `RunImportCheckConsumer`, `ExecuteImportCheckCommand` |
+| Application *(internal)* | `OfficialMirror/Application` | `StartImportCheckHandler`; the second pass is the import body's own (`OfficialLeaderboardSaga.ReadDeeper`), run by `RunOfficialImportConsumer` |
 | Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus` and `GetBestScoresIn` |
 | Wiring *(public)* | `OfficialMirror/Wiring` | model-contribution row, DI, consumer registration |
 | Data | `ScoreTracker.Data` | `UserEntity.DeepScansRemaining` + `AddUserDeepScansRemaining`; `IUserRepository` gains the spend/read/reset trio |
@@ -360,10 +373,9 @@ own dependency fault rate that day was the *lowest* of the six.
 
 One `ImportResult` row per press of Import, Import and check, or Deep scan.
 
-- **Opened at the consumer, not in the import body.** `RunOfficialImportConsumer` and
-  `RunImportCheckConsumer` sit one level above where the three paths diverge. The check *runs*
-  the standard import inside itself, so a row minted in the body would give every check two —
-  the same trap the session table hit and solved by passing an id down.
+- **Opened at the consumer, not in the import body.** `RunOfficialImportConsumer` runs all three
+  kinds and opens the row, then the session, before the body starts — so a run that dies on its
+  first piugame call still has a row, and the row can point at its session from the start.
 - **`Kind`** (`Standard` · `Check` · `DeepScan`) because the three cost the official site wildly
   different amounts; "deep scans fail" and "everything fails" must be countable apart.
 - **`Outcome`** is a closed vocabulary and never exception text: `Completed` · `PiuGameError` ·
@@ -378,10 +390,9 @@ One `ImportResult` row per press of Import, Import and check, or Deep scan.
   reason.
 - **Separate from `ScoreSession`**, which records what got *saved*: a session can span eight
   hours and several runs, an import is one attempt with one ending, and a failed one may have no
-  session at all. The FK points import → session so undo never reaches into this table. The
-  standard path's session moved up into its consumer to make that free; the check's stays in the
-  saga, because it is opened *after* the deep-scan slot gate and minting it earlier would leave
-  an empty session row every time a scan lost the race.
+  session at all. The FK points import → session so undo never reaches into this table. Every
+  kind's session is opened in the consumer, *after* the deep-scan slot gate, so a scan that loses
+  the race leaves no empty session row.
 - **`ScoreCount` is stamped by the run itself**, at close. It was originally read off the
   Ledger's `ScoreSession.ScoreCount` through the published `GetScoreSessionsQuery` — correct on
   paper, wrong in practice (a restart-recovered session has its counts set from the journal
@@ -392,9 +403,10 @@ afterwards, but the run itself cannot wait for that): that counter is written wh
   that saved seven scores sat at `ScoreCount` 0 with seven journal rows behind it, and the Undo
   page showed 0 too. The import already knows what it saved, so it says so — which also drops a
   cross-vertical read entirely.
-  ⚠ **The Ledger's own counter still has this hole**, and the Undo page still reads it. That is
-  its own ticket: the batch lives only in memory, so a restart between the last save and the
-  drain loses the count with no way to recover it.
+  Since 2026-09-26 an import writes the Ledger's counter itself, at its announcement, the moment
+  its last score saves ([import-restart-recovery.md](import-restart-recovery.md) §0), and a run a
+  restart cut short has it set by the startup replay. Only a typed entry's batch can still lose its
+  count to a restart.
 
 ### The surfaces
 
@@ -420,7 +432,7 @@ the next page load to have the truth ([import-restart-recovery.md](import-restar
 ### Still open
 
 - The **spent-deep-scan bug**: `SpendDeepScanCommand` runs in the start handler, before the
-  publish, so a user who loses the site-wide slot race in `ExecuteImportCheckCommand` is charged
+  publish, so a user who loses the site-wide slot race in `RunOfficialImportConsumer` is charged
   for a scan that never ran. Out of scope here; its own ticket.
 - **An unauthenticated page parses as "zero scores", not as an error.** `GetCards` returns an
   empty array when the profile boxes are missing, `OfficialSiteClient.GetRecordedScores` uses the

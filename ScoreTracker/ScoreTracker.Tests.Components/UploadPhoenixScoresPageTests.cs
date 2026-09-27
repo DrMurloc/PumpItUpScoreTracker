@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using MudBlazor;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
@@ -23,6 +24,7 @@ using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -50,6 +52,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     private readonly Mock<IImportCredentialClientStore> _clientStore = new();
     private readonly Mock<IUiNotificationHub> _uiHub = new();
     private readonly Mock<IPhoenixScoreFileExtractor> _extractor = new();
+    private readonly Guid _me = Guid.NewGuid();
 
     public UploadPhoenixScoresPageTests()
     {
@@ -92,7 +95,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         CurrentUser.SetupGet(c => c.User).Returns(new User(
-            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
+            _me, "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
     }
 
     [Theory]
@@ -363,6 +366,61 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Once));
     }
 
+    [Fact]
+    public async Task AnUploadSavesIntoTheLedgersCsvSessionAndAnnouncesTheMomentItEnds()
+    {
+        // The page used to mint its own session id, which the Ledger treats as a caller that opened its
+        // own session — so no session row was ever written and Undo could not list the upload. Now the
+        // Ledger's CSV envelope opens it, and the upload drains the batch instead of waiting it out.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var first = Guid.NewGuid();
+        var last = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(first, 950000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(last, 960000, PhoenixPlate.FairGame, false, Uploaded));
+        var order = new List<string>();
+        _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((c, _) =>
+                order.Add(((UpdatePhoenixBestAttemptCommand)c).ChartId == last ? "last" : "first"))
+            .ReturnsAsync(default(ScoreSaveResult));
+        _mediator.Setup(m => m.Send(It.IsAny<DrainScoreBatchCommand>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("drain"))
+            .Returns(Task.CompletedTask);
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { "first", "last", "drain" }, order));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.SessionId == null && c.Source == ScoreJournalEntry.CsvSource && !c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _mediator.Verify(m => m.Send(It.Is<DrainScoreBatchCommand>(c => c.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUploadThatFailsPartWayStillAnnouncesWhatItSaved()
+    {
+        var saved = Guid.NewGuid();
+        var failing = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(saved, 950000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(failing, 960000, PhoenixPlate.FairGame, false, Uploaded));
+        _mediator.Setup(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == failing),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
+
+        try
+        {
+            await UploadAndSave();
+        }
+        catch (TimeoutException)
+        {
+            // The failure itself is the page's to show; what matters here is what reached the Ledger.
+        }
+
+        _mediator.Verify(m => m.Send(It.Is<DrainScoreBatchCommand>(c => c.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private void GivenTheRecords(params RecordedPhoenixScore[] records)
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
@@ -533,5 +591,120 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         _mediator.Verify(m => m.Send(It.Is<GetGameCardsQuery>(q => q.Mix == mix), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ACsvUploadWhileTheMixIsImportingSavesNothingAndSaysWhy()
+    {
+        // Owner, 2026-09-27: nothing else saves on a mix while it imports.
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        GivenTheFileParsesTo(new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.FairGame, false, Uploaded));
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.UserId == _me && q.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await UploadAndSave();
+
+        snackbar.Verify(s => s.Add("An import is running on this mix. Save again once it finishes.",
+            Severity.Error, It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mediator.Verify(m => m.Send(It.IsAny<DrainScoreBatchCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AnImportInsideTheCooldownSaysHowLongIsLeftAndFreesTheButtons()
+    {
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(2)));
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        snackbar.Verify(s => s.Add("You can import again in 2 min.", Severity.Error,
+            It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+    }
+
+    [Fact]
+    public async Task ATypedImportInsideTheCooldownSaysHowLongIsLeftAndFreesTheButtons()
+    {
+        // The typed-password path has its own refusal handling; most presses come through it.
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameId", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("9990001");
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameTag", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("CARD");
+        _mediator.Setup(m => m.Send(It.Is<StartOfficialImportCommand>(c => c.Source is TypedCredentialSource),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4.5)));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await cut.Find("input[type=text]").ChangeAsync(new ChangeEventArgs { Value = "player" });
+        await cut.Find("input[type=password]").ChangeAsync(new ChangeEventArgs { Value = "hunter2" });
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        snackbar.Verify(s => s.Add("You can import again in 5 min.", Severity.Error,
+            It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+    }
+
+    [Fact]
+    public async Task ARefusedImportLeavesTheRunThatJustFinishedOnScreen()
+    {
+        // The page and the check panel inside it both listen; the hub delivers to each.
+        var listeners = new List<Func<ImportStatusUpdatedEvent, Task>>();
+        _uiHub.Setup(h => h.Subscribe(It.IsAny<string>(), It.IsAny<Func<ImportStatusUpdatedEvent, Task>>()))
+            .Callback<string, Func<ImportStatusUpdatedEvent, Task>>((_, handler) => listeners.Add(handler))
+            .Returns(Mock.Of<IDisposable>());
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.Started));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+        foreach (var listener in listeners)
+            await cut.InvokeAsync(() => listener(new ImportStatusUpdatedEvent(_me, "Charts finished saving",
+                Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix)));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=view-session-link]")));
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=view-session-link]")));
+    }
+
+    [Fact]
+    public async Task ARefusedRetryKeepsTheLineSayingWhyTheLastRunFailed()
+    {
+        // The failure text invites a retry; inside the cooldown that retry is refused, and the page must
+        // not fall back to the strip's older "finished" verdict as if nothing had gone wrong.
+        var errorListeners = new List<Func<ImportStatusErrorEvent, Task>>();
+        _uiHub.Setup(h => h.Subscribe(It.IsAny<string>(), It.IsAny<Func<ImportStatusErrorEvent, Task>>()))
+            .Callback<string, Func<ImportStatusErrorEvent, Task>>((_, handler) => errorListeners.Add(handler))
+            .Returns(Mock.Of<IDisposable>());
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.Started));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+        foreach (var listener in errorListeners)
+            await cut.InvokeAsync(() => listener(new ImportStatusErrorEvent(_me,
+                "PIUGame.com stopped responding, so this import couldn't finish.", MixEnum.Phoenix)));
+        cut.WaitForAssertion(() => Assert.Contains("PIUGame.com stopped responding", cut.Markup));
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
+
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.Contains("PIUGame.com stopped responding", cut.Markup));
     }
 }
