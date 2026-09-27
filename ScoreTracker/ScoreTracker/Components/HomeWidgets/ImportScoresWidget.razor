@@ -5,6 +5,7 @@
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
@@ -40,6 +41,20 @@ else if (_allMixes && _mix == null)
             <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
         }
     </MudSelect>
+}
+else if (_mix is { } watched && watched.HasScoresWatcher())
+{
+    @* RISE keeps its records inside the game, so its import is the capture app (docs/design/rise.md
+       §6.4): the import page's own download button, and the way to that page's explanation. *@
+    <div class="import-watcher">
+        <div class="import-watcher-line">
+            <img src="/img/scores-watcher.png" alt="" width="32" height="32"/>
+            <MudText Typo="Typo.body2">@L["{0} records your RISE plays as you play.", CommunityToolLinks.ScoresWatcherName]</MudText>
+        </div>
+        <ScoresWatcherDownload FullWidth="true" Disabled="EditMode"/>
+        <MudLink Href="/UploadPhoenixScores" Typo="Typo.caption" Class="import-watcher-more"
+                 Disabled="EditMode">@L["How it works"]</MudLink>
+    </div>
 }
 else if (_mix is { } m && !m.HasOfficialSite())
 {

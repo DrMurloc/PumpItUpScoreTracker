@@ -49,26 +49,55 @@
 
 @if (!_currentMix.HasOfficialSite())
 {
-    @* A Phoenix-scored mix with no site to pull from (Rise keeps its records inside the game):
-       the spreadsheet IS the import, so the page is the upload and nothing else. The
-       credential card and the console-script steps would ask for a site that does not exist —
-       ManualSiteHost throws on one. The same UploadFile path and steps the expander uses, so a
-       row reads in the mix's own vocabulary (S16 / HD23, PG / FC / NM) and the file is confirmed
-       and saved right here. *@
+    @* A Phoenix-scored mix with no site to pull from (Rise keeps its records inside the game).
+       The credential card and the console-script steps would ask for a site that does not exist —
+       ManualSiteHost throws on one — so the card offers what does: the capture app, where the mix
+       has one (docs/design/rise.md §6.4), beside the spreadsheet upload. The upload is the same
+       UploadFile path and steps the expander uses, so a row reads in the mix's own vocabulary
+       (S16 / HD23, PG / FC / NM) and the file is confirmed and saved right here. Upload CSV is
+       outlined so the download stays the card's one filled button. *@
+    var offersWatcher = _currentMix.HasScoresWatcher();
     <MudCard Class="mt-4">
         <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
         <MudCardContent>
-            <MudText Typo="Typo.body2" Class="mb-3">@L["Spreadsheet Import Lede", _currentMix.GetName()]</MudText>
-            <MudText Typo="Typo.caption" Class="d-block mb-4">@L["Spreadsheet Import Columns"]</MudText>
-            @if (_csvStep == CsvStep.Idle)
-            {
-                <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
-            }
-            else
-            {
-                @CsvProgress
-            }
+            <div class="@(offersWatcher ? "siteless-import siteless-import-watcher" : "siteless-import")">
+                @if (offersWatcher)
+                {
+                    <section class="siteless-watcher" aria-labelledby="scores-watcher-name">
+                        <div class="siteless-watcher-head">
+                            <img src="/img/scores-watcher.png" alt="" width="56" height="56"/>
+                            <div>
+                                <div id="scores-watcher-name" class="siteless-watcher-name">@CommunityToolLinks.ScoresWatcherName</div>
+                                <div class="siteless-watcher-tagline">@L["Play RISE. It does the rest."]</div>
+                            </div>
+                        </div>
+                        <MudText Typo="Typo.body2">@L["Scores Watcher Lede"]</MudText>
+                        <div class="siteless-watcher-actions">
+                            <ScoresWatcherDownload Class="siteless-watcher-download"/>
+                            <MudLink Href="@CommunityToolLinks.ScoresWatcherPrivacy" Target="_blank" rel="noopener noreferrer"
+                                     Typo="Typo.body2" Class="siteless-watcher-privacy">
+                                @L["What it looks at and sends"]
+                                <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small"/>
+                            </MudLink>
+                        </div>
+                        <MudText Typo="Typo.caption" Class="siteless-muted">@ScoresWatcherTokenHint</MudText>
+                    </section>
+                }
+                <section class="siteless-spreadsheet">
+                    <h3>@L["Upload a spreadsheet"]</h3>
+                    <MudText Typo="Typo.body2">@L["Fill one in yourself: one row per chart, and a better score replaces a worse one."]</MudText>
+                    <MudText Typo="Typo.caption" Class="siteless-muted">@L["Spreadsheet Import Columns"]</MudText>
+                    @if (_csvStep == CsvStep.Idle)
+                    {
+                        <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+                    }
+                    else
+                    {
+                        <div class="siteless-progress">@CsvProgress</div>
+                    }
+                </section>
+            </div>
         </MudCardContent>
     </MudCard>
     <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
@@ -469,6 +498,15 @@
         "Sending your scores to {0} or another community tool is managed from {1}.",
         CommunityToolLinks.Anchor(CommunityToolLinks.PiuTracker, "PIU Tracker"),
         CommunityToolLinks.InternalAnchor("/CommunityTools", L["Community Tools"].Value)].Value;
+
+    /// <summary>
+    ///     Where the capture app's token comes from, as one localized sentence carrying the link —
+    ///     markup for the same reason as <see cref="ToolsSentence" />. The link text is the Account
+    ///     page's own two labels, so it names the tab the player will actually find.
+    /// </summary>
+    private MarkupString ScoresWatcherTokenHint => (MarkupString)L[
+        "Windows 10 or 11. When it asks for your token, get it from {0}.",
+        CommunityToolLinks.InternalAnchor("/Account?tab=api", $"{L["Account"].Value} → {L["API"].Value}")].Value;
 
     /// <summary>
     ///     Ticking the box IS the choice — it is kept on the account and outranks the mix default

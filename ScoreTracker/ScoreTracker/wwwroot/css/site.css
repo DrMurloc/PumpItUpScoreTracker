@@ -2951,6 +2951,33 @@ html.sheet-open .more-sheet-scrim {
     height: auto;
 }
 
+/* The RISE state (docs/design/rise.md §6.4): one line naming the capture app, its download and
+   the way to the import page's explanation, packed to the middle of the 1x1 body. */
+.import-watcher {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.import-watcher-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.import-watcher-line img {
+    width: 32px;
+    height: 32px;
+    flex: none;
+}
+
+.import-watcher-more {
+    align-self: center;
+}
+
 /* Nav-bar import indicator: a pulsing dot on the avatar while a background import runs. */
 .nav-avatar-wrap {
     position: relative;
@@ -8264,6 +8291,110 @@ button.chart-card-art {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+/* /UploadPhoenixScores on a RISE mix (docs/design/rise.md §6.4): the capture app beside the
+   spreadsheet upload from 960px, the shell's own desktop line. Below it they stack, the app
+   first, and on a phone the download takes the whole width. */
+.siteless-import-watcher {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: 32px;
+}
+
+.siteless-import-watcher .siteless-spreadsheet {
+    padding-left: 32px;
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.siteless-watcher,
+.siteless-spreadsheet {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.siteless-spreadsheet {
+    align-items: flex-start;
+}
+
+.siteless-watcher-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.siteless-watcher-head img {
+    width: 56px;
+    height: 56px;
+    flex: none;
+}
+
+.siteless-watcher-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    letter-spacing: .01em;
+}
+
+.siteless-watcher-tagline {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: .02em;
+    color: var(--mix-primary);
+}
+
+.siteless-watcher-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+}
+
+.siteless-watcher-privacy {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.siteless-spreadsheet h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    letter-spacing: .02em;
+}
+
+.siteless-muted {
+    color: var(--mix-ink-muted);
+}
+
+/* The spreadsheet column packs its buttons to the left; the upload's progress bar needs the width. */
+.siteless-progress {
+    align-self: stretch;
+}
+
+@media (max-width: 959.98px) {
+    .siteless-import-watcher {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 20px;
+    }
+
+    .siteless-import-watcher .siteless-spreadsheet {
+        padding-left: 0;
+        padding-top: 20px;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, .12);
+    }
+}
+
+@media (max-width: 599.98px) {
+    .siteless-watcher-download {
+        width: 100%;
+    }
 }
 
 /* ============================================================

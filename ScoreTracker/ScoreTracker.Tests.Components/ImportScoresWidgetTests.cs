@@ -37,11 +37,45 @@ public sealed class ImportScoresWidgetTests : ComponentTestBase
         Services.AddSingleton(_snackbar.Object);
     }
 
-    private IRenderedComponent<ImportScoresWidget> Render()
+    private IRenderedComponent<ImportScoresWidget> Render(MixEnum mix = MixEnum.Phoenix2, bool editMode = false)
     {
         return RenderComponent<ImportScoresWidget>(p => p
             .Add(c => c.Widget, new HomePageWidgetRecord(Guid.NewGuid(), "ImportScores", null, 0, "1x1", "{}", 1))
-            .Add(c => c.EffectiveMix, MixEnum.Phoenix2));
+            .Add(c => c.EffectiveMix, mix)
+            .Add(c => c.EditMode, editMode));
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public void ARiseMixOffersTheCaptureAppInsteadOfTheSpreadsheet(MixEnum mix)
+    {
+        var cut = Render(mix);
+
+        // The import page's own download button, and the way to its explanation (docs/design/rise.md §6.4).
+        cut.WaitForAssertion(() => Assert.Equal(CommunityToolLinks.ScoresWatcherInstaller,
+            cut.Find("[data-testid=scores-watcher-download]").GetAttribute("href")));
+        Assert.Single(cut.FindAll("a[href='/UploadPhoenixScores']"));
+        Assert.DoesNotContain("Upload file", cut.Markup);
+    }
+
+    [Fact]
+    public void ALegacyMixStillImportsFromASpreadsheet()
+    {
+        var cut = Render(MixEnum.XX);
+
+        cut.WaitForAssertion(() => Assert.Contains("Upload file", cut.Markup));
+        Assert.Empty(cut.FindAll("[data-testid=scores-watcher-download]"));
+    }
+
+    [Fact]
+    public void EditModeLeavesTheDownloadWithNowhereToGo()
+    {
+        var cut = Render(MixEnum.Rise, editMode: true);
+
+        // Arranging the dashboard must not start a download.
+        cut.WaitForAssertion(() =>
+            Assert.False(cut.Find("[data-testid=scores-watcher-download]").HasAttribute("href")));
     }
 
     [Fact]
