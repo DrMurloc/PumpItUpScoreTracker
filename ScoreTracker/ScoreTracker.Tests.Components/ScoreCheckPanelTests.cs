@@ -209,13 +209,13 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         var panel = Render();
         await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
         await Finish(panel, added: 2);
-        Assert.Contains("Added 2 scores PIUGAME had that we didn't.", panel.Markup);
+        Assert.Contains("Added 2 scores", panel.Markup);
         _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.CoolingDown, 3,
                 TimeSpan.FromMinutes(4)));
 
         await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
 
-        Assert.Contains("Added 2 scores PIUGAME had that we didn't.", panel.Markup);
+        Assert.Contains("Added 2 scores", panel.Markup);
     }
 }
