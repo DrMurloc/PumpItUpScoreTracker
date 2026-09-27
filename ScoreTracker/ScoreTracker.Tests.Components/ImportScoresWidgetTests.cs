@@ -73,9 +73,10 @@ public sealed class ImportScoresWidgetTests : ComponentTestBase
     {
         var cut = Render(MixEnum.Rise, editMode: true);
 
-        // Arranging the dashboard must not start a download.
+        // Arranging the dashboard must not start a download or leave the page.
         cut.WaitForAssertion(() =>
             Assert.False(cut.Find("[data-testid=scores-watcher-download]").HasAttribute("href")));
+        Assert.Empty(cut.FindAll("a[href='/UploadPhoenixScores']"));
     }
 
     [Fact]
