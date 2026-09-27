@@ -898,3 +898,35 @@ the three words of the existing *Something went wrong loading this widget.*
 | made (made it here) | mrgurp | Not `murpgro`, which two existing values already spend. |
 | slower | grrolurg | One extra `r` on the existing *Slow* (`Grolurg`) — the comparative device. |
 | without | momag | `mo` (negation) + `mag` (with). |
+
+## The capture app batch (2026-09-27)
+
+Coined for PIU Scores Watcher's download on the RISE import page and the Import Scores widget
+([rise.md §6.4](design/rise.md)). `Windows` and `Warm Up` are protected nouns (above), and `RISE` is an
+acronym. Reused as-is: `Murlg` (download), `Grglargl` (upload), `blgrlgrrglmaglmorg` (spreadsheet),
+`Blubgrorp` (records), `Blub` (plays, you), `Grrglgrrgl` (play), `Grolm` (rest), `Algo` (keeps),
+`Mgrlgmrg` (scores), `Mrglrgl` (score), `Murgl` (chart), `Grolgub` (row), `Glorgblub rorgl` (result
+screen), `murgblarg` (becomes), `rorgmo` (reads), `gromurp` (your), `urgbam` (here), `Bam` (nothing),
+`Amrog` (already), `mrrglgro` (best), `Mrrgl` / `Mgl` (better / worse, from *More* / *Less*),
+`Blomorg` (looks, from *Watch*), `grolgo` (get), `Ob` (when) and the function words table.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| the | gl | |
+| does | murgmo | |
+| free | glubmo | |
+| game | glargmo | |
+| app | arg | |
+| so | murm | |
+| them | ugla | `ug` (it) + `la`. |
+| press | prglurg | |
+| while | obmur | `ob` (when) + `mur`. |
+| have | urgmo | |
+| bulk | brglmo | |
+| capture | grorpmurgl | |
+| asks | argmo | |
+| token | gurgmo | |
+| sends | murpglub | Not `murpgro`, which two existing values already spend. |
+| fill | Glurg | |
+| yourself | blubmurgl | |
+| replaces | rorgblarg | |
