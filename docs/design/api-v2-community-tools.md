@@ -352,6 +352,7 @@ Effective read access for tool T over player P:
    explicit ToolShare(T, P)
 OR (P.ShareWithAllTools AND T.AcceptsAllToolsShare AND NOT ToolBlock(T, P)
     AND T.WebhookMode <> PiuGameSession        -- never by blanket consent
+    AND T.Kind <> ListingOnly                   -- no key, reads nobody
     AND T's maker has Discord linked            -- or T is grandfathered
     AND T.OwnerUserId is not banned)
 ```

@@ -156,6 +156,34 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     A listing-only tool is a link in the directory: no key, no endpoint, nobody it can read. It
+    ///     is created accepting the pool like every tool, so the query has to leave it out, or a
+    ///     sharing player is told it is one of the tools reading their scores.
+    /// </summary>
+    [Fact]
+    public async Task AListingOnlyToolIsNeverReachedByBlanketConsent()
+    {
+        var repository = BuildRepository();
+        var reach = Reach(repository);
+        var player = Guid.NewGuid();
+        await repository.SetShareWithAllTools(player, true, Now);
+
+        var integrated = await SaveTool(repository, "Planner", configure: PublicAndPooled);
+        var listing = Tool.Create(Guid.NewGuid(), await SeedMaker(discordLinked: true), Name.From("Sheet"), Now,
+            kind: ToolKind.ListingOnly);
+        PublicAndPooled(listing);
+        await repository.Save(listing);
+
+        var reading = await reach.ToolIdsReading(player, CancellationToken.None);
+
+        Assert.Contains(integrated.Id, reading);
+        Assert.DoesNotContain(listing.Id, reading);
+        Assert.False(await reach.CanRead(listing.Id, player, CancellationToken.None));
+        Assert.DoesNotContain(player, await reach.ReadablePlayerIds(listing.Id, CancellationToken.None));
+        Assert.Equal(0, await reach.CountConnectedPlayers(listing.Id, CancellationToken.None));
+    }
+
+    /// <summary>
     ///     A ban disables rather than deletes, so its effect has to be computed at read time — which
     ///     means only a real query can prove it happened. The shares stay in the table untouched,
     ///     which is what makes the ban liftable.

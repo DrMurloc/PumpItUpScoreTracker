@@ -237,6 +237,9 @@ internal sealed class EFToolRepository : IToolRepository
             .Where(t => t.AcceptsAllToolsShare)
             // Session mode never arrives by blanket consent — it needs a moment the player saw.
             .Where(t => t.WebhookMode != nameof(WebhookMode.PiuGameSession))
+            // A listing-only tool has no key and no endpoint; it reads nobody, so it is not one of
+            // the tools a sharing player is told can read them.
+            .Where(t => t.Kind != nameof(ToolKind.ListingOnly))
             .Select(t => new PooledTool(t.Id, t.OwnerUserId))
             .ToArrayAsync(cancellationToken);
 
@@ -267,15 +270,17 @@ internal sealed class EFToolRepository : IToolRepository
             .Select(s => s.UserId).ToArrayAsync(cancellationToken);
 
         // A tool that may not take players is excluded from the blanket pool, exactly as a
-        // session-mode tool is. Deliberate grants already given survive it: cutting off players who
-        // chose a tool because its maker unlinked an account would punish the wrong people.
+        // session-mode tool and a listing-only one are. Deliberate grants already given survive it:
+        // cutting off players who chose a tool because its maker unlinked an account would punish
+        // the wrong people.
         //
         // Visibility is deliberately NOT part of this. Listing is a directory concern — what protects
         // a pooled player is a reachable maker and the maker ban, which a private tool is held to
         // identically.
         if (!takesPlayers
             || !tool.AcceptsAllToolsShare
-            || tool.WebhookMode == nameof(WebhookMode.PiuGameSession))
+            || tool.WebhookMode == nameof(WebhookMode.PiuGameSession)
+            || tool.Kind == nameof(ToolKind.ListingOnly))
             return direct.Distinct().ToArray();
 
         var blocked = await database.Set<ToolBlockEntity>()
