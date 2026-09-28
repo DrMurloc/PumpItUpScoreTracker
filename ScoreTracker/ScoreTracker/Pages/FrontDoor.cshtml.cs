@@ -93,7 +93,7 @@ public sealed class FrontDoorModel : PageModel
     /// </summary>
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
-        ReturnUrl = SignInReturnUrl.Sanitize(Request.Query[SignInReturnUrl.QueryKey], Url);
+        ReturnUrl = SignInReturnUrl.Sanitize(Request.Query[SignInReturnUrl.QueryKey]);
         if (User.Identity?.IsAuthenticated == true) return LocalRedirect(ReturnUrl ?? "/");
 
         // A fresh local database routes the developer to the populate harness.

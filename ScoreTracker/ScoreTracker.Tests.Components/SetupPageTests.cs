@@ -96,6 +96,23 @@ public sealed class SetupPageTests : ComponentTestBase
     private string Navigations =>
         string.Join(" | ", Services.GetRequiredService<FakeNavigationManager>().History.Select(h => h.Uri));
 
+    /// <summary>The <paramref name="key" /> this test's one navigation to <paramref name="path" /> carried.</summary>
+    private string QueryValueOf(string path, string key)
+    {
+        var uri = Services.GetRequiredService<FakeNavigationManager>().History
+            .Select(h => h.Uri).Single(u => u.Contains(path + "?", StringComparison.Ordinal));
+        var pair = uri[(uri.IndexOf('?') + 1)..].Split('&')
+            .Single(p => p.StartsWith(key + "=", StringComparison.Ordinal));
+        return Uri.UnescapeDataString(pair[(key.Length + 1)..]);
+    }
+
+    private IRenderedComponent<Setup> RenderReturningTo(string returnUrl, string from = "Discord")
+    {
+        Services.GetRequiredService<FakeNavigationManager>()
+            .NavigateTo($"/Setup?from={from}&returnUrl={Uri.EscapeDataString(returnUrl)}");
+        return RenderComponent<Setup>();
+    }
+
     /// <summary>
     ///     The username arrives prefilled from whatever the provider gave, which is the whole
     ///     reason this page exists — Google and Facebook hand over a real name.
@@ -413,6 +430,51 @@ public sealed class SetupPageTests : ComponentTestBase
         _uiSettings.Verify(u => u.SetSetting(IUiSettingsAccessor.SetupCompletedSettingKey, "true", It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.True(NavigatedTo("/Mix/Set?mix=Phoenix2"), Navigations);
+    }
+
+    /// <summary>
+    ///     A new account that signed up from a page — a tool's invite link, most of all — goes back
+    ///     to it once setup is done, and the page stops promising the home page (D13).
+    /// </summary>
+    [Fact]
+    public async Task ContinueGoesBackToThePageTheAccountSignedUpFrom()
+    {
+        const string invite = "/CommunityTools/Invite/5f0c3c47-7b5e-4a33-9c56-0d1e2f3a4b5c";
+        var page = RenderReturningTo(invite);
+
+        Assert.DoesNotContain("Next: your home page", page.Markup);
+        await page.Find("button.setup-continue").ClickAsync(new());
+
+        Assert.Equal(invite, QueryValueOf("/Mix/Set", "redirectUrl"));
+    }
+
+    /// <summary>
+    ///     The address arrives on a query string the player controls, so anything that is not a
+    ///     path on this site — or would bring Continue back to setup itself — is ignored.
+    /// </summary>
+    [Theory]
+    [InlineData("https://evil.example/")]
+    [InlineData("//evil.example/")]
+    [InlineData("/Setup")]
+    public async Task ContinueGoesHomeWhenTheReturnAddressIsNotOneToFollow(string returnUrl)
+    {
+        var page = RenderReturningTo(returnUrl);
+
+        Assert.Contains("Next: your home page", page.Markup);
+        await page.Find("button.setup-continue").ClickAsync(new());
+
+        Assert.Equal("/", QueryValueOf("/Mix/Set", "redirectUrl"));
+    }
+
+    /// <summary>A language change reloads the page; the way back keeps the address or Continue forgets it.</summary>
+    [Fact]
+    public async Task ChangingLanguageKeepsTheReturnAddress()
+    {
+        var page = RenderReturningTo("/CommunityTools", from: "Google");
+
+        await page.Find("#setup-language").ChangeAsync(new() { Value = "ko-KR" });
+
+        Assert.Equal("/Setup?from=Google&returnUrl=%2FCommunityTools", QueryValueOf("/Culture/Set", "redirectUrl"));
     }
 
     /// <summary>

@@ -600,11 +600,16 @@
 
         <div class="setup-actions">
             <button type="button" class="setup-continue" disabled="@_isSaving" @onclick="Continue">
-                @(_isFinishing ? L["Opening your home page…"] : L["Continue"])
+                @(_isFinishing ? (ResumeUrl is null ? L["Opening your home page…"] : L["Loading..."]) : L["Continue"])
             </button>
-            <p class="setup-after">
-                @L["Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there."]
-            </p>
+            @* Continue goes back to the page this account signed up from when there is one, so the
+               home page is promised only when it is where Continue leads. *@
+            @if (ResumeUrl is null)
+            {
+                <p class="setup-after">
+                    @L["Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there."]
+                </p>
+            }
         </div>
 
     </section>
@@ -641,6 +646,16 @@
     private string? ProviderLabel =>
         From != null && ProviderLabels.TryGetValue(From, out var label) ? label : null;
 
+    /// <summary>
+    ///     The page this account signed up from, which Continue goes back to instead of the home
+    ///     page (D13). Checked again here: it arrives on the query string, which the player controls,
+    ///     and only a path on this site is followed.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = SignInReturnUrl.QueryKey)]
+    public string? ReturnUrl { get; set; }
+
+    private string? ResumeUrl => SignInReturnUrl.Sanitize(ReturnUrl);
+
     private string _name = string.Empty;
     private string _country = string.Empty;
     private string _culture = SupportedCultures.Automatic;
@@ -661,14 +676,14 @@
     private string _mergeInviteTag = string.Empty;
 
     /// <summary>
-    ///     This page's own address, carrying the provider through so anything that leaves and comes
-    ///     back keeps the "filled in from PIUGAME" chip. Rebuilt from the whitelisted label rather
-    ///     than echoing the query string, which the player controls.
+    ///     This page's own address, carrying the provider and the return address through so anything
+    ///     that leaves and comes back keeps the "filled in from PIUGAME" chip and still knows where
+    ///     Continue goes. Rebuilt from the whitelisted label and the checked address rather than
+    ///     echoing the query string, which the player controls.
     /// </summary>
-    private string SelfUrl =>
-        ProviderLabel == null || From == null
-            ? "/Setup"
-            : $"/Setup?from={Uri.EscapeDataString(From)}";
+    private string SelfUrl => SignInReturnUrl.Append(
+        ProviderLabel == null || From == null ? "/Setup" : $"/Setup?from={Uri.EscapeDataString(From)}",
+        ResumeUrl);
 
     /// <summary>
     ///     Back here afterwards: keeping the new account leaves setup unfinished, so the wizard
@@ -870,8 +885,9 @@
     }
 
     /// <summary>
-    ///     Not a save — everything already is. This marks setup done and hands off to step 3,
-    ///     routed through /Mix/Set so the anonymous-fallback cookie lands on the way home.
+    ///     Not a save — everything already is. This marks setup done and hands off to step 3, or
+    ///     back to the page the account signed up from, routed through /Mix/Set so the
+    ///     anonymous-fallback cookie lands on the way.
     /// </summary>
     private async Task Continue()
     {
@@ -880,7 +896,7 @@
 
         await UiSettings.SetSetting(IUiSettingsAccessor.SetupCompletedSettingKey, "true");
         NavManager.NavigateTo(
-            $"/Mix/Set?mix={_mix}&redirectUrl={Uri.EscapeDataString("/")}", true);
+            $"/Mix/Set?mix={_mix}&redirectUrl={Uri.EscapeDataString(ResumeUrl ?? "/")}", true);
     }
 
 }

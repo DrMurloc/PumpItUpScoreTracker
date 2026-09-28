@@ -31,8 +31,8 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
     }
 
     /// <summary>
-    ///     A page that sends a logged-out visitor to sign in gets them back. Only an existing
-    ///     account can show it — a brand-new one is taken to setup first, wherever it came from.
+    ///     A page that sends a logged-out visitor to sign in gets them back. An existing account
+    ///     comes straight back; a brand-new one goes through setup first (the next test).
     /// </summary>
     [Fact]
     public async Task SigningInFromAPageReturnsTheVisitorToIt()
@@ -61,6 +61,30 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
         {
             await signedOut.DisposeAsync();
         }
+    }
+
+    /// <summary>
+    ///     A brand-new account keeps the page it started from through setup, and Continue goes back
+    ///     to it instead of the home page (docs/design/new-user-setup.md D13) — the path a player
+    ///     signing up from a tool's invite link takes.
+    /// </summary>
+    [Fact]
+    public async Task ANewAccountGoesBackToThePageItStartedFromAfterSetup()
+    {
+        await _page.GotoAsync("/Login?returnUrl=%2FCommunityTools");
+        await _page.Locator("a.btn[href^='/PiuGameLogin']").ClickAsync();
+
+        await _page.Locator("input[name='username']")
+            .FillAsync(PiuGameLoginFlow.Username, new LocatorFillOptions { Timeout = 30_000 });
+        await _page.Locator("input[name='password']").FillAsync(PiuGameLoginFlow.Password);
+        await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
+
+        await _page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/Setup",
+            new PageWaitForURLOptions { Timeout = 60_000 });
+        await _page.Locator("button.setup-continue").ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
+
+        await _page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/CommunityTools",
+            new PageWaitForURLOptions { Timeout = 60_000 });
     }
 
     [Fact]
