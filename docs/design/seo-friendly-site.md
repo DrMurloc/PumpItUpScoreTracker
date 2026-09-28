@@ -471,8 +471,14 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
   some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
   from the extension; **existing blobs need a one-time owner-side content-type stamp**
-  (`Downloads\stamp-piuimages-content-types.ps1`; remember a CDN purge after — cached
-  octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  (`tools/SongImages/stamp-content-types.ps1`; remember a CDN purge after — cached
+  octet-stream responses outlive the stamp). That stamp **never actually ran**: the original
+  `Downloads\stamp-piuimages-content-types.ps1` minted its SAS with `az`, which writes a
+  credentials WARNING to stderr, and PS 5.1 under `$ErrorActionPreference='Stop'` makes a
+  native command's stderr fatal — so it died on its SAS line every run, before touching a
+  blob. 3,793 of 5,217 blobs were still `application/octet-stream` when the replacement
+  script was written (2026-09-14); it mints the SAS locally and never shells out to `az`.
+  Head grew `og:url`, `og:image:alt`, and
   `twitter:card = summary_large_image`. **Second latent bug found in the same client**: the
   plain `UploadAsync(Stream)` overload throws `BlobAlreadyExists`, so the daily
   `refresh-folder-share-cards` job faulted on its first folder every run after its first —
