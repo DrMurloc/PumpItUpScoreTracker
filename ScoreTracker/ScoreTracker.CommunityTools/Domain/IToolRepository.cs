@@ -19,6 +19,12 @@ internal interface IToolRepository
 
     Task DeleteTool(Guid toolId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Hands every tool one account owns to another, keys, shares and history untouched, and
+    ///     returns the tools it moved.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> MoveTools(Guid fromUserId, Guid toUserId, CancellationToken cancellationToken = default);
+
     /// <summary>Who made the tool, or null when there is no such tool.</summary>
     Task<Guid?> GetOwnerId(Guid toolId, CancellationToken cancellationToken = default);
 

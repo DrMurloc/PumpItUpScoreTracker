@@ -86,6 +86,19 @@ internal sealed class EFToolRepository : IToolRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> MoveTools(Guid fromUserId, Guid toUserId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var toolIds = await database.Set<ToolEntity>()
+            .Where(t => t.OwnerUserId == fromUserId).Select(t => t.Id).ToArrayAsync(cancellationToken);
+
+        // Everything else a tool has is keyed by the tool, so the owner column is the whole move.
+        await database.Set<ToolEntity>().Where(t => toolIds.Contains(t.Id))
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.OwnerUserId, toUserId), cancellationToken);
+        return toolIds;
+    }
+
     public async Task DeleteTool(Guid toolId, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);

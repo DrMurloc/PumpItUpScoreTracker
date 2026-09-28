@@ -156,6 +156,30 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     An account merge hands the retired account's tools to the one kept. Only a real update can
+    ///     show it moved that account's tools and nobody else's.
+    /// </summary>
+    [Fact]
+    public async Task MovingToolsHandsOverThatAccountsToolsAndNoOneElses()
+    {
+        var repository = BuildRepository();
+        var planner = await SaveTool(repository, "Planner");
+        var sheet = Tool.Create(Guid.NewGuid(), planner.OwnerUserId, Name.From("Sheet"), Now,
+            kind: ToolKind.ListingOnly);
+        await repository.Save(sheet);
+        var strangers = await SaveTool(repository, "Digger");
+        var survivor = await SeedMaker(discordLinked: true);
+
+        var moved = await repository.MoveTools(planner.OwnerUserId, survivor);
+
+        var both = new[] { planner.Id, sheet.Id }.Order().ToArray();
+        Assert.Equal(both, moved.Order().ToArray());
+        Assert.Equal(both, (await repository.GetToolsOwnedBy(survivor)).Select(t => t.Id).Order().ToArray());
+        Assert.Empty(await repository.GetToolsOwnedBy(planner.OwnerUserId));
+        Assert.Equal(strangers.OwnerUserId, await repository.GetOwnerId(strangers.Id));
+    }
+
+    /// <summary>
     ///     A listing-only tool is a link in the directory: no key, no endpoint, nobody it can read. It
     ///     is created accepting the pool like every tool, so the query has to leave it out, or a
     ///     sharing player is told it is one of the tools reading their scores.

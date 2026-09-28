@@ -50,6 +50,7 @@ public static class CommunityToolsRegistrationExtensions
     /// </summary>
     public static void AddCommunityToolsConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<AccountMergeConsumer>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<WebhookDeliverySaga>();
         configurator.AddConsumer<WebhookMaintenanceSaga>();
