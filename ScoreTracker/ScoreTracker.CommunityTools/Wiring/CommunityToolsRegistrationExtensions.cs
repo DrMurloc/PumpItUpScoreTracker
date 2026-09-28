@@ -18,6 +18,8 @@ public static class CommunityToolsRegistrationExtensions
     public static IServiceCollection AddCommunityTools(this IServiceCollection services)
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
+        services.AddTransient<ToolReach>();
+        services.AddTransient<DiscordNames>();
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
         services.AddTransient<IToolSecretProtector, ToolSecretProtector>();
@@ -27,9 +29,6 @@ public static class CommunityToolsRegistrationExtensions
         services.AddTransient<IWebhookDeliveryDispatcher, WebhookDeliveryDispatcher>();
         // A typed client, so the vertical owns its own outbound policy rather than borrowing one.
         services.AddHttpClient<IWebhookDeliveryClient, WebhookDeliveryClient>();
-        // Its own client rather than sharing the delivery one: this call must carry no credential
-        // of any kind, because proving a repository is publicly readable is the whole job.
-        services.AddHttpClient<IRepositoryReachabilityClient, RepositoryReachabilityClient>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         // The Domain port OfficialMirror hands a live piugame session to. Registered here rather
         // than by the CompositionRoot's reflection pass, which only scans ScoreTracker.Data.
@@ -51,6 +50,7 @@ public static class CommunityToolsRegistrationExtensions
     /// </summary>
     public static void AddCommunityToolsConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<AccountMergeConsumer>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<WebhookDeliverySaga>();
         configurator.AddConsumer<WebhookMaintenanceSaga>();

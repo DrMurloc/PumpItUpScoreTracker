@@ -1,7 +1,7 @@
 namespace ScoreTracker.CommunityTools.Domain;
 
 /// <summary>
-///     Tools that predate the source-repository requirement and are exempt from it.
+///     Tools that take players whether or not their maker has a Discord account linked.
 ///     <para>
 ///         Exempt by id rather than by a date. <c>SeedPiuTrackerTool</c> stamps
 ///         <c>SYSDATETIMEOFFSET()</c>, so PIU Tracker's <c>CreatedAt</c> lands whenever the migration
@@ -9,18 +9,10 @@ namespace ScoreTracker.CommunityTools.Domain;
 ///         "created before X" cutoff would be a coin flip between them.
 ///     </para>
 ///     <para>
-///         PIU Tracker arrived Public with 653 migrated players before the rule existed. Gating it
-///         would take a working integration away from those players to enforce something written
-///         after they connected.
-///     </para>
-///     <para>
-///         <b>Its repository has since arrived</b> and is seeded by <c>SeedPiuTrackerRepository</c>,
-///         but the gate wants a repository that has been <i>checked</i> and a handle to reach the
-///         maker on. A migration cannot honestly claim the first — stamping a check date would
-///         record a fetch that never happened — and does not know the second. So the exemption
-///         stands until an admin presses Check the link and adds TUSA's handle, at which point this
-///         entry is deleted and the class with it. The list is meant to shrink, and nothing may be
-///         added to it without the owner saying so.
+///         PIU Tracker arrived Public with 653 migrated players before any maker requirement
+///         existed. Its players stay connected whatever becomes of one account setting on its
+///         maker's side. The list is meant to shrink, and nothing may be added to it without the
+///         owner saying so.
 ///     </para>
 /// </summary>
 internal static class GrandfatheredTools

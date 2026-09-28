@@ -105,7 +105,7 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Video | Grrrgl | |
 | Hour / Hours | grogl | Coined 2026-08-03 for the console's `· 24 grogl` stat labels. |
 | GameTag | Grglmrg | `Grgl` (account) + `Mrg` (name). |
-| Code / Source | Murgblub | Already carried "Source & contact" (`Murgblub opa golba`); the Code tab reuses it. |
+| Code / Source | Murgblub | Carried by *Contact & source* (`Golba opa murgblub`), the console card that was *Source & contact* until 2026-09-27; the Code tab reuses it. |
 | Publishes | Grolub | Coined 2026-08-06 for the sharing copy, which names publishing source as the gate. Not `Murpro` — that is already "Shared". |
 | Insights / Activity | Murgblarg | The console tab and the "recent activity" strings share one word. |
 
@@ -930,3 +930,32 @@ screen), `murgblarg` (becomes), `rorgmo` (reads), `gromurp` (your), `urgbam` (he
 | fill | Glurg | |
 | yourself | blubmurgl | |
 | replaces | rorgblarg | |
+
+## The Discord link batch (2026-09-27)
+
+Coined for the tool maker's linked Discord: the console's *Contact & source* card, the setup wizard, the
+invite page's not-ready notice and the two sharing sentences on the Account page
+([toolmaker-requirements.md](design/toolmaker-requirements.md) §10). `Discord` and `DrMurloc` are
+protected. Reused as-is: `Grorpgl` (link, the existing *Link* and *Copy link*), `golba` (reach, contact,
+from the retired *Reachable*), `Opa` (optional), `Galm` (connect), `Rorgl` (tool), `Morp` (players),
+`Grgl` (account), `plglur` (page), `Grolurg` (change), `Loob` (view, see), `murp` (use), `grulgro`
+(share), `murpro` (shared), `Momorp` (nobody), `Bam` (nothing), `argrog` (anything), `mrprgl rogrgl`
+(goes wrong, from *Something went wrong*), `gromarg` (confirm), `bamglorg` (then), `bagro` (back),
+`urgbam` (here), `argmo` (asks), `marogl` (approving, from *Approved*), `golba grog` (directory),
+`murpmurp` (browse), `grumba` (repository), `murgblub` (source), `grorpblubgrgl` (created), `amrog`
+(already), `murgo` (first), `grolp` (starts), `grogrolg` (works), `gropmur` (through), `larg` (yet,
+still), `mublar` (needs) and the function words table.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| linked | grorpglgro | `Grorpgl` + the `gro` participle ending. Not `murmargl`, which the file already spends on *settings*, *manages* and *ask*. |
+| maker | murgbrul | The person who registered a tool. Not `lurgurg`, which *Passing* already spends. |
+| console (a tool's) | blugrorg | |
+| listed | grogmo | On `grog` (list). Not `groggro`, which the step-chart corpus line already spends. |
+| appears | blorgmo | |
+| involves | gurlbo | |
+| next to | bumarg | Beside, not `grorpglorg` (the next grade). |
+| brings | bormug | |
+| let (allow) | pluba | |
+| guarantees | gurmbalg | |
+| soon | molbu | `ulo molbu ulo` = as soon as. |

@@ -4,11 +4,12 @@
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Developers"]</PageTitle>
 
-@* Identity, source, reach, and the one destructive control on the whole console. *@
+@* Identity, contact, reach, and the one destructive control on the whole console. *@
 
 <ToolConsoleFrame Section="tool" ToolId="ToolId" Context="tool">
     <div class="ct-cards">
@@ -29,35 +30,65 @@
             </MudGrid>
         </ConsoleCard>
 
-        <ConsoleCard Title=@L["Source & contact"].Value
-                     Hint='@L["A private repository answers fine to your browser and 404s to every player invited to read it — identical to a typo. Until the link answers anonymously, only you can use the tool."].Value'>
-            <MudTextField T="string" @bind-Value="_repository" MaxLength="500"
-                          Label=@L["Public source repository"]
-                          Placeholder="https://github.com/you/your-tool"></MudTextField>
-            <MudTextField T="string" @bind-Value="_discord" MaxLength="64" Class="mt-3"
-                          Label=@L["Your Discord handle"]></MudTextField>
-
-            <div class="d-flex align-center gap-2 flex-wrap mt-3">
-                <MudButton Size="Size.Small" Variant="Variant.Outlined"
-                           Disabled="@(_busy || string.IsNullOrWhiteSpace(_repository))"
-                           OnClick="() => Check(tool)">@L["Check the link"]</MudButton>
-                @if (tool.RepositoryCheckedAt is not null)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
-                        @L["Reachable"]
-                    </MudChip>
-                    @if (!string.IsNullOrWhiteSpace(tool.RepositoryOwner))
+        @* Discord leads because it is the requirement: a linked account is what lets anyone but the
+           maker connect, and how DrMurloc reaches them. The source link is optional until listing. *@
+        <ConsoleCard Title=@L["Contact & source"].Value>
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.overline">@L["Discord"]</MudText>
+                    @if (tool.MakerDiscordId is null)
                     {
-                        <MudText Typo="Typo.caption" Style="opacity:.7;">@tool.RepositoryOwner</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                            @L["Not linked"]
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                            @L["Linked"]
+                        </MudChip>
+                    }
+                </div>
+
+                @if (tool.MakerDiscordId is null)
+                {
+                    <MudText Typo="Typo.body2">
+                        @L["Link your Discord to let other players share their scores with this tool. It guarantees DrMurloc can contact you if anything goes wrong, for your players or for you."]
+                    </MudText>
+                    @* Linking attaches the account to whoever is signed in, so an admin looking at
+                       someone else's tool is not offered it. *@
+                    @if (IsMaker(tool))
+                    {
+                        <div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                       Href="@LinkDiscordUrl(tool)">@L["Link Discord"]</MudButton>
+                        </div>
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">
+                            @L["Discord asks you to confirm, then brings you back here."]
+                        </MudText>
+                    }
+                    @if (!tool.CanTakePlayers)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Warning">@L["Only you can use this tool right now."]</MudText>
                     }
                 }
-                else if (!string.IsNullOrWhiteSpace(tool.RepositoryUrl))
+                else
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
-                        @L["Not checked"]
-                    </MudChip>
+                    <LinkedDiscordAccount DiscordId="@tool.MakerDiscordId" Handle="@tool.MakerDiscordHandle"
+                                          ShowAvatar="true"></LinkedDiscordAccount>
+                    <MudText Typo="Typo.body2">
+                        @L["DrMurloc can reach you here if anything goes wrong, for your players or for you."]
+                        @DifferentAccountSentence
+                    </MudText>
                 }
             </div>
+
+            <MudDivider Class="my-3"></MudDivider>
+
+            <MudTextField T="string" @bind-Value="_repository" MaxLength="500"
+                          Label=@L["Public source repository"]
+                          Placeholder="https://github.com/you/your-tool"
+                          HelperText='@L["Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving."].Value'></MudTextField>
         </ConsoleCard>
 
         <ConsoleCard Title=@L["Who can find it"].Value>
@@ -124,6 +155,7 @@
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid ToolId { get; set; }
 
@@ -135,8 +167,17 @@
     private string _description = string.Empty;
     private string _url = string.Empty;
     private string _repository = string.Empty;
-    private string _discord = string.Empty;
     private bool _acceptsAllTools = true;
+
+    private bool IsMaker(ToolRecord tool) => CurrentUser.IsLoggedIn && CurrentUser.User.Id == tool.OwnerUserId;
+
+    /// <summary>Linking goes out to Discord and back, and lands the maker on this page again.</summary>
+    private static string LinkDiscordUrl(ToolRecord tool) =>
+        SignInReturnUrl.Append("/Login/Discord/Link", $"/Developers/{tool.Id}");
+
+    private MarkupString DifferentAccountSentence => (MarkupString)L[
+        "To use a different account, change it on your {0}.",
+        CommunityToolLinks.InternalAnchor("/Account?tab=signin", L["Account page"].Value)].Value;
 
     /// <summary>
     ///     The page seeds its own fields rather than reading them off the frame. One extra read, and
@@ -145,7 +186,9 @@
     /// </summary>
     protected override async Task OnParametersSetAsync()
     {
-        if (_loaded) return;
+        // A visitor who is not signed in is sent to sign in by the frame; this read would refuse them
+        // before the frame got the chance.
+        if (_loaded || !CurrentUser.IsLoggedIn) return;
 
         var tool = await Mediator.Send(new GetToolQuery(ToolId));
         if (tool is null) return;
@@ -154,7 +197,6 @@
         _description = tool.Description ?? string.Empty;
         _url = tool.Url ?? string.Empty;
         _repository = tool.RepositoryUrl ?? string.Empty;
-        _discord = tool.DiscordHandle ?? string.Empty;
         _acceptsAllTools = tool.AcceptsAllToolsShare;
         _loaded = true;
     }
@@ -176,7 +218,7 @@
         try
         {
             await Mediator.Send(new UpdateToolCommand(tool.Id, _name, Blank(_description), Blank(_url),
-                Blank(_repository), Blank(_discord)));
+                Blank(_repository)));
             await Mediator.Send(new SetToolAllToolsShareCommand(tool.Id, _acceptsAllTools));
             Snackbar.Add(L["Saved"].Value, Severity.Success);
             NavManager.Refresh();
@@ -184,35 +226,6 @@
         catch (Exception e)
         {
             // A domain exception's message is written for the person who tripped it.
-            Snackbar.Add(e.Message, Severity.Error);
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task Check(ToolRecord tool)
-    {
-        _busy = true;
-        try
-        {
-            var result = await Mediator.Send(new CheckToolRepositoryCommand(tool.Id));
-            if (result.Reachable)
-            {
-                Snackbar.Add(L["Your repository is reachable."].Value, Severity.Success);
-                NavManager.Refresh();
-            }
-            else
-            {
-                Snackbar.Add(result.StatusCode is null
-                    ? L["Couldn't reach your repository ({0}).", result.Reason ?? string.Empty].Value
-                    : L["Your repository answered {0}. If it is private, players can't read it either.",
-                        result.StatusCode.Value].Value, Severity.Error);
-            }
-        }
-        catch (Exception e)
-        {
             Snackbar.Add(e.Message, Severity.Error);
         }
         finally

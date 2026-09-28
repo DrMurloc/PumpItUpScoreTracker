@@ -39,6 +39,13 @@ public sealed record GetToolInviteLinksQuery(Guid ToolId) : IQuery<IReadOnlyList
 public sealed record GetToolInvitePreviewQuery(Guid Code) : IQuery<ToolInvitePreview?>;
 
 /// <summary>
+///     The signed-in maker's linked Discord account, or null when they have none — what the setup
+///     wizard shows before any tool exists to carry it.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetMyDiscordLinkQuery : IQuery<DiscordLinkRecord?>;
+
+/// <summary>
 ///     Resolves a presented API key to its tool and the key's name. The v2 auth scheme's only
 ///     question; null for a key that is unknown, revoked or expired.
 /// </summary>

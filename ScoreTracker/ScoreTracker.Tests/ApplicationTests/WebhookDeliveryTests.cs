@@ -47,7 +47,7 @@ public sealed class WebhookDeliveryTests
             .ReturnsAsync(new User(UserId, Name.From("DrMurloc"), true, Name.From("MURLOC#1"),
                 new Uri("https://example.com/a.png"), null));
         return new WebhookDeliverySaga(_tools.Object, _dispatcher.Object, _users.Object,
-            NullLogger<WebhookDeliverySaga>.Instance);
+            new ToolReach(_tools.Object, _users.Object), NullLogger<WebhookDeliverySaga>.Instance);
     }
 
     private static ConsumeContext<PlayerScoresUpdatedEvent> Batch(MixEnum mix, int changeCount)
@@ -65,9 +65,40 @@ public sealed class WebhookDeliveryTests
 
     private void SetupTool(Tool tool)
     {
-        _tools.Setup(t => t.GetToolIdsReading(UserId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { ToolId });
+        _tools.Setup(t => t.GetToolsReaching(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolsReaching(new[] { ToolId }, Array.Empty<PooledTool>()));
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
+    }
+
+    /// <summary>
+    ///     The tool reaches the player only through "share with all tools", so whether it hears about
+    ///     their scores depends on its maker being reachable.
+    /// </summary>
+    private void SetupPooledTool(Tool tool, bool makerHasDiscord)
+    {
+        _tools.Setup(t => t.GetToolsReaching(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolsReaching(Array.Empty<Guid>(), new[] { new PooledTool(ToolId, tool.OwnerUserId) }));
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
+        _users.Setup(u => u.GetExternalLogins(It.IsAny<IEnumerable<Guid>>(), ToolReach.DiscordProvider,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(makerHasDiscord
+                ? new Dictionary<Guid, string> { [tool.OwnerUserId] = "1234" }
+                : new Dictionary<Guid, string>());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task APooledToolHearsAboutScoresOnlyWhileItsMakerHasDiscordLinked(bool makerHasDiscord)
+    {
+        SetupPooledTool(ToolWith(WebhookMode.ScorePush), makerHasDiscord);
+
+        await Saga().Consume(Batch(MixEnum.Phoenix2, 3));
+
+        _dispatcher.Verify(d => d.Dispatch(It.IsAny<Tool>(), It.IsAny<DeliveryPayload.PlayerBlock>(),
+                It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<DeliveryPayload.Change>>(), It.IsAny<bool>(),
+                It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+            makerHasDiscord ? Times.Once() : Times.Never());
     }
 
     [Theory]

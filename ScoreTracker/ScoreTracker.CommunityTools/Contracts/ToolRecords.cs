@@ -31,15 +31,22 @@ public sealed record ToolRecord(
     string? RepositoryUrl,
     /// <summary>The account the repository sits under. Displayed for a human, never decided on.</summary>
     string? RepositoryOwner,
-    DateTimeOffset? RepositoryCheckedAt,
-    /// <summary>The maker's own, or an admin's view of it. Never reaches a player-facing surface.</summary>
-    string? DiscordHandle,
     DateTimeOffset? AgreedToRulesAt,
     /// <summary>
     ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
     ///     can say why a tool is stuck without guessing at it.
     /// </summary>
-    bool CanBeSharedWithOthers,
+    bool CanTakePlayers,
+    /// <summary>
+    ///     The Discord user id the maker has linked to their account, or null when there is none.
+    ///     The maker's own, or an admin's view of it — never on a player-facing surface.
+    /// </summary>
+    string? MakerDiscordId,
+    /// <summary>
+    ///     That account's handle, looked up from Discord. Null when there is no link, or when Discord
+    ///     could not be asked — the id is still there to link to.
+    /// </summary>
+    string? MakerDiscordHandle,
     ToolKind Kind,
     /// <summary>
     ///     Whether the console shows an API group at all. A listing-only tool has none and is not
@@ -47,6 +54,13 @@ public sealed record ToolRecord(
     /// </summary>
     bool HasKeys,
     bool WebhookConfigured);
+
+/// <summary>
+///     The Discord account linked to the signed-in maker's own PIU Scores account. The handle is
+///     looked up from Discord and is null when Discord could not be asked.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record DiscordLinkRecord(string DiscordId, string? Handle);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]
@@ -172,7 +186,12 @@ public sealed record ToolInvitePreview(
     ///     feature, so it is also the one place a stranger can check the tool before signing in.
     /// </summary>
     string? RepositoryUrl,
-    ToolKind Kind);
+    ToolKind Kind,
+    /// <summary>
+    ///     Whether the tool can take anyone but its maker yet. When it cannot, the page gives the
+    ///     reason instead of a Connect that would be refused.
+    /// </summary>
+    bool CanTakePlayers);
 
 /// <summary>
 ///     A maker's ban, as the admin list shows it. Notes are the owner's own and reach no other

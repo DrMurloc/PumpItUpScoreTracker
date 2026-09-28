@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
@@ -28,10 +28,9 @@ public sealed class ToolTests
     /// </summary>
     private static Tool ListedTool()
     {
-        var tool = ShareableTool();
+        var tool = SourcedTool();
         tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, Repository);
-        tool.MarkRepositoryReachable(Now);
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
         tool.Approve(Now);
         return tool;
     }
@@ -53,18 +52,17 @@ public sealed class ToolTests
     {
         var tool = NewTool();
 
-        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+        Assert.Throws<ToolListingException>(() => tool.RequestListing(makerHasDiscord: true));
     }
 
     [Fact]
     public void ApprovalMovesAToolIntoTheDirectoryAndClearsAnyPriorRejection()
     {
-        var tool = ShareableTool();
+        var tool = SourcedTool();
         tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
-        tool.MarkRepositoryReachable(Now);
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
         tool.Reject("Needs a link.");
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
         tool.Approve(Now);
 
         Assert.Equal(ToolVisibility.Public, tool.Visibility);
@@ -75,10 +73,9 @@ public sealed class ToolTests
     [Fact]
     public void RejectionNeedsAReasonTheMakerCanActOn()
     {
-        var tool = ShareableTool();
+        var tool = SourcedTool();
         tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
-        tool.MarkRepositoryReachable(Now);
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
 
         Assert.Throws<ToolListingException>(() => tool.Reject("  "));
     }
@@ -319,76 +316,30 @@ public sealed class ToolTests
 
     private static readonly Uri Repository = new("https://github.com/errlena/pumbility-planner");
 
-    /// <summary>The three things that must be true before another player's scores are involved.</summary>
-    private static Tool ShareableTool()
+    /// <summary>A tool with a source link players can read, as listing asks for.</summary>
+    private static Tool SourcedTool()
     {
-        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now,
-            Repository, "errlena", Now);
-        tool.MarkRepositoryReachable(Now);
-        return tool;
+        return Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now,
+            Repository, agreedToRulesAt: Now);
     }
 
     [Fact]
-    public void ANewToolCannotBeSharedWithAnyoneButItsMaker()
+    public void ANewToolCannotTakePlayersUntilItsMakerLinksDiscord()
     {
-        Assert.False(NewTool().CanBeSharedWithOthers);
+        var tool = NewTool();
+
+        Assert.False(tool.CanTakePlayers(makerHasDiscord: false));
+        Assert.True(tool.CanTakePlayers(makerHasDiscord: true));
     }
 
+    // A linked maker is the whole requirement; nothing about the source is asked for.
     [Fact]
-    public void ARepositoryAndAHandleAndACheckTogetherOpenTheGate()
+    public void ALinkedMakersToolTakesPlayersWithNoSourcePublished()
     {
-        Assert.True(ShareableTool().CanBeSharedWithOthers);
-    }
+        var tool = NewTool();
 
-    [Fact]
-    public void AnUncheckedRepositoryIsNotEnough()
-    {
-        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
-            Repository, "errlena", Now);
-
-        Assert.False(tool.CanBeSharedWithOthers);
-    }
-
-    [Fact]
-    public void ARepositoryWithoutAHandleIsNotEnough()
-    {
-        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
-            Repository, null, Now);
-        tool.MarkRepositoryReachable(Now);
-
-        Assert.False(tool.CanBeSharedWithOthers);
-    }
-
-    [Fact]
-    public void ABlankHandleDoesNotCountAsAHandle()
-    {
-        var tool = ShareableTool();
-        tool.SetDiscordHandle("   ");
-
-        Assert.False(tool.CanBeSharedWithOthers);
-    }
-
-    // Otherwise: check once, swap to anything. Same rule as the webhook proof, same reason.
-    [Fact]
-    public void ChangingTheRepositoryWithdrawsItsCheck()
-    {
-        var tool = ShareableTool();
-
-        tool.Describe(tool.Name, tool.Description, tool.Url,
-            new Uri("https://github.com/someone-else/a-different-thing"));
-
-        Assert.Null(tool.RepositoryCheckedAt);
-        Assert.False(tool.CanBeSharedWithOthers);
-    }
-
-    [Fact]
-    public void SavingTheSameRepositoryAgainKeepsItsCheck()
-    {
-        var tool = ShareableTool();
-
-        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
-
-        Assert.Equal(Now, tool.RepositoryCheckedAt);
+        Assert.Null(tool.RepositoryUrl);
+        Assert.True(tool.CanTakePlayers(makerHasDiscord: true));
     }
 
     // The repository is printed beside the tool in the directory, so swapping it after approval is
@@ -413,7 +364,7 @@ public sealed class ToolTests
     public void TheRepositoryOwnerIsTheFirstPathSegment(string url, string expected)
     {
         var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
-            new Uri(url), "errlena", Now);
+            new Uri(url), agreedToRulesAt: Now);
 
         Assert.Equal(expected, tool.RepositoryOwner);
     }
@@ -422,20 +373,20 @@ public sealed class ToolTests
     public void ARepositoryHostWithNoPathHasNoOwner()
     {
         var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
-            new Uri("https://git.example.test/"), "errlena", Now);
+            new Uri("https://git.example.test/"), agreedToRulesAt: Now);
 
         Assert.Null(tool.RepositoryOwner);
     }
 
-    // PIU Tracker arrived Public with 653 migrated players before the rule existed. Gating it would
-    // take a working integration away from them to enforce something written afterwards.
+    // PIU Tracker arrived Public with 653 migrated players before any maker requirement existed,
+    // and they stay connected whatever becomes of one account setting on its maker's side.
     [Fact]
-    public void TheGrandfatheredToolIsShareableWithNothingSet()
+    public void TheGrandfatheredToolTakesPlayersWithoutALinkedDiscord()
     {
         var tool = Tool.Create(GrandfatheredTools.PiuTracker, Guid.NewGuid(),
             Name.From("PIU Tracker"), Now);
 
-        Assert.True(tool.CanBeSharedWithOthers);
+        Assert.True(tool.CanTakePlayers(makerHasDiscord: false));
     }
 
     // A listing-only tool is nothing but a pointer, so the pointer has to point somewhere.
@@ -443,23 +394,21 @@ public sealed class ToolTests
     public void AListingOnlyToolCannotBeListedWithoutALink()
     {
         var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
-            Repository, "errlena", Now, ToolKind.ListingOnly);
-        tool.MarkRepositoryReachable(Now);
+            Repository, agreedToRulesAt: Now, kind: ToolKind.ListingOnly);
         tool.Describe(Name.From("Pumpout"), "A chart database.", null, Repository);
 
-        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+        Assert.Throws<ToolListingException>(() => tool.RequestListing(makerHasDiscord: true));
     }
 
     [Fact]
     public void AListingOnlyToolWithALinkCanBeListed()
     {
         var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
-            Repository, "errlena", Now, ToolKind.ListingOnly);
-        tool.MarkRepositoryReachable(Now);
+            Repository, agreedToRulesAt: Now, kind: ToolKind.ListingOnly);
         tool.Describe(Name.From("Pumpout"), "A chart database.",
             new Uri("https://pumpout.example"), Repository);
 
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
     }
@@ -468,11 +417,10 @@ public sealed class ToolTests
     [Fact]
     public void AnIntegratedToolNeedsNoLinkToBeListed()
     {
-        var tool = ShareableTool();
+        var tool = SourcedTool();
         tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
-        tool.MarkRepositoryReachable(Now);
 
-        tool.RequestListing();
+        tool.RequestListing(makerHasDiscord: true);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
     }
@@ -486,19 +434,40 @@ public sealed class ToolTests
     [Fact]
     public void AListedToolStillNeedsADescription()
     {
-        var tool = ShareableTool();
+        var tool = SourcedTool();
 
-        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+        Assert.Throws<ToolListingException>(() => tool.RequestListing(makerHasDiscord: true));
     }
 
-    // Being listed is an invitation to every player on the site, so the source they are invited to
-    // read has to be readable and someone has to be reachable when it goes wrong.
+    // The source is read by a person at review, so there has to be one to read.
     [Fact]
-    public void AToolWithNoCheckedSourceCannotAskToBeListed()
+    public void ListingNeedsASourceLink()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, null);
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing(makerHasDiscord: true));
+    }
+
+    // A listed tool invites every player on the site, so its maker has to be reachable.
+    [Fact]
+    public void ListingNeedsTheMakersDiscordLinked()
     {
         var tool = NewTool();
         tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
 
-        Assert.Throws<ToolRepositoryRequiredException>(() => tool.RequestListing());
+        Assert.Throws<ToolDiscordRequiredException>(() => tool.RequestListing(makerHasDiscord: false));
+    }
+
+    // Nothing checks the link any more; a person reads it at review.
+    [Fact]
+    public void AnUncheckedSourceLinkIsEnoughToAskToBeListed()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
+
+        tool.RequestListing(makerHasDiscord: true);
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
     }
 }

@@ -145,9 +145,16 @@ sign-in into a returning user.
   touched already *is* the skip. A second control that does the same thing would only imply the
   page is a chore.
 
-- **D13 — returnUrl is dropped for new accounts.** Already today's behaviour
-  (`isNewUser ? "/" : returnUrl`), and it stays: a brand-new account has nowhere meaningful to
-  resume to, and step 3 is the payoff the whole flow is built around.
+- **D13 — A new account resumes its returnUrl after setup (amended 2026-09-27).** Setup still
+  comes first, but Continue goes back to the page the account signed up from instead of step 3,
+  and the page drops its "Next: your home page" line when that is not where Continue leads. The
+  original ruling dropped returnUrl for new accounts on the grounds that a brand-new account has
+  nowhere meaningful to resume to; a Community Tools invite link proved otherwise — the player
+  signing up from it is its main audience, and landing home lost the invite they came for (owner:
+  *"continue takes back to invite"*). The callback carries the address onto `/Setup?returnUrl=…`,
+  the page checks it again (it arrives on a query string the player controls), and every
+  navigation that leaves setup and comes back — a language change, the merge wizard — carries it
+  along. With no address, Continue lands on step 3 exactly as before.
 
 - **D14 — Anonymous culture matching gets a downward mapping first (C0, landed).** Every entry in
   `SupportedCultures` is a *specific* tag and `RequestLocalizationMiddleware` only falls back

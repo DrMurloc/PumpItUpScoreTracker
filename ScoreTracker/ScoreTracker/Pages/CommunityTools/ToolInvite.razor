@@ -7,7 +7,6 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
-@using System.Web
 <PageTitle>@(_preview?.Name ?? L["Community Tools"].Value)</PageTitle>
 
 @* The one logged-out surface in the feature: a maker sends this link to people who may never have
@@ -65,61 +64,79 @@ else
             </div>
         </div>
 
-        @if (_preview.RequiresPiuGameSession)
+        @* A tool whose maker has not linked Discord would refuse the connection, so everyone — signed in
+           or not — gets the reason instead of a button that cannot work. A player who connected before
+           the maker unlinked keeps that connection, so they see it instead. *@
+        @if (!_preview.CanTakePlayers && !_connected)
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                <MudText Typo="Typo.body2"><b>@L["{0} can't connect players yet", _preview.Name]</b></MudText>
                 <MudText Typo="Typo.body2">
-                    <b>@L["This tool asks for your PIUGame session"]</b>
-                </MudText>
-                <MudText Typo="Typo.body2">
-                    @L["That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared."]
-                </MudText>
-            </MudAlert>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-4">
-                <MudText Typo="Typo.body2"><b>@L["What it will be able to read"]</b></MudText>
-                <MudText Typo="Typo.body2">
-                    @L["Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you."]
+                    @L["Its maker still has to link a Discord account, so DrMurloc can reach them if anything goes wrong. Nothing has been shared."]
                 </MudText>
             </MudAlert>
-        }
-
-        @if (!CurrentUser.IsLoggedIn)
-        {
-            <MudButton Class="mt-4" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
-                       Href="@SignInUrl">@L["Sign in to continue"]</MudButton>
-            <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
-                @L["You'll come back here after signing in. Nothing is shared until you press Connect."]
-            </MudText>
-        }
-        else if (_connected)
-        {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-4">
-                @L["{0} can now read your scores", _preview.Name]
-            </MudAlert>
-            <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Text" Href="/CommunityTools">
-                @L["Community Tools"]
-            </MudButton>
-        }
-        else
-        {
-            <div class="d-flex gap-2 mt-4 justify-end flex-wrap">
-                <MudButton Variant="Variant.Text" Href="/CommunityTools">@L["No thanks"]</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenConnect">
-                    @L["Connect {0}", _preview.Name]
-                </MudButton>
+            <div class="d-flex mt-3 justify-end">
+                <MudButton Variant="Variant.Text" Href="/CommunityTools">@L["Browse tools"]</MudButton>
             </div>
         }
-
-        @* A private profile can still connect to one tool it trusts — privacy blocks the blanket
-           grant, never a deliberate named one. Saying so here stops the page reading as a dead end. *@
-        @if (CurrentUser.IsLoggedIn && !CurrentUser.User.IsPublic && !_connected)
+        else
         {
-            <MudText Typo="Typo.caption" Class="mt-3 d-block" Style="opacity:.7;">
-                @L["Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access."]
-            </MudText>
+            @if (_preview.RequiresPiuGameSession)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                    <MudText Typo="Typo.body2">
+                        <b>@L["This tool asks for your PIUGame session"]</b>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        @L["That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared."]
+                    </MudText>
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                    <MudText Typo="Typo.body2"><b>@L["What it will be able to read"]</b></MudText>
+                    <MudText Typo="Typo.body2">
+                        @L["Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you."]
+                    </MudText>
+                </MudAlert>
+            }
+
+            @if (!CurrentUser.IsLoggedIn)
+            {
+                <MudButton Class="mt-4" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
+                           Href="@SignInUrl">@L["Sign in to continue"]</MudButton>
+                <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
+                    @L["You'll come back here after signing in. Nothing is shared until you press Connect."]
+                </MudText>
+            }
+            else if (_connected)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                    @L["{0} can now read your scores", _preview.Name]
+                </MudAlert>
+                <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Text" Href="/CommunityTools">
+                    @L["Community Tools"]
+                </MudButton>
+            }
+            else
+            {
+                <div class="d-flex gap-2 mt-4 justify-end flex-wrap">
+                    <MudButton Variant="Variant.Text" Href="/CommunityTools">@L["No thanks"]</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenConnect">
+                        @L["Connect {0}", _preview.Name]
+                    </MudButton>
+                </div>
+            }
+
+            @* A private profile can still connect to one tool it trusts — privacy blocks the blanket
+               grant, never a deliberate named one. Saying so here stops the page reading as a dead end. *@
+            @if (CurrentUser.IsLoggedIn && !CurrentUser.User.IsPublic && !_connected)
+            {
+                <MudText Typo="Typo.caption" Class="mt-3 d-block" Style="opacity:.7;">
+                    @L["Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access."]
+                </MudText>
+            }
         }
     </MudPaper>
 }
@@ -136,8 +153,7 @@ else
     private bool _connected;
     private bool _showConnect;
 
-    private string SignInUrl =>
-        $"/Login?redirectUrl={HttpUtility.UrlEncode($"/CommunityTools/Invite/{Code}")}";
+    private string SignInUrl => SignInReturnUrl.Append("/Login", $"/CommunityTools/Invite/{Code}");
 
     // The connect dialog speaks in directory records, and an invite preview carries the same facts
     // it needs — reusing the one dialog keeps the PIUGame-session warning identical on both routes.

@@ -65,13 +65,6 @@ internal sealed class ToolEntity
     [MaxLength(100)]
     public string? RepositoryOwner { get; set; }
 
-    /// <summary>When <see cref="RepositoryUrl" /> last answered anonymously.</summary>
-    public DateTimeOffset? RepositoryCheckedAt { get; set; }
-
-    /// <summary>The maker's, for the owner to reach them on. Never leaves an admin surface.</summary>
-    [MaxLength(64)]
-    public string? DiscordHandle { get; set; }
-
     /// <summary>When the maker accepted the rules, recorded once at registration.</summary>
     public DateTimeOffset? AgreedToRulesAt { get; set; }
 }

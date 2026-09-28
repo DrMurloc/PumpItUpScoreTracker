@@ -32,7 +32,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<ApproveToolCommand>,
     IRequestHandler<RejectToolCommand>,
     IRequestHandler<DeleteToolCommand>,
-    IRequestHandler<CheckToolRepositoryCommand, RepositoryCheckResult>,
+    IRequestHandler<GetMyDiscordLinkQuery, DiscordLinkRecord?>,
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
@@ -46,17 +46,20 @@ internal sealed class ToolManagementSaga :
     private readonly IMediator _mediator;
     private readonly IToolSecretReader _secrets;
     private readonly IToolMakerBanRepository _bans;
-    private readonly IRepositoryReachabilityClient _repositories;
+    private readonly DiscordNames _discordNames;
+    private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
         IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
-        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans)
+        IToolMakerBanRepository bans, ToolReach reach,
+        DiscordNames discordNames)
     {
         _bans = bans;
-        _repositories = repositories;
+        _reach = reach;
+        _discordNames = discordNames;
         _configuration = configuration;
         _tools = tools;
         _users = users;
@@ -167,8 +170,7 @@ internal sealed class ToolManagementSaga :
                 "You can't register a tool. If you think that's wrong, ask in the PIU Scores Discord.");
 
         var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
-            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now,
-            request.Kind);
+            _dateTime.Now, Link(request.RepositoryUrl), _dateTime.Now, request.Kind);
         await _tools.Save(tool, cancellationToken);
 
         // The maker is player one. Without this they cannot test their own tool against a real
@@ -178,30 +180,13 @@ internal sealed class ToolManagementSaga :
         return tool.Id;
     }
 
-    /// <summary>
-    ///     Fetches the source repository anonymously and records whether it answered.
-    ///     <para>
-    ///         A failed check clears the previous proof rather than leaving it standing. A repository
-    ///         that has gone private is exactly the case this exists to catch, and a stale tick
-    ///         beside a dead link is worse than no tick at all.
-    ///     </para>
-    /// </summary>
-    public async Task<RepositoryCheckResult> Handle(CheckToolRepositoryCommand request,
-        CancellationToken cancellationToken)
+    public async Task<DiscordLinkRecord?> Handle(GetMyDiscordLinkQuery request, CancellationToken cancellationToken)
     {
-        var tool = await Manageable(request.ToolId, cancellationToken);
-        if (tool.RepositoryUrl is null)
-            throw ToolRepositoryRequiredException.ForMaker();
-
-        var outcome = await _repositories.Check(tool.RepositoryUrl, cancellationToken);
-
-        if (outcome.Reachable) tool.MarkRepositoryReachable(_dateTime.Now);
-        else tool.ClearRepositoryCheck();
-
-        await _tools.Save(tool, cancellationToken);
-
-        return new RepositoryCheckResult(outcome.Reachable,
-            outcome.Reachable ? null : outcome.Reason.ToString(), outcome.StatusCode);
+        var me = _currentUser.User.Id;
+        var discordId = (await _reach.DiscordAccounts(new[] { me }, cancellationToken)).GetValueOrDefault(me);
+        return discordId is null
+            ? null
+            : new DiscordLinkRecord(discordId, await _discordNames.HandleOf(discordId, cancellationToken));
     }
 
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)
@@ -209,7 +194,6 @@ internal sealed class ToolManagementSaga :
         var tool = await Manageable(request.ToolId, cancellationToken);
         tool.Describe(Name.From(request.Name), request.Description, Link(request.Url),
             Link(request.RepositoryUrl));
-        tool.SetDiscordHandle(request.DiscordHandle);
         await _tools.Save(tool, cancellationToken);
     }
 
@@ -228,7 +212,7 @@ internal sealed class ToolManagementSaga :
     public async Task Handle(SetToolWebhookCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        var connected = await _tools.CountConnectedPlayers(request.ToolId, cancellationToken);
+        var connected = await _reach.CountConnectedPlayers(tool, cancellationToken);
         tool.SetWebhook(request.Mode,
             await CheckedTarget(request.Url, cancellationToken), connected,
             hasOutboundHeader: !string.IsNullOrWhiteSpace(
@@ -240,7 +224,7 @@ internal sealed class ToolManagementSaga :
     public async Task Handle(RequestToolListingCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        tool.RequestListing();
+        tool.RequestListing(await _reach.MakerHasDiscord(tool.OwnerUserId, cancellationToken));
         await _tools.Save(tool, cancellationToken);
     }
 
@@ -313,12 +297,21 @@ internal sealed class ToolManagementSaga :
     {
         var keyCounts = await _tools.CountKeysFor(tools.Select(t => t.Id).ToArray(), _dateTime.Now,
             cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts)));
+        var discordAccounts = await _reach.DiscordAccounts(tools.Select(t => t.OwnerUserId), cancellationToken);
+        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts, discordAccounts)));
     }
 
     private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken,
-        IReadOnlyDictionary<Guid, int>? keyCounts = null)
+        IReadOnlyDictionary<Guid, int>? keyCounts = null,
+        IReadOnlyDictionary<Guid, string>? discordAccounts = null)
     {
+        discordAccounts ??= await _reach.DiscordAccounts(new[] { tool.OwnerUserId }, cancellationToken);
+        var makerDiscordId = discordAccounts.GetValueOrDefault(tool.OwnerUserId);
+        var makerDiscordHandle = makerDiscordId is null
+            ? null
+            : await _discordNames.HandleOf(makerDiscordId, cancellationToken);
+        var takesPlayers = tool.CanTakePlayers(makerDiscordId is not null);
+
         // Batched by the list handlers; a single-tool read pays for one extra query.
         var keyCount = keyCounts is not null && keyCounts.TryGetValue(tool.Id, out var n)
             ? n
@@ -337,12 +330,12 @@ internal sealed class ToolManagementSaga :
             tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
-            await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
+            await _reach.CountConnectedPlayers(tool, takesPlayers, cancellationToken),
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
             headerName, !string.IsNullOrWhiteSpace(headerValue),
             !string.IsNullOrWhiteSpace(verificationHash),
-            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
-            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers, tool.Kind,
+            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.AgreedToRulesAt, takesPlayers,
+            makerDiscordId, makerDiscordHandle, tool.Kind,
             keyCount > 0, tool.WebhookMode != WebhookMode.None);
     }
 

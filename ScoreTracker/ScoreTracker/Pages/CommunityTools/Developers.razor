@@ -3,6 +3,7 @@
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Developers"]</PageTitle>
@@ -80,6 +81,7 @@ else
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
     private bool _loading = true;
@@ -89,6 +91,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo(SignInReturnUrl.Append("/Login", "/Developers"), true);
+            return;
+        }
+
         await Reload();
 
         // One tool is the common case, and a list of one is a page you have to click through for no

@@ -225,7 +225,18 @@ else
     private IReadOnlyList<PlayerToolConnectionRecord> Connected =>
         _connections.Where(c => _myTools.All(m => m.Id != c.ToolId)).ToArray();
 
-    protected override async Task OnInitializedAsync() => await Reload();
+    protected override async Task OnInitializedAsync()
+    {
+        // Every section is about the visitor's own tools and connections, so a visitor who is not
+        // signed in is sent to do that first and brought back.
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo(SignInReturnUrl.Append("/Login", "/CommunityTools"), true);
+            return;
+        }
+
+        await Reload();
+    }
 
     private async Task Reload()
     {

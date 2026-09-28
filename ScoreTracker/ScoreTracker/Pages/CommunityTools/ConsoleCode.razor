@@ -3,6 +3,7 @@
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
@@ -66,6 +67,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid ToolId { get; set; }
 
@@ -80,6 +82,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // A visitor who is not signed in is sent to sign in by the frame; this read would refuse them
+        // before the frame got the chance.
+        if (!CurrentUser.IsLoggedIn) return;
+
         _context = await Mediator.Send(new GetToolCodeSamplesQuery(ToolId));
     }
 

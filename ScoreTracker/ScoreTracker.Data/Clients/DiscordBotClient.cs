@@ -228,6 +228,15 @@ public sealed class DiscordBotClient : IBotClient
                 guild.CurrentUser?.GuildPermissions.ManageRoles ?? false));
     }
 
+    public async Task<BotUser?> GetUser(ulong userId, CancellationToken cancellationToken = default)
+    {
+        var client = Client;
+        // The socket cache only knows accounts that share a server with the bot; the REST lookup
+        // answers for everyone else.
+        var user = client.GetUser(userId) ?? (IUser?)await client.Rest.GetUserAsync(userId);
+        return user == null ? null : new BotUser(user.Id, user.Username, user.GlobalName);
+    }
+
     /// <summary>
     ///     Roles strongest-first, each carrying why the bot cannot assign it. The hierarchy test is
     ///     Discord's own: a role at or above the bot's highest position is refused, and the refusal

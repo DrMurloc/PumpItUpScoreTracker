@@ -14748,6 +14748,29 @@ span.ct-console-pick { cursor: default; }
 
 .ct-dir-strip > :last-child { margin-left: auto; }
 
+/* A maker's linked Discord account: the handle, with its initial where it stands on its own. */
+.ct-discord {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ct-discord-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--mix-secondary);
+    border: 1px solid var(--mix-secondary);
+    background: var(--mix-surface-muted);
+}
+
+.ct-discord-handle { font-weight: 500; }
+
 @media (max-width: 599.98px) {
     .ct-dir-mark { display: none; }
     .ct-dir-tail { margin-left: 0; width: 100%; }

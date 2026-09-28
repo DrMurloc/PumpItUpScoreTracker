@@ -54,30 +54,30 @@ internal sealed class ToolConsentMismatchException : CommunityToolsException
 }
 
 /// <summary>
-///     The tool has not met what it needs before other people's scores are involved: a public
-///     source repository that resolves, and a Discord handle to reach its maker on.
+///     The tool's maker has no Discord account linked, so the tool cannot take anyone but its maker.
+///     A linked account is how DrMurloc reaches a maker when something goes wrong.
 /// </summary>
 [ExcludeFromCodeCoverage]
-internal sealed class ToolRepositoryRequiredException : CommunityToolsException
+internal sealed class ToolDiscordRequiredException : CommunityToolsException
 {
-    public ToolRepositoryRequiredException(string message) : base(message)
+    private ToolDiscordRequiredException(string message) : base(message)
     {
     }
 
     /// <summary>What a player sees. Names the tool, and says nothing about whose fault it is.</summary>
-    public static ToolRepositoryRequiredException ForPlayer(string toolName)
+    public static ToolDiscordRequiredException ForPlayer(string toolName)
     {
-        return new ToolRepositoryRequiredException(
-            $"{toolName} isn't ready to connect yet — its maker still has to publish its source " +
-            "and leave a way to be contacted. Nothing was shared.");
+        return new ToolDiscordRequiredException(
+            $"{toolName} can't connect players yet. Its maker still has to link a Discord account, so " +
+            "DrMurloc can reach them if anything goes wrong. Nothing was shared.");
     }
 
     /// <summary>What the maker sees, which is the same rule from the side that can fix it.</summary>
-    public static ToolRepositoryRequiredException ForMaker()
+    public static ToolDiscordRequiredException ForMaker()
     {
-        return new ToolRepositoryRequiredException(
-            "Add a public source repository and your Discord handle first, then check the " +
-            "repository link. Until both are in place your tool can only read your own scores.");
+        return new ToolDiscordRequiredException(
+            "Link your Discord first, from your tool's settings. It's how DrMurloc reaches you if " +
+            "anything goes wrong, for your players or for you.");
     }
 }
 

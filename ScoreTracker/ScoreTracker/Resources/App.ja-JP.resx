@@ -535,9 +535,6 @@
   <data name="A player disconnected" xml:space="preserve">
     <value>プレイヤーが接続を解除しました</value>
   </data>
-  <data name="A private repository answers fine to your browser and 404s to every player invited to read it — identical to a typo. Until the link answers anonymously, only you can use the tool." xml:space="preserve">
-    <value>非公開のリポジトリはあなたのブラウザーには問題なく応答し、読むよう案内された全プレイヤーには 404 を返します — 打ち間違いと見分けがつきません。リンクが匿名で応答するまで、このツールを使えるのはあなただけです。</value>
-  </data>
   <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
     <value>非公開のツールは、作者からの招待リンクで今も接続できます。</value>
   </data>
@@ -636,6 +633,9 @@
   </data>
   <data name="Account locked." xml:space="preserve">
     <value>アカウントをロックしました。</value>
+  </data>
+  <data name="Account page" xml:space="preserve">
+    <value>アカウントページ</value>
   </data>
   <data name="Account Stats" xml:space="preserve">
     <value>アカウント統計</value>
@@ -976,11 +976,11 @@
   <data name="Any song type: arcade, short cut, remix, full song. Every level from 1 to 29." xml:space="preserve">
     <value>曲種は問いません：アーケード、ショートカット、リミックス、フルソング。レベルは1から29まで全部。</value>
   </data>
-  <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
-    <value>ソースコードを公開しているツールがあなたのスコアを読み取れます。主にスコア分析ツールで使われます。オフにすると新しいアクセスは止まりますが、すでに取得されたデータはツール側に残る場合があります。</value>
+  <data name="Any tool can read your scores once its maker has linked their Discord, so DrMurloc can reach them. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>作者が Discord を連携したツールは、あなたのスコアを読み取れます。DrMurloc が作者に連絡できるようにするためです。主にスコア分析ツールで使われます。オフにすると新しいアクセスは止まりますが、すでに取得されたデータはツール側に残る場合があります。</value>
   </data>
-  <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
-    <value>ソースコードを公開しているツールがあなたのスコアを読み取れるようになります。ほとんどのスコア分析ツールがこれを使っています。別の設定なので、このページですぐにオフにできます。</value>
+  <data name="Any tool whose maker has linked their Discord will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>作者が Discord を連携したツールが、あなたのスコアを読み取れるようになります。ほとんどのスコア分析ツールがこれを使っています。別の設定なので、このページですぐにオフにできます。</value>
   </data>
   <data name="any — ×1.0" xml:space="preserve">
     <value>どれでも — ×1.0</value>
@@ -1304,6 +1304,9 @@
   <data name="Before" xml:space="preserve">
     <value>これより前</value>
   </data>
+  <data name="Before anyone else can connect, you'll need to link your Discord. You can do it from your tool's console once it's created." xml:space="preserve">
+    <value>ほかの人が接続するには、あなたの Discord の連携が必要です。ツールを作成したあと、ツールのコンソールから連携できます。</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>パスワードを記憶する前に</value>
   </data>
@@ -1426,9 +1429,6 @@
   </data>
   <data name="both" xml:space="preserve">
     <value>両方</value>
-  </data>
-  <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
-    <value>ほかの人があなたのツールを使うには、どちらも必要です。</value>
   </data>
   <data name="Boundaries" xml:space="preserve">
     <value>枠線</value>
@@ -1795,9 +1795,6 @@
   </data>
   <data name="Check now" xml:space="preserve">
     <value>今すぐ確認</value>
-  </data>
-  <data name="Check the link" xml:space="preserve">
-    <value>リンクを確認</value>
   </data>
   <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
     <value>PIUGame.com のユーザー名とパスワードを確認して、もう一度インポートしてください。</value>
@@ -2202,6 +2199,9 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
   </data>
+  <data name="Contact &amp; source" xml:space="preserve">
+    <value>連絡先とソース</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>コンテンツ</value>
   </data>
@@ -2289,9 +2289,6 @@
   </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>JSON解析失敗</value>
-  </data>
-  <data name="Couldn't reach your repository ({0})." xml:space="preserve">
-    <value>リポジトリに到達できませんでした（{0}）。</value>
   </data>
   <data name="Couldn't reach your server" xml:space="preserve">
     <value>サーバーに接続できませんでした</value>
@@ -2642,6 +2639,9 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord asks you to confirm, then brings you back here." xml:space="preserve">
+    <value>Discord で確認すると、このページに戻ってきます。</value>
+  </data>
   <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
     <value>Discord が管理しているロールなので、誰も付与できません。</value>
   </data>
@@ -2798,6 +2798,12 @@
   </data>
   <data name="Drills" xml:space="preserve">
     <value>ドリル</value>
+  </data>
+  <data name="DrMurloc can reach you here if anything goes wrong, for your players or for you." xml:space="preserve">
+    <value>あなたのプレイヤーやあなた自身に何かあったとき、DrMurloc はここからあなたに連絡できます。</value>
+  </data>
+  <data name="DrMurloc can reach you here if anything goes wrong." xml:space="preserve">
+    <value>何かあったとき、DrMurloc はここからあなたに連絡できます。</value>
   </data>
   <data name="DrMurloc's Rules for Comments" xml:space="preserve">
     <value>DrMurloc のコメントのルール</value>
@@ -4327,6 +4333,9 @@
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>キーは無効になり、Webhook の送信も止まり、接続している {0} 人のプレイヤーがアクセスを失います。</value>
   </data>
+  <data name="Its maker still has to link a Discord account, so DrMurloc can reach them if anything goes wrong. Nothing has been shared." xml:space="preserve">
+    <value>作者がまだ Discord アカウントを連携していません。何かあったときに DrMurloc が作者に連絡できるようにするためです。何も共有されていません。</value>
+  </data>
   <data name="Jacks" xml:space="preserve">
     <value>ジャック</value>
   </data>
@@ -4654,14 +4663,26 @@
 	  <value>リンク</value>
 	  
   <comment>Link</comment></data>
+  <data name="Link Discord" xml:space="preserve">
+    <value>Discord を連携</value>
+  </data>
   <data name="Link Discord on my account" xml:space="preserve">
     <value>自分のアカウントに Discord を連携</value>
   </data>
   <data name="Link your Discord account on PIU Scores first, so we know who you are." xml:space="preserve">
     <value>まず PIU Scores で Discord アカウントを連携してください。誰なのかを確認するためです。</value>
   </data>
+  <data name="Link your Discord first. Links you've already shared start working as soon as you do." xml:space="preserve">
+    <value>まず Discord を連携してください。連携すると、すでに共有したリンクもすぐに使えるようになります。</value>
+  </data>
+  <data name="Link your Discord to let other players share their scores with this tool. It guarantees DrMurloc can contact you if anything goes wrong, for your players or for you." xml:space="preserve">
+    <value>Discord を連携すると、ほかのプレイヤーがこのツールとスコアを共有できるようになります。あなたのプレイヤーやあなた自身に何かあったとき、DrMurloc が確実にあなたに連絡できるようになります。</value>
+  </data>
   <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
     <value>まず自分の Discord アカウントを連携してください — サーバーの指定は、Discord で自分としてコマンドを実行することです。</value>
+  </data>
+  <data name="Linked" xml:space="preserve">
+    <value>連携済み</value>
   </data>
   <data name="Linked server" xml:space="preserve">
     <value>連携済みサーバー</value>
@@ -5626,6 +5647,9 @@
   <data name="nobody" xml:space="preserve">
     <value>誰も</value>
   </data>
+  <data name="Nobody can connect through these links yet." xml:space="preserve">
+    <value>これらのリンクからはまだ誰も接続できません。</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>今週は譜面ボードで順位を上げたプレイヤーはいません。</value>
   </data>
@@ -5704,9 +5728,6 @@
   <data name="Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one." xml:space="preserve">
     <value>そこでランクの価値が高いからではなく — 無難なクリアからSSS+までの幅はここの+{0}から+{1}に縮みました — レベルの方がもっと縮んだからです。Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定の+{3}です。Phoenixで1レベル上のクリアに追いつくには、手持ちの譜面で900,000を{4}まで上げる必要があります。だからここの階段はクリアです。スコアの方が高くつくレバーなのです。</value>
   </data>
-  <data name="Not checked" xml:space="preserve">
-    <value>未確認</value>
-  </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>まだ確認していません。先に保存してから確認してください。</value>
   </data>
@@ -5751,6 +5772,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0} には収録なし — {1} 譜面すべてが曲ごと削除されました。</value>
+  </data>
+  <data name="Not linked" xml:space="preserve">
+    <value>未連携</value>
   </data>
   <data name="Not listed" xml:space="preserve">
     <value>未掲載</value>
@@ -6209,9 +6233,6 @@
   <data name="One-offs" xml:space="preserve">
     <value>単発称号</value>
   </data>
-  <data name="Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool." xml:space="preserve">
-    <value>これを見るのは DrMurloc だけです。ツールに何かあったときの連絡先になります。</value>
-  </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけが送られます。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
   </data>
@@ -6297,11 +6318,14 @@
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>任意 — スコアの正当性が問われた場合、写真が証明になります。</value>
   </data>
-  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
-    <value>任意で、私が関わる唯一の手順です。掲載されたツールは全プレイヤーが見られるディレクトリに並び、「すべてのツールと共有」を選んだプレイヤーも受け取れます。掲載しなくてもツールは動きます。</value>
+  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse. I read its source before approving it, so listing needs a public repository link and a linked Discord. Your tool works either way." xml:space="preserve">
+    <value>任意で、私が関わる唯一の手順です。掲載されたツールは全プレイヤーが見られるディレクトリに並びます。承認する前にソースを読むので、掲載には公開リポジトリのリンクと Discord の連携が必要です。掲載しなくてもツールは動きます。</value>
   </data>
   <data name="Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
     <value>任意です。既定では、欲しいときに PIU Scores へスコアを取りに来てもらいます。代わりに PIU Scores から呼ぶこともできます: プレイヤーが取り込むと、指定された URL に HTTP POST を送り、あとはサーバーの好きなように処理してください。設定した経験があれば、ごく普通の Webhook です。</value>
+  </data>
+  <data name="Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving." xml:space="preserve">
+    <value>任意です。プレイヤーにはツールの横にリンクが表示されます。掲載を申請すると、DrMurloc が承認前に読みます。</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>並び替え</value>
@@ -7506,9 +7530,6 @@
   </data>
   <data name="Re-translate everything" xml:space="preserve">
     <value>すべて再翻訳</value>
-  </data>
-  <data name="Reachable" xml:space="preserve">
-    <value>到達可能</value>
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>{0}人が到達</value>
@@ -8842,9 +8863,6 @@
   <data name="Source" xml:space="preserve">
 	  <value>出典</value>
   </data>
-  <data name="Source &amp; contact" xml:space="preserve">
-    <value>ソースと連絡先</value>
-  </data>
   <data name="Source Code" xml:space="preserve">
 	  <value>ソースコード</value>
   </data>
@@ -9974,6 +9992,9 @@
   <data name="To page" xml:space="preserve">
     <value>終了ページ</value>
   </data>
+  <data name="To use a different account, change it on your {0}." xml:space="preserve">
+    <value>別のアカウントを使うには、{0}で変更してください。</value>
+  </data>
   <data name="Today" xml:space="preserve">
     <value>今日</value>
   </data>
@@ -10500,6 +10521,9 @@
   <data name="View full chart on PIU Center" xml:space="preserve">
     <value>PIU Centerでチャート全体を見る</value>
   </data>
+  <data name="View on Discord" xml:space="preserve">
+    <value>Discord で見る</value>
+  </data>
   <data name="View Photo" xml:space="preserve">
     <value>写真を見る</value>
   </data>
@@ -10921,9 +10945,6 @@
   <data name="Within half a competitive level of you" xml:space="preserve">
     <value>あなたから競技レベル0.5以内</value>
   </data>
-  <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
-    <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
-  </data>
   <data name="Worked example" xml:space="preserve">
     <value>計算例</value>
   </data>
@@ -11271,9 +11292,6 @@
   <data name="Your data is yours" xml:space="preserve">
     <value>データはあなたのもの</value>
   </data>
-  <data name="Your Discord handle" xml:space="preserve">
-    <value>あなたの Discord ハンドル</value>
-  </data>
   <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
     <value>この Discord は PIU Scores の {0} に連携されていますが、{0} は {1} のメンバーではありません。{1} を別のアカウントで管理している場合は、そのアカウントに Discord を連携してください。</value>
   </data>
@@ -11438,12 +11456,6 @@
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>自分の地域</value>
-  </data>
-  <data name="Your repository answered {0}. If it is private, players can't read it either." xml:space="preserve">
-    <value>リポジトリの応答は {0} でした。非公開なら、プレイヤーも読めません。</value>
-  </data>
-  <data name="Your repository is reachable." xml:space="preserve">
-    <value>リポジトリに到達できました。</value>
   </data>
   <data name="your rival" xml:space="preserve">
     <value>あなたのライバル</value>
@@ -11678,6 +11690,9 @@
   </data>
   <data name="{0} can now read your scores" xml:space="preserve">
     <value>{0}があなたのスコアを読み取れるようになりました</value>
+  </data>
+  <data name="{0} can't connect players yet" xml:space="preserve">
+    <value>{0}はまだプレイヤーと接続できません</value>
   </data>
   <data name="{0} can’t reach it (SSS+ = {1})" xml:space="preserve">
     <value>{0}は届きません（SSS+ = {1}）</value>

@@ -535,9 +535,6 @@
   <data name="A player disconnected" xml:space="preserve">
     <value>Un jugador se desconectó</value>
   </data>
-  <data name="A private repository answers fine to your browser and 404s to every player invited to read it — identical to a typo. Until the link answers anonymously, only you can use the tool." xml:space="preserve">
-    <value>Un repositorio privado responde bien a tu navegador y devuelve 404 a cada jugador invitado a leerlo — idéntico a una errata. Hasta que el enlace responda de forma anónima, solo tú puedes usar la herramienta.</value>
-  </data>
   <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
     <value>Una herramienta privada todavía puede llegar a ti con un enlace de invitación de quien la hizo.</value>
   </data>
@@ -636,6 +633,9 @@
   </data>
   <data name="Account locked." xml:space="preserve">
     <value>Cuenta bloqueada.</value>
+  </data>
+  <data name="Account page" xml:space="preserve">
+    <value>página de Cuenta</value>
   </data>
   <data name="Account Stats" xml:space="preserve">
     <value>Estadísticas de cuenta</value>
@@ -973,11 +973,11 @@
   <data name="Any song type: arcade, short cut, remix, full song. Every level from 1 to 29." xml:space="preserve">
     <value>Cualquier tipo de canción: arcade, short cut, remix, full song. Todos los niveles del 1 al 29.</value>
   </data>
-  <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
-    <value>Cualquier herramienta que publique su código fuente puede leer tus puntuaciones. Sobre todo sirve para herramientas de análisis. Si lo desactivas se detiene el acceso nuevo, pero las herramientas pueden conservar lo que ya recopilaron.</value>
+  <data name="Any tool can read your scores once its maker has linked their Discord, so DrMurloc can reach them. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Cualquier herramienta puede leer tus puntuaciones en cuanto quien la desarrolla vincula su Discord, para que DrMurloc pueda contactar con esa persona. Sobre todo sirve para herramientas de análisis. Si lo desactivas se detiene el acceso nuevo, pero las herramientas pueden conservar lo que ya recopilaron.</value>
   </data>
-  <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
-    <value>Cualquier herramienta que publique su código fuente podrá leer tus puntuaciones — eso es lo que impulsa la mayoría de las herramientas de análisis. Es un ajuste aparte y puedes desactivarlo justo después, en esta página.</value>
+  <data name="Any tool whose maker has linked their Discord will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Cualquier herramienta cuyo creador haya vinculado su Discord podrá leer tus puntuaciones — eso es lo que impulsa la mayoría de las herramientas de análisis. Es un ajuste aparte y puedes desactivarlo justo después, en esta página.</value>
   </data>
   <data name="any — ×1.0" xml:space="preserve">
     <value>cualquiera — ×1,0</value>
@@ -1297,6 +1297,9 @@
   <data name="Before" xml:space="preserve">
     <value>Antes de</value>
   </data>
+  <data name="Before anyone else can connect, you'll need to link your Discord. You can do it from your tool's console once it's created." xml:space="preserve">
+    <value>Antes de que otra persona pueda conectarse, tendrás que vincular tu Discord. Puedes hacerlo desde la consola de tu herramienta cuando la hayas creado.</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>Antes de recordar tu contraseña</value>
   </data>
@@ -1419,9 +1422,6 @@
   </data>
   <data name="both" xml:space="preserve">
     <value>ambos</value>
-  </data>
-  <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
-    <value>Ambos hacen falta antes de que otra persona pueda usar tu herramienta.</value>
   </data>
   <data name="Boundaries" xml:space="preserve">
     <value>Bordes</value>
@@ -1785,9 +1785,6 @@
   </data>
   <data name="Check now" xml:space="preserve">
     <value>Comprobar ahora</value>
-  </data>
-  <data name="Check the link" xml:space="preserve">
-    <value>Comprobar el enlace</value>
   </data>
   <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
     <value>Revisa tu usuario y contraseña de PIUGame.com y vuelve a importar.</value>
@@ -2191,6 +2188,9 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Conectar una herramienta en la que confías funciona bien con un perfil privado — es una conexión directa, no uso compartido público. Tu perfil sigue siendo privado y ninguna otra herramienta obtiene acceso.</value>
   </data>
+  <data name="Contact &amp; source" xml:space="preserve">
+    <value>Contacto y código</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>Contenido</value>
   </data>
@@ -2277,9 +2277,6 @@
   </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
     <value>No se pudo leer el JSON</value>
-  </data>
-  <data name="Couldn't reach your repository ({0})." xml:space="preserve">
-    <value>No se pudo llegar a tu repositorio ({0}).</value>
   </data>
   <data name="Couldn't reach your server" xml:space="preserve">
     <value>No pudimos contactar con tu servidor</value>
@@ -2629,6 +2626,9 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord asks you to confirm, then brings you back here." xml:space="preserve">
+    <value>Discord te pedirá que lo confirmes y luego te traerá de vuelta aquí.</value>
+  </data>
   <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
     <value>Discord gestiona este rol, así que nadie puede otorgarlo.</value>
   </data>
@@ -2784,6 +2784,12 @@
   </data>
   <data name="Drills" xml:space="preserve">
     <value>Drills</value>
+  </data>
+  <data name="DrMurloc can reach you here if anything goes wrong, for your players or for you." xml:space="preserve">
+    <value>DrMurloc puede contactarte aquí si algo va mal, para tus jugadores o para ti.</value>
+  </data>
+  <data name="DrMurloc can reach you here if anything goes wrong." xml:space="preserve">
+    <value>DrMurloc puede contactarte aquí si algo va mal.</value>
   </data>
   <data name="DrMurloc's Rules for Comments" xml:space="preserve">
     <value>Las reglas de DrMurloc para los comentarios</value>
@@ -4309,6 +4315,9 @@
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>Sus claves dejan de funcionar, sus webhooks dejan de dispararse y los {0} jugadores conectados pierden el acceso.</value>
   </data>
+  <data name="Its maker still has to link a Discord account, so DrMurloc can reach them if anything goes wrong. Nothing has been shared." xml:space="preserve">
+    <value>Quien la desarrolla todavía tiene que vincular una cuenta de Discord, para que DrMurloc pueda contactar con esa persona si algo va mal. No se ha compartido nada.</value>
+  </data>
   <data name="Jacks" xml:space="preserve">
     <value>Jacks</value>
   </data>
@@ -4633,14 +4642,26 @@
   <data name="Link" xml:space="preserve">
     <value>Enlace</value>
   </data>
+  <data name="Link Discord" xml:space="preserve">
+    <value>Vincular Discord</value>
+  </data>
   <data name="Link Discord on my account" xml:space="preserve">
     <value>Vincular Discord en mi cuenta</value>
   </data>
   <data name="Link your Discord account on PIU Scores first, so we know who you are." xml:space="preserve">
     <value>Vincula primero tu cuenta de Discord en PIU Scores, para que sepamos quién eres.</value>
   </data>
+  <data name="Link your Discord first. Links you've already shared start working as soon as you do." xml:space="preserve">
+    <value>Primero vincula tu Discord. Los enlaces que ya has compartido empezarán a funcionar en cuanto lo hagas.</value>
+  </data>
+  <data name="Link your Discord to let other players share their scores with this tool. It guarantees DrMurloc can contact you if anything goes wrong, for your players or for you." xml:space="preserve">
+    <value>Vincula tu Discord para que otros jugadores puedan compartir sus puntuaciones con esta herramienta. Así DrMurloc tiene garantizado poder contactarte si algo va mal, para tus jugadores o para ti.</value>
+  </data>
   <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
     <value>Vincula primero tu propia cuenta de Discord: designar el servidor implica ejecutar un comando como tú mismo en Discord.</value>
+  </data>
+  <data name="Linked" xml:space="preserve">
+    <value>Vinculado</value>
   </data>
   <data name="Linked server" xml:space="preserve">
     <value>Servidor vinculado</value>
@@ -5596,6 +5617,9 @@
   <data name="nobody" xml:space="preserve">
     <value>nadie</value>
   </data>
+  <data name="Nobody can connect through these links yet." xml:space="preserve">
+    <value>Nadie puede conectarse todavía con estos enlaces.</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Nadie escaló en un leaderboard de charts esta semana.</value>
   </data>
@@ -5674,9 +5698,6 @@
   <data name="Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one." xml:space="preserve">
     <value>No porque los grados valgan más allí — el tramo de un pass limpio a un SSS+ cayó de +{0} aquí a +{1} — sino porque un nivel cayó más: la base de Phoenix es cuadrática (+{2} a 20) frente al +{3} plano de Phoenix 2. En Phoenix, igualar un pass un nivel más arriba exige llevar un 900.000 a {4} en el chart que ya tienes. Por eso aquí la escalera es pasar: la palanca del score es la cara.</value>
   </data>
-  <data name="Not checked" xml:space="preserve">
-    <value>Sin comprobar</value>
-  </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Aún sin comprobar. Guarda primero y luego comprueba.</value>
   </data>
@@ -5721,6 +5742,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>No está en {0} — sus {1} charts se fueron con la canción.</value>
+  </data>
+  <data name="Not linked" xml:space="preserve">
+    <value>Sin vincular</value>
   </data>
   <data name="Not listed" xml:space="preserve">
     <value>Sin listar</value>
@@ -6178,9 +6202,6 @@
   <data name="One-offs" xml:space="preserve">
     <value>Títulos sueltos</value>
   </data>
-  <data name="Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool." xml:space="preserve">
-    <value>Solo lo ve DrMurloc. Es la forma de que te escriba si algo va mal con tu herramienta.</value>
-  </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Solo se envían importaciones de las versiones que elijas. Las versiones antiguas puntúan con letras en vez de la escala de 1M — el payload indica qué modelo usa.</value>
   </data>
@@ -6265,11 +6286,14 @@
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>Opcional — una foto es tu prueba si se cuestiona la legitimidad de una puntuación.</value>
   </data>
-  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
-    <value>Opcional, y el único paso en el que intervengo. Una herramienta listada aparece en el directorio que cualquier jugador puede explorar, y puede aceptar a quienes eligieron compartir con todas. Tu herramienta funciona igual.</value>
+  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse. I read its source before approving it, so listing needs a public repository link and a linked Discord. Your tool works either way." xml:space="preserve">
+    <value>Opcional, y el único paso en el que intervengo. Una herramienta listada aparece en el directorio que cualquier jugador puede explorar. Leo su código antes de aprobarla, así que para listarla hace falta un enlace a un repositorio público y un Discord vinculado. Tu herramienta funciona igual.</value>
   </data>
   <data name="Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
     <value>Opcional. Por defecto le pides las puntuaciones a PIU Scores cuando quieras. En su lugar puede llamarte él: cuando uno de tus jugadores importa, sale un POST HTTP a una URL que indiques y tu servidor hace lo suyo. Si ya has montado alguno antes, es un webhook normal.</value>
+  </data>
+  <data name="Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving." xml:space="preserve">
+    <value>Opcional. Los jugadores ven un enlace junto a tu herramienta. Si pides aparecer en la lista, DrMurloc lo lee antes de aprobarla.</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Ordenar por</value>
@@ -7467,9 +7491,6 @@
   </data>
   <data name="Re-translate everything" xml:space="preserve">
     <value>Retraducir todo</value>
-  </data>
-  <data name="Reachable" xml:space="preserve">
-    <value>Accesible</value>
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>alcanzado por {0} jugadores</value>
@@ -8788,9 +8809,6 @@
   <data name="Source" xml:space="preserve">
     <value>Fuente</value>
   </data>
-  <data name="Source &amp; contact" xml:space="preserve">
-    <value>Código y contacto</value>
-  </data>
   <data name="Source Code" xml:space="preserve">
     <value>Código fuente</value>
   </data>
@@ -9916,6 +9934,9 @@
   <data name="To page" xml:space="preserve">
     <value>Hasta la página</value>
   </data>
+  <data name="To use a different account, change it on your {0}." xml:space="preserve">
+    <value>Para usar otra cuenta, cámbiala en tu {0}.</value>
+  </data>
   <data name="Today" xml:space="preserve">
     <value>Hoy</value>
   </data>
@@ -10438,6 +10459,9 @@
   <data name="View full chart on PIU Center" xml:space="preserve">
     <value>Ver el chart completo en PIU Center</value>
   </data>
+  <data name="View on Discord" xml:space="preserve">
+    <value>Ver en Discord</value>
+  </data>
   <data name="View Photo" xml:space="preserve">
     <value>Ver foto</value>
   </data>
@@ -10858,9 +10882,6 @@
   <data name="Within half a competitive level of you" xml:space="preserve">
     <value>A medio nivel competitivo de ti</value>
   </data>
-  <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
-    <value>Sin ellos sigue funcionando — para ti, sobre tus propias puntuaciones.</value>
-  </data>
   <data name="Worked example" xml:space="preserve">
     <value>Ejemplo resuelto</value>
   </data>
@@ -11203,9 +11224,6 @@
   <data name="Your data is yours" xml:space="preserve">
     <value>Tus datos son tuyos</value>
   </data>
-  <data name="Your Discord handle" xml:space="preserve">
-    <value>Tu usuario de Discord</value>
-  </data>
   <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
     <value>Tu Discord está vinculado a {0} en PIU Scores, y {0} no está en {1}. Si gestionas {1} desde otra cuenta, vincula Discord a esa cuenta.</value>
   </data>
@@ -11370,12 +11388,6 @@
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Tu región</value>
-  </data>
-  <data name="Your repository answered {0}. If it is private, players can't read it either." xml:space="preserve">
-    <value>Tu repositorio respondió {0}. Si es privado, los jugadores tampoco pueden leerlo.</value>
-  </data>
-  <data name="Your repository is reachable." xml:space="preserve">
-    <value>Tu repositorio es accesible.</value>
   </data>
   <data name="your rival" xml:space="preserve">
     <value>tu rival</value>
@@ -11610,6 +11622,9 @@
   </data>
   <data name="{0} can now read your scores" xml:space="preserve">
     <value>{0} ya puede leer tus puntuaciones</value>
+  </data>
+  <data name="{0} can't connect players yet" xml:space="preserve">
+    <value>{0} todavía no puede conectar jugadores</value>
   </data>
   <data name="{0} can’t reach it (SSS+ = {1})" xml:space="preserve">
     <value>{0} no llega (SSS+ = {1})</value>

@@ -19,8 +19,14 @@ internal interface IToolRepository
 
     Task DeleteTool(Guid toolId, CancellationToken cancellationToken = default);
 
-    /// <summary>How many players can currently read this tool's data — the session-mode gate reads it.</summary>
-    Task<int> CountConnectedPlayers(Guid toolId, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Hands every tool one account owns to another, keys, shares and history untouched, and
+    ///     returns the tools it moved.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> MoveTools(Guid fromUserId, Guid toUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>Who made the tool, or null when there is no such tool.</summary>
+    Task<Guid?> GetOwnerId(Guid toolId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ToolShareRecord>> GetSharesForTool(Guid toolId,
         CancellationToken cancellationToken = default);
@@ -43,13 +49,20 @@ internal interface IToolRepository
     Task SetShareWithAllTools(Guid userId, bool share, DateTimeOffset at,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Everything a player's data is currently reachable by, direct grants and the pool alike.</summary>
-    Task<IReadOnlyList<Guid>> GetToolIdsReading(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     The tools a player granted directly, and the pooled tools that would read them through
+    ///     "share with all tools" — blocks, bans and session mode already applied. Whether each
+    ///     pooled tool's maker is reachable is not decided here; the caller asks that of the maker.
+    /// </summary>
+    Task<ToolsReaching> GetToolsReaching(Guid userId, CancellationToken cancellationToken = default);
 
-    /// <summary>Every player one tool may read, resolved across direct grants, the pool, and blocks.</summary>
-    Task<IReadOnlyList<Guid>> GetReadablePlayerIds(Guid toolId, CancellationToken cancellationToken = default);
-
-    Task<bool> CanRead(Guid toolId, Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Every player one tool may read, resolved across direct grants, the pool, and blocks. The
+    ///     pool is only added when <paramref name="takesPlayers" /> says the tool may take players it
+    ///     was not directly granted.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetReadablePlayerIds(Guid toolId, bool takesPlayers,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     How many live keys each of these tools holds. Batched because the console and the
@@ -62,3 +75,11 @@ internal interface IToolRepository
 /// <summary>A player's grant to a tool, as a reader sees it.</summary>
 [ExcludeFromCodeCoverage]
 internal sealed record ToolShareRecord(Guid ToolId, Guid UserId, ShareSource Source, DateTimeOffset GrantedAt);
+
+/// <summary>What <see cref="IToolRepository.GetToolsReaching" /> found for one player.</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record ToolsReaching(IReadOnlyList<Guid> DirectToolIds, IReadOnlyList<PooledTool> PooledTools);
+
+/// <summary>A tool that reads a player through "share with all tools", and who made it.</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record PooledTool(Guid ToolId, Guid OwnerUserId);

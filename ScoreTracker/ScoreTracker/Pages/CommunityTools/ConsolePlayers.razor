@@ -4,6 +4,7 @@
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Developers"]</PageTitle>
@@ -18,6 +19,24 @@
     <div class="ct-cards">
         <ConsoleCard Title=@L["Invite Links"].Value Class="ct-card-wide"
                      Hint='@L["Anyone with an invite link can connect, whether their profile is public or private. The note is yours alone — the player who follows the link never sees it."].Value'>
+            @* An invite only connects anyone once the maker has Discord linked, so until then the
+               card says so rather than handing out links that would be refused. *@
+            @if (!tool.CanTakePlayers)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                    <MudText Typo="Typo.body2"><b>@L["Nobody can connect through these links yet."]</b></MudText>
+                    <MudText Typo="Typo.body2">
+                        @L["Link your Discord first. Links you've already shared start working as soon as you do."]
+                    </MudText>
+                    @if (CurrentUser.IsLoggedIn && CurrentUser.User.Id == tool.OwnerUserId)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Class="mt-1"
+                                   Href="@SignInReturnUrl.Append("/Login/Discord/Link", $"/Developers/{tool.Id}/players")">
+                            @L["Link Discord"]
+                        </MudButton>
+                    }
+                </MudAlert>
+            }
             @foreach (var link in _links)
             {
                 <div class="olb-rank-card" style="align-items:flex-start;">
@@ -57,6 +76,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid ToolId { get; set; }
 
@@ -65,7 +85,14 @@
     // Held separately so a half-typed note survives the reload a sibling action triggers.
     private readonly Dictionary<Guid, string> _edits = new();
 
-    protected override async Task OnParametersSetAsync() => await Reload();
+    protected override async Task OnParametersSetAsync()
+    {
+        // A visitor who is not signed in is sent to sign in by the frame; this read would refuse them
+        // before the frame got the chance.
+        if (!CurrentUser.IsLoggedIn) return;
+
+        await Reload();
+    }
 
     private async Task Reload()
     {

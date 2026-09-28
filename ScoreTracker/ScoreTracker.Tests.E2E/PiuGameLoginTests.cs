@@ -30,6 +30,63 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
         await _browser.DisposeAsync();
     }
 
+    /// <summary>
+    ///     A page that sends a logged-out visitor to sign in gets them back. An existing account
+    ///     comes straight back; a brand-new one goes through setup first (the next test).
+    /// </summary>
+    [Fact]
+    public async Task SigningInFromAPageReturnsTheVisitorToIt()
+    {
+        await PiuGameLoginFlow.LogInAsNewUserAsync(_page);
+
+        var signedOut = await _fixture.NewBrowserContextAsync();
+        try
+        {
+            var page = await signedOut.NewPageAsync();
+            await page.GotoAsync("/Login?returnUrl=%2FAccount");
+
+            var piuGame = page.Locator("a.btn[href^='/PiuGameLogin']");
+            Assert.Equal("/PiuGameLogin?returnUrl=%2FAccount", await piuGame.GetAttributeAsync("href"));
+            await piuGame.ClickAsync();
+
+            await page.Locator("input[name='username']")
+                .FillAsync(PiuGameLoginFlow.Username, new LocatorFillOptions { Timeout = 30_000 });
+            await page.Locator("input[name='password']").FillAsync(PiuGameLoginFlow.Password);
+            await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
+
+            await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/Account",
+                new PageWaitForURLOptions { Timeout = 60_000 });
+        }
+        finally
+        {
+            await signedOut.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    ///     A brand-new account keeps the page it started from through setup, and Continue goes back
+    ///     to it instead of the home page (docs/design/new-user-setup.md D13) — the path a player
+    ///     signing up from a tool's invite link takes.
+    /// </summary>
+    [Fact]
+    public async Task ANewAccountGoesBackToThePageItStartedFromAfterSetup()
+    {
+        await _page.GotoAsync("/Login?returnUrl=%2FCommunityTools");
+        await _page.Locator("a.btn[href^='/PiuGameLogin']").ClickAsync();
+
+        await _page.Locator("input[name='username']")
+            .FillAsync(PiuGameLoginFlow.Username, new LocatorFillOptions { Timeout = 30_000 });
+        await _page.Locator("input[name='password']").FillAsync(PiuGameLoginFlow.Password);
+        await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
+
+        await _page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/Setup",
+            new PageWaitForURLOptions { Timeout = 60_000 });
+        await _page.Locator("button.setup-continue").ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
+
+        await _page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/CommunityTools",
+            new PageWaitForURLOptions { Timeout = 60_000 });
+    }
+
     [Fact]
     public async Task FirstPiuGameLoginCreatesTheAccountAndSignsTheBrowserIn()
     {

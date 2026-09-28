@@ -21,8 +21,7 @@ internal sealed class Tool
         ToolVisibility visibility, bool acceptsAllToolsShare, WebhookMode webhookMode, Uri? webhookUrl,
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
-        string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt, ToolKind kind)
+        string? repositoryOwner, DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
         Kind = kind;
         Id = id;
@@ -41,8 +40,6 @@ internal sealed class Tool
         WebhookUrlVerifiedAt = webhookUrlVerifiedAt;
         RepositoryUrl = repositoryUrl;
         RepositoryOwner = repositoryOwner;
-        RepositoryCheckedAt = repositoryCheckedAt;
-        DiscordHandle = discordHandle;
         AgreedToRulesAt = agreedToRulesAt;
     }
 
@@ -79,18 +76,6 @@ internal sealed class Tool
     /// </summary>
     public string? RepositoryOwner { get; private set; }
 
-    /// <summary>
-    ///     When <see cref="RepositoryUrl" /> last answered anonymously. Null means it has not, or the
-    ///     URL changed since it did.
-    /// </summary>
-    public DateTimeOffset? RepositoryCheckedAt { get; private set; }
-
-    /// <summary>
-    ///     How the maker is reached when something breaks. Admin-visible only — never in a
-    ///     player-facing record.
-    /// </summary>
-    public string? DiscordHandle { get; private set; }
-
     /// <summary>When the maker accepted the rules. Recorded once, at registration.</summary>
     public DateTimeOffset? AgreedToRulesAt { get; private set; }
 
@@ -98,37 +83,26 @@ internal sealed class Tool
     public bool RequiresExplicitShare => WebhookMode == WebhookMode.PiuGameSession;
 
     /// <summary>
-    ///     Whether this tool may reach anyone but its own maker.
+    ///     Whether this tool may reach anyone but its own maker: only while the maker has a Discord
+    ///     account linked, so a tool reading other people's scores always has a maker who can be told
+    ///     when it goes wrong.
     ///     <para>
     ///         A tool failing this still works — keys mint, webhooks fire, and the maker is connected
-    ///         to it as always. What it cannot do is acquire a second player. A configured repository
-    ///         is a claim and a checked one is proof, exactly as with <see cref="CanDeliver" />: a
-    ///         private repository answers 404 to the players it is supposed to be readable by, and
-    ///         looks identical to a typo.
-    ///     </para>
-    ///     <para>
-    ///         The handle is here for the same reason the repository is — a tool reading other
-    ///         people's scores needs a maker who can be told when it goes wrong.
+    ///         to it as always. What it cannot do is acquire a second player.
     ///     </para>
     /// </summary>
-    public bool CanBeSharedWithOthers =>
-        Shareable(Id, RepositoryUrl?.ToString(), RepositoryCheckedAt, DiscordHandle);
+    public bool CanTakePlayers(bool makerHasDiscord)
+    {
+        return TakesPlayers(Id, makerHasDiscord);
+    }
 
     /// <summary>
-    ///     The same rule, over raw column values.
-    ///     <para>
-    ///         Effective read access is resolved in SQL against the entity, never against a rehydrated
-    ///         aggregate, so without this the gate would have to be written twice — and the copy that
-    ///         drifted would be the one actually deciding who can read a player's scores.
-    ///     </para>
+    ///     The same rule over a tool id, for reads that resolve access without rehydrating the
+    ///     aggregate — so the gate is written once however a caller arrives at it.
     /// </summary>
-    public static bool Shareable(Guid id, string? repositoryUrl, DateTimeOffset? repositoryCheckedAt,
-        string? discordHandle)
+    public static bool TakesPlayers(Guid toolId, bool makerHasDiscord)
     {
-        return GrandfatheredTools.Exempt(id)
-               || (!string.IsNullOrWhiteSpace(repositoryUrl)
-                   && repositoryCheckedAt is not null
-                   && !string.IsNullOrWhiteSpace(discordHandle));
+        return GrandfatheredTools.Exempt(toolId) || makerHasDiscord;
     }
 
     /// <summary>
@@ -141,29 +115,27 @@ internal sealed class Tool
                               && WebhookUrlVerifiedAt is not null;
 
     /// <summary>
-    ///     A new tool. The repository and handle are optional here on purpose — a maker building
-    ///     against their own scores needs neither, and <see cref="CanBeSharedWithOthers" /> is what
-    ///     holds the line once anyone else's data is involved.
+    ///     A new tool. The repository is optional here on purpose — a maker building against their
+    ///     own scores needs none, and <see cref="CanTakePlayers" /> is what holds the line once anyone
+    ///     else's data is involved.
     /// </summary>
     public static Tool Create(Guid id, Guid ownerUserId, Name name, DateTimeOffset createdAt,
-        Uri? repositoryUrl = null, string? discordHandle = null, DateTimeOffset? agreedToRulesAt = null,
-        ToolKind kind = ToolKind.Integrated)
+        Uri? repositoryUrl = null, DateTimeOffset? agreedToRulesAt = null, ToolKind kind = ToolKind.Integrated)
     {
         return new Tool(id, ownerUserId, name, null, null, ToolVisibility.Private, true,
             WebhookMode.None, null, Array.Empty<MixEnum>(), createdAt, null, null, null,
-            repositoryUrl, OwnerOf(repositoryUrl), null, Blank(discordHandle), agreedToRulesAt, kind);
+            repositoryUrl, OwnerOf(repositoryUrl), agreedToRulesAt, kind);
     }
 
     public static Tool Rehydrate(Guid id, Guid ownerUserId, Name name, string? description, Uri? url,
         ToolVisibility visibility, bool acceptsAllToolsShare, WebhookMode webhookMode, Uri? webhookUrl,
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
-        string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt, ToolKind kind)
+        string? repositoryOwner, DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
         return new Tool(id, ownerUserId, name, description, url, visibility, acceptsAllToolsShare,
             webhookMode, webhookUrl, mixes, createdAt, approvedAt, rejectionReason, webhookUrlVerifiedAt,
-            repositoryUrl, repositoryOwner, repositoryCheckedAt, discordHandle, agreedToRulesAt, kind);
+            repositoryUrl, repositoryOwner, agreedToRulesAt, kind);
     }
 
     /// <summary>
@@ -176,10 +148,6 @@ internal sealed class Tool
     ///         repository and swapping it afterwards is the same trick as renaming, wearing a
     ///         different hat.
     ///     </para>
-    ///     <para>
-    ///         <b>A changed repository is an unchecked repository</b>, exactly as a changed webhook
-    ///         URL is an unverified one. Without that, check once and swap to anything.
-    ///     </para>
     /// </summary>
     public void Describe(Name name, string? description, Uri? url, Uri? repositoryUrl)
     {
@@ -188,10 +156,7 @@ internal sealed class Tool
                                            || repositoryUrl?.ToString() != RepositoryUrl?.ToString();
 
         if (repositoryUrl?.ToString() != RepositoryUrl?.ToString())
-        {
-            RepositoryCheckedAt = null;
             RepositoryOwner = OwnerOf(repositoryUrl);
-        }
 
         Name = name;
         Description = description;
@@ -203,27 +168,6 @@ internal sealed class Tool
             Visibility = ToolVisibility.PendingApproval;
             ApprovedAt = null;
         }
-    }
-
-    /// <summary>Not player-visible, so changing it does not return the tool to review.</summary>
-    public void SetDiscordHandle(string? handle)
-    {
-        DiscordHandle = Blank(handle);
-    }
-
-    /// <summary>Records that <see cref="RepositoryUrl" /> answered anonymously.</summary>
-    public void MarkRepositoryReachable(DateTimeOffset at)
-    {
-        if (RepositoryUrl is null)
-            throw new ToolRepositoryRequiredException("There is no repository link to check.");
-
-        RepositoryCheckedAt = at;
-    }
-
-    /// <summary>Withdraws the proof after a check that did not answer.</summary>
-    public void ClearRepositoryCheck()
-    {
-        RepositoryCheckedAt = null;
     }
 
     /// <summary>
@@ -240,12 +184,7 @@ internal sealed class Tool
         return string.IsNullOrWhiteSpace(segment) ? null : segment;
     }
 
-    private static string? Blank(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    public void RequestListing()
+    public void RequestListing(bool makerHasDiscord)
     {
         if (Visibility == ToolVisibility.Public) return;
 
@@ -258,9 +197,13 @@ internal sealed class Tool
             throw new ToolListingException("A listing-only tool needs a link — it is the whole " +
                                            "thing a player is being sent to.");
 
-        // Being listed is an invitation to every player on the site. The source they are invited to
-        // read has to actually be readable, and someone has to be reachable when it goes wrong.
-        if (!CanBeSharedWithOthers) throw ToolRepositoryRequiredException.ForMaker();
+        // Being listed is an invitation to every player on the site: the source is what gets read at
+        // review, and the maker has to be reachable when it goes wrong.
+        if (RepositoryUrl is null)
+            throw new ToolListingException("A listed tool needs a public source repository link. I read " +
+                                           "the source before approving it.");
+
+        if (!CanTakePlayers(makerHasDiscord)) throw ToolDiscordRequiredException.ForMaker();
 
         Visibility = ToolVisibility.PendingApproval;
         RejectionReason = null;
