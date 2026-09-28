@@ -693,6 +693,16 @@ value is the maker's server, which is leaving anyway. Nothing to transfer to.
   unreachable, and listing a second consequence before the first is resolved just makes the wall
   taller.
 
+**An account merge is not a deletion: the tools move** (owner, 2026-09-27). A merge keeps one
+account and purges the other's data after the grace window, but a maker keeps every tool from both
+accounts on the one kept, whichever that is — each moved tool with its keys, players and history,
+and its maker connected to it as at registration. This matters more since a linked Discord became
+the gate (§5): Link Discord on a second account is exactly what opens the merge wizard, and it never
+mentioned tools. `AccountMergeConsumer` does it off `AccountsMergedEvent`. Two edges are built one
+way and await the owner's word: a banned maker's tools stay behind and leave with the retired
+account (moving them would lift the ban), and undoing a merge leaves the tools on the account they
+moved to.
+
 ---
 
 ## 11. Retiring `dev/export`
