@@ -38,7 +38,7 @@ internal sealed record DevCatalogSnapshot(
 internal sealed record DevMixVersionRow(MixEnum Mix, string Name, DateOnly? ReleaseDate, int SortOrder);
 
 [ExcludeFromCodeCoverage]
-internal sealed record DevMixRow(MixEnum Mix, string DisplayName, int SortOrder, bool IsPrimary);
+internal sealed record DevMixRow(MixEnum Mix, string Name, int SortOrder, bool IsPrimary);
 
 /// <summary>Songs are keyed by name — the catalog has no song id on the wire.</summary>
 [ExcludeFromCodeCoverage]
