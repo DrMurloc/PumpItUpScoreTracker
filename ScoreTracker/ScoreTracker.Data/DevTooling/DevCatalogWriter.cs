@@ -58,7 +58,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
         await Insert(connection, transaction, "Mix", snapshot.Mixes, (row, m) =>
         {
             row["Id"] = MixIds.For(m.Mix);
-            row["Name"] = m.DisplayName;
+            row["Name"] = m.Name;
             row["SortOrder"] = m.SortOrder;
             row["IsPrimary"] = m.IsPrimary;
         }, cancellationToken);
@@ -245,8 +245,18 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
         {
             var dataRow = schemaTable.NewRow();
             foreach (DataColumn column in schemaTable.Columns) dataRow[column] = DBNull.Value;
-            map(dataRow, item);
-            schemaTable.Rows.Add(dataRow);
+            try
+            {
+                map(dataRow, item);
+                schemaTable.Rows.Add(dataRow);
+            }
+            catch (ArgumentException exception) when
+                (exception.Message.Contains("MaxLength", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"An imported value exceeds a column length in [{Schema}].[{table}].", exception);
+            }
+
             count++;
         }
 

@@ -62,8 +62,10 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         return new DevCatalogSnapshot(
             new[]
             {
-                new DevMixRow(MixEnum.Phoenix, "Phoenix", 27, true),
-                new DevMixRow(MixEnum.Phoenix2, "Phoenix2", 28, true)
+                new DevMixRow(MixEnum.Phoenix, MixIds.NameFor(MixEnum.Phoenix), 27, true),
+                new DevMixRow(MixEnum.Phoenix2, MixIds.NameFor(MixEnum.Phoenix2), 28, true),
+                new DevMixRow(MixEnum.RiseArcade, MixIds.NameFor(MixEnum.RiseArcade), 29, true),
+                new DevMixRow(MixEnum.FirstDanceFloor, MixIds.NameFor(MixEnum.FirstDanceFloor), 10, false)
             },
             new[]
             {
@@ -80,8 +82,12 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
     {
         await BuildSeeder().ReplaceCatalog(Snapshot());
 
-        Assert.Equal(2, await CountOf("Mix"));
+        Assert.Equal(4, await CountOf("Mix"));
         Assert.Equal(1, await CountOf("Song"));
+        Assert.Equal("RiseArcade", await Scalar(
+            $"SELECT Name FROM scores.Mix WHERE Id='{MixIds.For(MixEnum.RiseArcade)}'"));
+        Assert.Equal("1st", await Scalar(
+            $"SELECT Name FROM scores.Mix WHERE Id='{MixIds.For(MixEnum.FirstDanceFloor)}'"));
         // One Chart row for the id, one ChartMix row per mix it exists in.
         Assert.Equal(1, await CountOf("Chart"));
         Assert.Equal(2, await CountOf("ChartMix"));

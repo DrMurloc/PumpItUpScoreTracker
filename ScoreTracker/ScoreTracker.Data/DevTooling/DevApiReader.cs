@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -128,7 +129,11 @@ internal sealed class DevApiReader
         reportProgress($"Writing {charts.Count:N0} charts to the local database…");
         await _writer.ReplaceCatalog(new DevCatalogSnapshot(
             mixes.Where(m => Enum.TryParse<MixEnum>(m.Name, out _))
-                .Select(m => new DevMixRow(Enum.Parse<MixEnum>(m.Name), m.DisplayName, m.SortOrder, m.IsPrimary))
+                .Select(m =>
+                {
+                    var mix = Enum.Parse<MixEnum>(m.Name);
+                    return new DevMixRow(mix, MixIds.NameFor(mix), m.SortOrder, m.IsPrimary);
+                })
                 .ToArray(),
             songs.Values.ToArray(), charts, tierLists, scoringLevels, versions), cancellationToken);
 

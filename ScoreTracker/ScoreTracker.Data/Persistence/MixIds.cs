@@ -61,11 +61,39 @@ public static class MixIds
     private static readonly IReadOnlyDictionary<Guid, MixEnum> ByGuid =
         ByEnum.ToDictionary(kv => kv.Value, kv => kv.Key);
 
+    private static readonly IReadOnlyDictionary<MixEnum, string> StoredNames = new Dictionary<MixEnum, string>
+    {
+        [MixEnum.FirstDanceFloor] = "1st",
+        [MixEnum.SecondUltimateRemix] = "2nd",
+        [MixEnum.ThirdObg] = "3rd",
+        [MixEnum.ObgSeasonEvolution] = "OBG SE",
+        [MixEnum.PerfectCollection] = "Perfect",
+        [MixEnum.Premiere2] = "Premiere 2",
+        [MixEnum.Prex2] = "Prex 2",
+        [MixEnum.Premiere3] = "Premiere 3",
+        [MixEnum.Prex3] = "Prex 3",
+        [MixEnum.Exceed2] = "Exceed 2",
+        [MixEnum.Nx] = "NX",
+        [MixEnum.Nx2] = "NX2",
+        [MixEnum.NxAbsolute] = "NXA",
+        [MixEnum.FiestaEx] = "Fiesta EX",
+        [MixEnum.Fiesta2] = "Fiesta 2",
+        [MixEnum.Prime2] = "Prime 2"
+    };
+
     public static Guid For(MixEnum mix)
     {
         return ByEnum.TryGetValue(mix, out var id)
             ? id
             : throw new ArgumentOutOfRangeException(nameof(mix), mix, "No Mix row id known for mix");
+    }
+
+    public static string NameFor(MixEnum mix)
+    {
+        if (!ByEnum.ContainsKey(mix))
+            throw new ArgumentOutOfRangeException(nameof(mix), mix, "No Mix row id known for mix");
+
+        return StoredNames.TryGetValue(mix, out var name) ? name : mix.ToString();
     }
 
     /// <summary>
