@@ -17,6 +17,32 @@ services:
       retries: 10
       start_period: 30s
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scoretracker-web
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SQL__ConnectionString: "Server=db,1433;Database=ScoreTracker;User Id=sa;Password=Your_password123;TrustServerCertificate=true;Encrypt=false"
+      AutoMigrate: "true"
+      DevAuth__Enabled: "true"
+      CommunityTools__AllowPrivateWebhookTargets: "true"
+      CommunityTools__AllowPublicWebhookTargets: "false"
+      Discord__ClientId: "local-dev"
+      Discord__ClientSecret: "local-dev"
+      Google__ClientId: "local-dev"
+      Google__ClientSecret: "local-dev"
+      Facebook__AppId: "local-dev"
+      Facebook__AppSecret: "local-dev"
+      ProdSync__BaseUrl: "https://piuscores.arroweclip.se"
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
     container_name: scoretracker-azurite

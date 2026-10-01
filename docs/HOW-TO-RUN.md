@@ -57,6 +57,27 @@ a tool. There is no longer a separate raw-table export — `dev/export/*` is gon
 
 That's it — you have a working local copy of the site with real data.
 
+### Running the complete stack in Docker
+
+If the .NET SDK is unavailable on the host, the application can be built and run
+entirely through Docker. Docker runs the .NET 10 build image and also supplies the
+.NET 8 runtime needed by the Sass build tool; no host .NET installation is required.
+
+From the repository root:
+
+```sh
+docker compose up --build
+```
+
+Open <http://localhost:8080>. The containerized path uses the same local dev login
+and automatic migrations as the Aspire path. It intentionally serves HTTP rather
+than HTTPS; this avoids needing to share a host development certificate with the
+container. Stop it with `Ctrl+C`, or use `docker compose down` from another terminal.
+
+The first build downloads the .NET SDK/runtime and may take several minutes. SQL
+Server data persists in the `sqldata` Docker volume. To remove that local database
+as well, use `docker compose down -v`.
+
 ### Poking at the database directly
 
 While the AppHost is running, connect SSMS / Azure Data Studio to `localhost,14330`, user `sa`, password `LocalDev_Passw0rd!` (both pinned in the AppHost's appsettings.json). Note the port is an Aspire proxy — it's only listening while the AppHost runs.

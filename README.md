@@ -29,6 +29,16 @@ dotnet run --project ScoreTracker/ScoreTracker.AppHost
 
 That provisions a local SQL Server container, applies migrations, and opens the app — then a guided setup page populates your database with real chart data from the live site. No credentials required. Full walkthrough: **[HOW-TO-RUN.md](docs/HOW-TO-RUN.md)**.
 
+If you do not want to install the .NET SDK on the host, the complete stack can also
+run in Docker:
+
+```sh
+docker compose up --build
+```
+
+Then open http://localhost:8080. This path is HTTP-only and uses the same local dev
+login and automatic migrations.
+
 ## Documentation
 
 | Doc | What's in it |
