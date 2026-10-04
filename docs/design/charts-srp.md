@@ -39,7 +39,7 @@ flips the model:
 | Default sort | **Level descending**; within-level tiebreak = **Scoring Level** (score-derived) in a Phoenix-family mix, Community Vote average in XX and older. Vote data never orders modern-mix results, tiebreaks included. |
 | Sorts | Level · scoring level · popularity · **pass difficulty** · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX and older). The difficulty sort is the community *lens*, never the raw rate — the ramp already encodes "hard for its level", where a rate needs a sample floor to mean anything. (This row said "pass rate" through round 5; the code never did.) |
 | Card display | Fixed core card + a small curated **Display switch set** in Comfortable (the tier-lists idiom: step artist, duration, note count). **The active sort key always auto-surfaces on the card/table and cannot be hidden** — sorting by an invisible value is impossible by construction; the sort menu never greys out. Table shows the full fact set with the sort column highlighted. No column pickers anywhere on the page. |
-| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), downloading a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only *and mix-conditional* (§8); stable English headers in registry order (convenience surface, outside the versioned `api/*` contract), except the `pc:` passthrough which is deliberately unstable (§8); Excel formula-injection hygiene on values. |
+| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), downloading a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only *and mix-conditional* (§8); stable English headers in registry order (convenience surface, outside the versioned `api/*` contract), except the `pc:` passthrough which is deliberately unstable (§8); Excel formula-injection hygiene on values; RFC 4180 quoting, so a title with a comma (`"Dizzy Dance, Street Light"`) stays one field; UTF-8 with a byte-order mark (`text/csv; charset=utf-8`) so Excel opens non-ASCII titles (`Sara☆M`, Korean, Japanese) as UTF-8 rather than the system codepage. |
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
 | Nulls | Facets with gappy coverage (NPS, badges, BPM on legacy) silently exclude unmatched charts. |
 | Rendering | Interactive circuit page. Load state from the query string, filter live without reloads, write state back via the history interop (the PR #164 pattern — no programmatic `NavigateTo` for filter state). SSR/SEO facets are explicitly not v1. |
@@ -221,7 +221,10 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **Export headers**: stable English by design (community tools will parse them), but the
   endpoint is a convenience surface — explicitly outside the `Tests.Api` wire contract.
   Values are formula-injection escaped (`=`, `+`, `-`, `@` starts). The `pc:` group added in
-  §8 is the one deliberate exception and says so in the dialog.
+  §8 is the one deliberate exception and says so in the dialog. The file is UTF-8 with a
+  byte-order mark so Excel opens non-ASCII titles; a parser reads the first header cleanly
+  with a BOM-aware decoder (`utf-8-sig` in Python, pandas, .NET's `StreamReader`), while a
+  plain `utf-8` decode sees `﻿` ahead of the first header name.
 - **`/TierLists` XX divergence**: the SRP will show XX tiers vote-sourced while the tier
   page still runs XX through score-derived lenses. Owner decides separately whether to
   align the page.

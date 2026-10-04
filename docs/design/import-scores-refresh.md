@@ -41,7 +41,9 @@ the copy deck below is the mock's copy verbatim.
     data URI). It's gone; song names arrive intact. The parser's `Witch Doctor Num1` special
     case stays for old CSVs — back-compatible both ways.
   - UTF-8 BOM on the Blob so Excel opens Korean/Japanese song names cleanly (users edit these
-    files to fix failed rows).
+    files to fix failed rows). The site's own CSV downloads carry the same mark for the same
+    reason: this page's `failedUploads.csv`, the XX upload page's `failedUploads.csv` and
+    `scoresExample.csv`, and the Account panel's `scores.csv`. The upload reader skips it.
   - Signed-out detection (empty first page → alert instead of a silent empty CSV), per-row
     try/catch with an end-of-run summary, off-by-one page log fixed.
 - **D7 — Every string through `L[…]`.** The page carried hardcoded field labels, table headers,
