@@ -105,6 +105,7 @@ public sealed class ChartV2Dto
         DebutedOn = chart.Debut?.ReleaseDate;
         Debut = chart.IsDebut;
         SongName = chart.Song.Name.ToString();
+        SongType = chart.Song.Type.ToString();
         Channel = chart.Song.Channel?.ToString();
         ImageUrl = chart.Song.ImagePath.ToString();
         Type = chart.Type.ToString();
@@ -162,10 +163,19 @@ public sealed class ChartV2Dto
     /// <summary>The song's name; songs are keyed by name in <c>/api/v2/songs</c>.</summary>
     public string SongName { get; set; }
 
+    /// <summary>
+    ///     The song's cut: Arcade, ShortCut, FullSong or Remix — the value <c>/api/v2/songs</c> carries
+    ///     as the song's <c>type</c>. This row's own <c>type</c> is the chart's.
+    /// </summary>
+    public string SongType { get; set; }
+
     /// <summary>The song's jacket image.</summary>
     public string ImageUrl { get; set; }
 
-    /// <summary>Single, Double, CoOp, SinglePerformance or DoublePerformance.</summary>
+    /// <summary>
+    ///     The chart's own type: Single, Double, HalfDouble, CoOp, SinglePerformance or
+    ///     DoublePerformance. HalfDouble is the six-panel layout. The song's cut is <c>songType</c>.
+    /// </summary>
     public string Type { get; set; }
 
     /// <summary>The level the game prints on the folder in this mix.</summary>

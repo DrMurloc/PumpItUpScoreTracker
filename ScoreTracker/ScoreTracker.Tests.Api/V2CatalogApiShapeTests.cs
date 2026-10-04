@@ -146,6 +146,7 @@ public sealed class V2CatalogApiShapeTests
                   "debut": true,
                   "channel": null,
                   "songName": "Conflict",
+                  "songType": "Arcade",
                   "imageUrl": "https://piuimages.example.com/conflict.png",
                   "type": "Single",
                   "level": 20,
@@ -162,6 +163,22 @@ public sealed class V2CatalogApiShapeTests
               "next": null
             }
             """, result);
+    }
+
+    // Arcade is the enum's zero value, so the golden above would pass on a row that never read the
+    // song at all. A cut that is not the default is what shows the field is the song's.
+    [Fact]
+    public async Task ChartCarriesTheSongsCutBesideItsOwnType()
+    {
+        var shortCut = ApiTestData.Chart1 with { Song = ApiTestData.Chart1.Song with { Type = SongType.ShortCut } };
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { shortCut });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix");
+
+        var row = FirstRow(result);
+        Assert.Equal("ShortCut", row.GetProperty("songType").GetString());
+        Assert.Equal("Single", row.GetProperty("type").GetString());
     }
 
     // Scoring difficulty is chart metadata, not a separate resource — it keys on (chart, mix),

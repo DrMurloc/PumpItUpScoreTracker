@@ -37,7 +37,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <summary>The chart catalog for one mix, with each chart's level and note count as that mix lists them.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
-    /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="typeValue">Optional chart type filter: Single, Double, HalfDouble, CoOp, SinglePerformance, DoublePerformance.</param>
     /// <param name="addedIn">
     ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
     ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
@@ -166,7 +166,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// </remarks>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
-    /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="typeValue">Optional chart type filter: Single, Double, HalfDouble, CoOp, SinglePerformance, DoublePerformance.</param>
     /// <param name="addedIn">
     ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
     ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
