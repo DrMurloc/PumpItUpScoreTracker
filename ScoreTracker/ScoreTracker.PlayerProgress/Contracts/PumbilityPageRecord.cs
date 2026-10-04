@@ -205,10 +205,14 @@ public sealed record AskExample(PhoenixLetterGrade Grade, DifficultyLevel Level,
 ///     <see cref="TargetSource.Phoenix1" /> row is a score the player has already hit, and
 ///     there is no better evidence than that.
 /// </param>
+/// <param name="ProjectedPlate">
+///     The plate the projected score was priced with: the Phoenix 1 record's on a carried row.
+///     Null on a peer estimate, whose plate is read off the score curve.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, double Gain,
     PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty,
-    TargetSource Source = TargetSource.Peers);
+    TargetSource Source = TargetSource.Peers, PhoenixPlate? ProjectedPlate = null);
 
 /// <summary>
 ///     What a projected score is built on.

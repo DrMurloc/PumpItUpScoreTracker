@@ -314,6 +314,71 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task ACarriedScoreKeepsTheBetterPlateYouHoldHere()
+    {
+        // Clematis Rapsodia S22: 991,632 Marvelous Game in Phoenix 1, 985,708 Superb Game here. The
+        // game keeps best score and best plate apart, so replaying the Phoenix 1 score leaves SSS
+        // Superb Game on the card — 367.01 against the 364.56 held, not SSS Marvelous Game's 366.52.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 991_632);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 985_708, plate: PhoenixPlate.SuperbGame);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        Assert.Equal(TargetSource.Phoenix1, row.Source);
+        Assert.Equal(991_632, (int)row.Projected);
+        Assert.Equal(2.45, row.Gain, 2);
+    }
+
+    [Fact]
+    public async Task ACarriedPlateYouHitInPhoenix1IsPricedAtYourScoreHere()
+    {
+        // A lower Phoenix 1 score with a better plate. On its own it is worth less than what is held
+        // here, but the plate it carries would still land on the card beside the score held.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 982_000,
+            plate: PhoenixPlate.SuperbGame);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 988_000, plate: PhoenixPlate.MarvelousGame);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var held = scoring.GetScore(ChartType.Single, 22, 988_000, PhoenixPlate.MarvelousGame);
+        Assert.True(scoring.GetScore(ChartType.Single, 22, 982_000, PhoenixPlate.SuperbGame) < held,
+            "the Phoenix 1 record alone must be worth less than what is held, or this asserts nothing");
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        Assert.Equal(982_000, (int)row.Projected);
+        Assert.Equal(scoring.GetScore(ChartType.Single, 22, 988_000, PhoenixPlate.SuperbGame) - held,
+            row.Gain, 6);
+    }
+
+    [Fact]
+    public async Task TheProjectedAverageUsesTheSamePlateRuleAsTheGains()
+    {
+        // The Phoenix 1 plate is the better one here. Priced at the plate held, the rail would read
+        // the chart at SSS Marvelous Game while its row's gain is priced at SSS Superb Game.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 991_632,
+            plate: PhoenixPlate.SuperbGame);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 985_708, plate: PhoenixPlate.MarvelousGame);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var rail = Assert.Single(page.Rails!);
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        var held = scoring.GetScore(ChartType.Single, 22, 985_708, PhoenixPlate.MarvelousGame);
+        Assert.NotNull(rail.ProjectedAverage);
+        Assert.Equal(held + row.Gain, rail.ProjectedAverage!.Value * 50, 6);
+        Assert.Equal(scoring.GetScore(ChartType.Single, 22, 991_632, PhoenixPlate.SuperbGame),
+            rail.ProjectedAverage.Value * 50, 6);
+    }
+
+    [Fact]
     public async Task ABrokenRunHereDoesNotCountAsHavingScoredTheChart()
     {
         // A stage break rates zero, so it displaces nothing — and a chart you broke on is
@@ -663,9 +728,10 @@ public sealed class PumbilityPageSagaTests
         }
 
         /// <summary>What the player holds in Phoenix 2 on a chart they also played in Phoenix 1.</summary>
-        public PageContext WithPhoenix2Score(Guid chartId, int score, bool isBroken = false)
+        public PageContext WithPhoenix2Score(Guid chartId, int score, bool isBroken = false,
+            PhoenixPlate plate = PhoenixPlate.TalentedGame)
         {
-            _phoenix2Scores[chartId] = new RecordedPhoenixScore(chartId, score, PhoenixPlate.TalentedGame,
+            _phoenix2Scores[chartId] = new RecordedPhoenixScore(chartId, score, plate,
                 isBroken, Now.AddDays(-10));
             return this;
         }
@@ -679,13 +745,13 @@ public sealed class PumbilityPageSagaTests
         }
 
         public PageContext WithPhoenixScores(ChartType type, int level, int count, int score,
-            bool availableInPhoenix2 = true)
+            bool availableInPhoenix2 = true, PhoenixPlate plate = PhoenixPlate.MarvelousGame)
         {
             for (var i = 0; i < count; i++)
             {
                 var chart = AddChart(type, level, availableInPhoenix2);
                 _myBests[chart.Id] = new RecordedPhoenixScore(chart.Id, score - i * 100,
-                    PhoenixPlate.MarvelousGame, false, Now.AddDays(-60));
+                    plate, false, Now.AddDays(-60));
             }
 
             return this;

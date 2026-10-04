@@ -348,9 +348,9 @@ namespace ScoreTracker.PlayerProgress.Application
 
         /// <summary>
         ///     What those estimates are worth to this player, in this pool, at this energy, right
-        ///     now. Cheap — a lookup on the cached ladders, their own top hundred and one
-        ///     tier-list read — and never cached, because the bar it measures against moves every
-        ///     time they play and the rung moves with the chip (D51).
+        ///     now. Cheap — a lookup on the cached ladders, their own top hundred, their own bests
+        ///     and one tier-list read — and never cached, because the bar it measures against moves
+        ///     every time they play and the rung moves with the chip (D51).
         /// </summary>
         private async Task<PumbilityProjection> Price(ProjectionSweep sweep,
             ProjectPumbilityGainsQuery request, CancellationToken cancellationToken)
@@ -375,15 +375,21 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
+            var mine = (await _scores.GetBestScores(mix, request.UserId, cancellationToken))
+                .Where(s => s.Score != null)
+                .ToDictionary(s => s.ChartId);
 
             var projectedGains = new Dictionary<Guid, double>();
             foreach (var kv in expectedScore)
             {
                 var chart = charts[kv.Key];
-                // Plate rides the projected score through the empirical curve — a flat EG
-                // assumption overpriced plate bonuses under Phoenix 2's additive formula.
-                var expectedPumbility = scoring.GetScore(chart, kv.Value,
-                    ScoringConfiguration.ExpectedPlateForScore(kv.Value), false);
+                // Priced as the best the player would hold after the play: the higher score with the
+                // better plate. The plate rides the projected score through the empirical curve — a
+                // flat EG assumption overpriced plate bonuses under Phoenix 2's additive formula —
+                // and counts only when the projected score beats the one held.
+                var held = mine.GetValueOrDefault(kv.Key);
+                var expectedPumbility = ProjectedBest.Value(scoring, chart, kv.Value,
+                    ProjectedBest.PeerPlate(kv.Value, held), held);
 
                 // What this chart would displace. A chart already IN the pool displaces its own
                 // old value; one outside displaces the 50th. Taking the current rating alone is
