@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Moq;
 using MudBlazor;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -367,6 +370,33 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Never);
         _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == passed),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DownloadFailuresHandsBackAUtf8FileWithTheTitlesIntact()
+    {
+        // Players fix these rows in Excel and upload the file again, which only works if Excel
+        // reads the file as UTF-8 - and it does that only when the file starts with the mark.
+        const string title = "Simon Says, EURODANCE!! (feat. Sara☆M)";
+        _extractor.Setup(e => e.GetScores(It.IsAny<IBrowserFile>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Enumerable.Empty<RecordedPhoenixScore>(), new[]
+            {
+                new SpreadsheetScoreErrorDto { Song = title, Difficulty = "D24", Error = "Chart not found" }
+            }.AsEnumerable()));
+        var helpers = JSInterop.SetupModule("./js/helpers.js");
+        helpers.SetupVoid("downloadFileFromStream", _ => true).SetVoidResult();
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await cut.Find(".mud-expand-panel-header").ClickAsync(new MouseEventArgs());
+        cut.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromText("Song,Difficulty,Score,Plate", "piu-scores.csv"));
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Contains("Download Failures")));
+
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Download Failures")).ClickAsync(new MouseEventArgs());
+
+        var download = helpers.VerifyInvoke("downloadFileFromStream");
+        Assert.Equal("failedUploads.csv", download.Arguments[0]);
+        var file = Assert.IsType<MemoryStream>(Assert.IsType<DotNetStreamReference>(download.Arguments[1]).Stream).ToArray();
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, file.Take(3).ToArray());
+        Assert.Contains(title, Encoding.UTF8.GetString(file, 3, file.Length - 3));
     }
 
     [Fact]
