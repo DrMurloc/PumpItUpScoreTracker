@@ -37,14 +37,14 @@ dotnet run --project ScoreTracker/ScoreTracker.AppHost
 This boots the [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) local orchestration, which:
 
 - provisions a **SQL Server container** with a pinned password and port (from [AppHost appsettings.json](../ScoreTracker/ScoreTracker.AppHost/appsettings.json)) and a persistent volume, so your data survives restarts;
-- **applies all EF migrations automatically** at startup, which also seeds the mix list (`scores.Mix`) — the one part of the catalog Populate never downloads;
+- **applies all EF migrations automatically** at startup, which also seeds the mix list (`scores.Mix`). Populate never writes those rows: it reads the live site's mix list only to know which mixes to download;
 - enables the **dev login backdoor** so you don't need OAuth credentials to sign in;
 - keeps **webhooks on your machine**: a local run refuses to deliver to any address outside loopback and the private ranges, so a database copied from production can never push into a maker's real endpoint (the startup import-recovery pass alone would otherwise replay hundreds of sessions into them). `localhost` targets still deliver, which is what local tool development needs;
 - opens the **Aspire dashboard** (logs, traces, resource states) in your browser.
 
 Click through to the **web** resource in the dashboard (or go to `https://localhost:7144`).
 
-**3. Populate your database.** The whole setup is two moves: run the AppHost (step 2), then Populate, which fills in everything that refers to the mixes the migrations seeded. On an empty database the site redirects you to the **Set Up Local Database** page, which walks you through three steps:
+**3. Populate your database.** The whole setup is two moves: run the AppHost (step 2), then Populate, which downloads the chart catalog and your scores against the mix rows the migrations seeded. On an empty database the site redirects you to the **Set Up Local Database** page, which walks you through three steps:
 
 1. **Sign in** — click *Create Dev User & Sign In* (no credentials needed; this is the dev backdoor, disabled outside local runs). On later runs you can sign back in as the same user.
 2. **Paste your API token** — from your [Account page](https://piuscores.arroweclip.se/Account) on the live site (create a free account there if you don't have one). The token is used read-only and stored in your local database.
