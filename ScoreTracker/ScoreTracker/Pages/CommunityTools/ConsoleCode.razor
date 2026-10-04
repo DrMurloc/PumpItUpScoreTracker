@@ -120,6 +120,9 @@
     private string Snippet() => (_group, _language) switch
     {
         ("api", "cs") => $$"""
+            using System.Net;
+            using System.Net.Http.Json;
+
             var http = new HttpClient { BaseAddress = new("{{Base}}") };
             http.DefaultRequestHeaders.Authorization = new("Bearer", "{{KeyText}}");
 
@@ -131,12 +134,22 @@
                     Console.WriteLine($"{player.Username}: {score.ChartId} {score.Score} {score.LetterGrade}");
 
             // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
-            // until it is null. 600 requests a minute per key; a 429 carries Retry-After.
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
             async IAsyncEnumerable<T> Rows<T>(string? url)
             {
                 while (url is not null)
                 {
-                    var page = await http.GetFromJsonAsync<Page<T>>(url);
+                    using var response = await http.GetAsync(url);
+                    if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        await Task.Delay(response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(1));
+                        continue;
+                    }
+                    response.EnsureSuccessStatusCode();
+
+                    var page = await response.Content.ReadFromJsonAsync<Page<T>>();
                     foreach (var row in page!.Data) yield return row;
                     url = page.Next;
                 }
@@ -163,14 +176,25 @@
             }
 
             // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
-            // until it is null. 600 requests a minute per key; a 429 carries Retry-After.
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
             static List<JsonNode> rows(String url) throws Exception {
                 List<JsonNode> found = new ArrayList<>();
                 while (url != null) {
                     HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                             .header("Authorization", AUTH)
                             .build();
-                    JsonNode page = MAPPER.readTree(HTTP.send(request, BodyHandlers.ofString()).body());
+                    HttpResponse<String> response = HTTP.send(request, BodyHandlers.ofString());
+                    if (response.statusCode() == 429) {
+                        String wait = response.headers().firstValue("Retry-After").orElse("60");
+                        Thread.sleep(1000L * Long.parseLong(wait));
+                        continue;
+                    }
+                    if (response.statusCode() != 200)
+                        throw new IllegalStateException(response.statusCode() + " " + url + " " + response.body());
+
+                    JsonNode page = MAPPER.readTree(response.body());
                     page.path("data").forEach(found::add);
                     url = page.path("next").isTextual() ? page.path("next").asText() : null;
                 }
@@ -179,16 +203,25 @@
             """,
 
         ("api", "py") => $$"""
+            import time
             import requests
 
             s = requests.Session()
             s.headers["Authorization"] = "Bearer {{KeyText}}"
 
             # Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
-            # until it is None. 600 requests a minute per key; a 429 carries Retry-After.
+            # until it is None. 600 requests a minute per key: a 429 is waited out for its
+            # Retry-After and asked again, and any other failure raises, so a sweep is never cut
+            # short in silence.
             def rows(url):
                 while url:
-                    page = s.get(url).json()
+                    r = s.get(url)
+                    if r.status_code == 429:
+                        time.sleep(int(r.headers.get("Retry-After", "60")))
+                        continue
+                    r.raise_for_status()
+
+                    page = r.json()
                     yield from page["data"]
                     url = page["next"]
 
@@ -203,10 +236,20 @@
             const headers = { Authorization: "Bearer {{KeyText}}" };
 
             // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
-            // until it is null. 600 requests a minute per key; a 429 carries Retry-After.
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
             async function* rows(url: string | null): AsyncGenerator<any> {
               while (url) {
-                const page = await (await fetch(url, { headers })).json();
+                const res = await fetch(url, { headers });
+                if (res.status === 429) {
+                  const wait = Number(res.headers.get("Retry-After") ?? 60);
+                  await new Promise(resolve => setTimeout(resolve, 1000 * wait));
+                  continue;
+                }
+                if (!res.ok) throw new Error(`${res.status} ${url}: ${await res.text()}`);
+
+                const page = await res.json();
                 yield* page.data;
                 url = page.next;
               }

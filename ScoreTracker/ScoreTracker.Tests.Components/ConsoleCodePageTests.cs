@@ -20,7 +20,9 @@ namespace ScoreTracker.Tests.Components;
 ///     The Code section's API snippets, which a maker copies as the starting point of a tool. Each one
 ///     authenticates with the tool's Bearer key, so it has to read players by id — a tool key asking
 ///     for <c>players/me</c> gets a 400 — and it has to follow <c>next</c> as the absolute URL the
-///     API already sends, because a URL built around it is malformed from page two on.
+///     API already sends, because a URL built around it is malformed from page two on. It also has to
+///     tell a failed page from a last one: a 429 is waited out, anything else that is not a page stops
+///     the sweep.
 /// </summary>
 public sealed class ConsoleCodePageTests : ComponentTestBase
 {
@@ -94,5 +96,34 @@ public sealed class ConsoleCodePageTests : ComponentTestBase
             Assert.DoesNotContain("f\"", line);
             Assert.DoesNotContain("http://localhost", line);
         });
+    }
+
+    [Theory]
+    [InlineData("C#", "HttpStatusCode.TooManyRequests", "Headers.RetryAfter", "EnsureSuccessStatusCode()")]
+    [InlineData("Java", "statusCode() == 429", "firstValue(\"Retry-After\")", "statusCode() != 200")]
+    [InlineData("Python", "status_code == 429", "headers.get(\"Retry-After\"", "raise_for_status()")]
+    [InlineData("TypeScript", "status === 429", "headers.get(\"Retry-After\")", "!res.ok")]
+    public async Task TheApiSnippetWaitsOutA429AndStopsOnAnyOtherFailure(string language, string tooMany,
+        string retryAfter, string otherFailure)
+    {
+        var snippet = await ApiSnippetIn(language);
+
+        // A sweep that crosses the rate limit, or a key that was never pasted in, must not come back
+        // as a short list that looks complete.
+        Assert.Contains(tooMany, snippet);
+        Assert.Contains(retryAfter, snippet);
+        Assert.Contains(otherFailure, snippet);
+    }
+
+    [Fact]
+    public async Task TheCSharpSnippetCarriesTheUsingsAConsoleProjectDoesNotImply()
+    {
+        var snippet = await ApiSnippetIn("C#");
+
+        // A console project's implicit usings stop at System.Net.Http: the JSON extensions and
+        // HttpStatusCode each need their own line ahead of the first statement.
+        var firstStatement = snippet.IndexOf("var http", StringComparison.Ordinal);
+        Assert.InRange(snippet.IndexOf("using System.Net.Http.Json;", StringComparison.Ordinal), 0, firstStatement);
+        Assert.InRange(snippet.IndexOf("using System.Net;", StringComparison.Ordinal), 0, firstStatement);
     }
 }
