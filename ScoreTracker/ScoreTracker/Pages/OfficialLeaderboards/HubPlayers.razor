@@ -118,6 +118,27 @@ else
             </MudGrid>
         }
 
+        @if (_profile.Placements.Any())
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-3 flex-wrap">
+                <MudText Typo="Typo.overline">@L["Top 50"]</MudText>
+                @* The board select only where the snapshot publishes per-type PUMBILITY boards.
+                   Co-op is not offered: it is not PUMBILITY. *@
+                @if (SplitsByType)
+                {
+                    <MudSelect T="string" Value="_pool" ValueChanged="SetPool" Label="@L["Board"]" Dense="true"
+                               Style="max-width:180px">
+                        <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
+                    </MudSelect>
+                }
+            </MudStack>
+            <div class="olb-player-top50">
+                <HubRankingsTopCharts Profile="_profile" TypeFilter="@_pool" Charts="Charts" OnOpen="OpenChart"/>
+            </div>
+        }
+
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
             @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
@@ -227,6 +248,7 @@ else
     private bool _loadingProfile;
     private bool _detailsOpen;
     private Chart? _detailsChart;
+    private string _pool = AllPools;
     private OfficialPlayerProfileRecord? _profile;
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
@@ -269,6 +291,19 @@ else
         }
     }
 
+    private const string AllPools = "All";
+
+    /// <summary>
+    ///     Whether the snapshot publishes PUMBILITY boards per chart type, so the Top 50 can be
+    ///     read pool by pool. The profile says which pools exist; the mix is never asked.
+    /// </summary>
+    private bool SplitsByType => _profile?.Pools?.Any(p => p.Type != AllPools) == true;
+
+    private void SetPool(string pool)
+    {
+        _pool = pool;
+    }
+
     private void OpenChart(Guid chartId)
     {
         if (!Charts.TryGetValue(chartId, out var chart)) return;
@@ -297,6 +332,9 @@ else
 
     internal async Task SelectPlayer(string username)
     {
+        // A new player starts on the combined pool: the last one's Singles pick is not a
+        // question this player was asked.
+        if (username != _selected) _pool = AllPools;
         _selected = username;
         _profile = null;
         await SelectedChanged.InvokeAsync(username);

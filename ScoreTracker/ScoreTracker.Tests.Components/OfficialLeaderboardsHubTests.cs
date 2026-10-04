@@ -539,7 +539,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Equal(chart.Id, Details(cut).Chart!.Id);
     }
 
-    // ── Players: the placement sheet ────────────────────────────────────────
+    // ── Players: Top 50 and the placement sheet ─────────────────────────────
 
     private static OfficialPlayerChartRecord Placement(Chart chart, double rating, int place = 3) =>
         new(chart.Id, place, null, 990_000, rating);
@@ -563,6 +563,52 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task PlayersShowTheTop50WithABoardSelectWhereTheSnapshotSplitsItsBoard()
+    {
+        var single = MakeChart("Single Song", ChartType.Single, 24);
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+        var cut = await RenderPlayer(MixEnum.Phoenix2,
+            ProfileWith(new[] { Placement(single, 380), Placement(doubles, 390) },
+                new OfficialPlayerPoolRecord("All", 17903.40m, true),
+                new OfficialPlayerPoolRecord("Singles", 9000m, true),
+                new OfficialPlayerPoolRecord("Doubles", 8900m, true)),
+            new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles });
+
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".olb-player-top50 .tier-chart-card").Count));
+        // MudSelect renders its items only once the popover opens, so they are read off the tree.
+        Assert.Equal(new[] { "All", "Singles", "Doubles" },
+            cut.FindComponents<MudSelectItem<string>>().Select(i => i.Instance.Value!).ToArray());
+    }
+
+    [Fact]
+    public async Task PlayersOnAOneBoardMixOfferNoBoardSelect()
+    {
+        var chart = MakeChart("Single Song", ChartType.Single, 24);
+        var cut = await RenderPlayer(MixEnum.Phoenix,
+            ProfileWith(new[] { Placement(chart, 380) }, new OfficialPlayerPoolRecord("All", 900m, true)),
+            new Dictionary<Guid, Chart> { [chart.Id] = chart });
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".olb-player-top50 .tier-chart-card")));
+        Assert.Empty(cut.FindComponents<MudSelect<string>>());
+    }
+
+    [Fact]
+    public async Task APlayersTop50CardOpensChartDetailsOnTheOfficialBoard()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        var cut = await RenderPlayer(MixEnum.Phoenix2,
+            ProfileWith(new[] { Placement(chart, 400) }, new OfficialPlayerPoolRecord("All", 400m, true)),
+            new Dictionary<Guid, Chart> { [chart.Id] = chart });
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".olb-player-top50 .tier-chart-card-jacket")));
+
+        await cut.Find(".olb-player-top50 .tier-chart-card-jacket").ClickAsync(new MouseEventArgs());
+
+        Assert.True(Details(cut).Visible);
+        Assert.Equal(chart.Id, Details(cut).Chart!.Id);
+        Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.Official, Details(cut).BoardScope);
+    }
+
+    [Fact]
     public async Task APlayersPlacementOpensChartDetailsOnTheOfficialBoard()
     {
         var chart = MakeChart("1948", ChartType.Double, 29);
@@ -577,6 +623,54 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.True(Details(cut).Visible);
         Assert.Equal(chart.Id, Details(cut).Chart!.Id);
         Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.Official, Details(cut).BoardScope);
+    }
+
+    [Fact]
+    public void TheTop50IsTheBoardsOwnPoolByComputedRating()
+    {
+        var single = MakeChart("Single Song", ChartType.Single, 24);
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+        var coop = MakeChart("Co-op Song", ChartType.CoOp, 3);
+        var profile = ProfileWith(new[] { Placement(single, 380), Placement(doubles, 390), Placement(coop, 120) },
+            new OfficialPlayerPoolRecord("All", null, true));
+        var charts = new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles, [coop.Id] = coop };
+
+        Guid[] Cards(string board) =>
+            RenderComponent<HubRankingsTopCharts>(p => p
+                    .Add(x => x.Profile, profile)
+                    .Add(x => x.TypeFilter, board)
+                    .Add(x => x.Charts, charts))
+                .FindComponents<TierListChartCard>().Select(c => c.Instance.Chart.Id).ToArray();
+
+        Assert.Equal(new[] { single.Id }, Cards("Singles"));
+        Assert.Equal(new[] { doubles.Id }, Cards("Doubles"));
+        Assert.Equal(new[] { coop.Id }, Cards("CoOp"));
+        Assert.Equal(new[] { doubles.Id, single.Id }, Cards("All"));
+    }
+
+    [Fact]
+    public void TheTop50SaysWhenTheChartBoardsCannotBeThePlayersWholeFifty()
+    {
+        var single = MakeChart("Single Song", ChartType.Single, 24);
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+        var charts = new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles };
+        var placements = new[] { Placement(single, 380), Placement(doubles, 390) };
+
+        IRenderedComponent<HubRankingsTopCharts> TopCharts(string board, params OfficialPlayerPoolRecord[] pools) =>
+            RenderComponent<HubRankingsTopCharts>(p => p
+                .Add(x => x.Profile, ProfileWith(placements, pools))
+                .Add(x => x.TypeFilter, board)
+                .Add(x => x.Charts, charts));
+
+        var shortAll = TopCharts("All", new OfficialPlayerPoolRecord("All", 18_000m, false),
+            new OfficialPlayerPoolRecord("Singles", 9_000m, true));
+        Assert.Contains("Only 2 of this player's charts are on the chart boards",
+            shortAll.Find("[data-testid='olb-top50-short']").TextContent);
+        // Each board answers for its own pool: the singles fifty is accounted for.
+        Assert.Empty(TopCharts("Singles", new OfficialPlayerPoolRecord("All", 18_000m, false),
+            new OfficialPlayerPoolRecord("Singles", 9_000m, true)).FindAll("[data-testid='olb-top50-short']"));
+        Assert.Empty(TopCharts("All", new OfficialPlayerPoolRecord("All", 770m, true))
+            .FindAll("[data-testid='olb-top50-short']"));
     }
 
     // ── Popularity ───────────────────────────────────────────────────────────
