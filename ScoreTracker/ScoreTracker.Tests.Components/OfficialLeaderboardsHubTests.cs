@@ -737,6 +737,10 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         var cut = TopFifty("All", new Dictionary<Guid, Chart> { [chart.Id] = chart }, Placement(chart, 389.62));
 
         var card = cut.Find(".tier-chart-card-compact");
+        // The card prints neither the song nor the score, so its accessible name carries both.
+        var label = card.GetAttribute("aria-label");
+        Assert.Contains("1948", label);
+        Assert.Contains("990,000", label);
         Assert.NotNull(card.QuerySelector(".tier-chart-card-corner-start.pmb-corner-gain img"));
         // The site's estimate, not a figure quoted from piugame's board, so it prints whole.
         Assert.Equal("390", card.QuerySelector(".tier-chart-card-compact-grade.tier-chart-card-corner")!

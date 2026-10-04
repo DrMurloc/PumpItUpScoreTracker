@@ -15,7 +15,10 @@
 @if (Density == UiDensity.Compact)
 {
     <MudTooltip Text="@CompactTooltip" ShowOnFocus="true">
+        @* MudTooltip's text never reaches assistive tech, so the button carries it as its
+           accessible name: the song, and everything else the compact card does not print. *@
         <div class="tier-chart-card tier-chart-card-compact @StateClass" role="button" tabindex="0"
+             aria-label="@CompactTooltip"
              @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
             @* Single quotes on purpose: Blazor sets attributes via the DOM, so HTML
                entities like &quot; are never decoded and would corrupt the CSS. *@
