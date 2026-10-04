@@ -5,38 +5,73 @@
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* A ranked player's Top 50 chart cards — the expansion body shared by the rankings
-   table's child row and the Comfortable/Compact card rows. *@
+@* A board player's Top 50 chart cards, by computed rating — the rankings card's expansion
+   body and the Players page's Top 50. The pool is the board's own: Singles, Doubles, co-op,
+   or singles and doubles together for the combined board. *@
 @if (Profile == null)
 {
     <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
 }
 else
 {
+    var pool = Profile.Placements
+        .Where(p => Charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, TypeFilter))
+        .ToArray();
     <MudText Typo="Typo.caption" Class="d-block pa-2">
-        @L[TypeFilter == "CoOp"
+        @L[TypeFilter == CoOp
             ? "Top co-op charts by estimated rating - plates inferred from score."
             : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
     </MudText>
     <div class="tier-card-grid pa-2">
-        @foreach (var placement in Profile.Placements
-                      .Where(p => Charts.TryGetValue(p.ChartId, out var pc) &&
-                                  (pc.Type == ChartType.CoOp) == (TypeFilter == "CoOp"))
-                      .OrderByDescending(p => p.ComputedRating).Take(50))
+        @foreach (var placement in pool.OrderByDescending(p => p.ComputedRating).Take(50))
         {
-            var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
-            if (chart == null) continue;
-            <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+            <TierListChartCard Chart="Charts[placement.ChartId]" Score="MirrorScore(placement)"
                                ShowToDo="false" OnOpen="OnOpen"/>
         }
     </div>
+    @if (IsShort && pool.Length > 0)
+    {
+        <MudText Typo="Typo.caption" Class="d-block px-2 pb-2" data-testid="olb-top50-short">
+            @L["Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best.", pool.Length]
+        </MudText>
+    }
 }
 
 @code {
+    private const string CoOp = "CoOp";
+
     [Parameter] public OfficialPlayerProfileRecord? Profile { get; set; }
+
+    /// <summary>The board whose pool the cards come from: "All", "Singles", "Doubles" or "CoOp".</summary>
     [Parameter] public string TypeFilter { get; set; } = "All";
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public EventCallback<Guid> OnOpen { get; set; }
+
+    /// <summary>
+    ///     Whether a chart belongs to the named board's pool. PUMBILITY counts singles and doubles,
+    ///     so the combined board holds those two and nothing else; co-op is a board of its own.
+    /// </summary>
+    internal static bool InPool(Chart chart, string typeFilter) => typeFilter switch
+    {
+        "Singles" => chart.Type == ChartType.Single,
+        "Doubles" => chart.Type == ChartType.Double,
+        CoOp => chart.Type == ChartType.CoOp,
+        _ => chart.Type is ChartType.Single or ChartType.Double
+    };
+
+    /// <summary>Whether any of the player's placements is a chart the catalog knows in the named board's pool.</summary>
+    internal static bool HasPool(OfficialPlayerProfileRecord profile, IDictionary<Guid, Chart> charts,
+        string typeFilter) =>
+        profile.Placements.Any(p => charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, typeFilter));
+
+    /// <summary>
+    ///     Whether the mirrored boards fall short of the player's fifty in this pool. Co-op is
+    ///     a sum of every chart rather than a fifty, so it has nothing to fall short of.
+    /// </summary>
+    private bool IsShort =>
+        TypeFilter != CoOp
+        && Profile?.Pools?.FirstOrDefault(p => p.Type == (TypeFilter is "Singles" or "Doubles" ? TypeFilter : "All"))
+            is { IsComplete: false };
 
     private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
     {

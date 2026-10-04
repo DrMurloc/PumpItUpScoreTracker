@@ -254,9 +254,13 @@ else
                         <div class="olb-hero-chartline">
                             @if (chart != null)
                             {
-                                <SongImage Song="chart.Song" Small="true"/>
-                                <DifficultyBubble Chart="chart" Small="true"/>
-                                <span class="olb-hero-song">@chart.Song.Name</span>
+                                <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer"
+                                         Color="Color.Inherit" Underline="Underline.None"
+                                         OnClick="() => OpenChart(chart)">
+                                    <DifficultyBubble Chart="chart" Small="true"/>
+                                    <SongImage Song="chart.Song" Small="true"/>
+                                    <span class="olb-hero-song">@chart.Song.Name</span>
+                                </MudLink>
                             }
                         </div>
                         <div class="olb-hero-chartline">
@@ -421,10 +425,10 @@ else
                 <GradeBandIcon Band="@first.GradeBand" Height="24"/>
                 @if (chart != null)
                 {
-                    <MudLink title="@L["Chart leaderboard"]" Class="olb-chartlink" Style="cursor:pointer"
-                             Underline="Underline.None" OnClick="() => OpenBoard(chart)">
-                        <SongImage Song="chart.Song" Small="true"/>
+                    <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer"
+                             Underline="Underline.None" OnClick="() => OpenChart(chart)">
                         <DifficultyBubble Chart="chart" Small="true"/>
+                        <SongImage Song="chart.Song" Small="true"/>
                         <MudText Typo="Typo.body1" Class="olb-song-text"><b>@chart.Song.Name</b></MudText>
                     </MudLink>
                 }
@@ -456,14 +460,17 @@ else
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         @if (chart != null)
                         {
-                            <SongImage Song="chart.Song"/>
-                            <DifficultyBubble Chart="chart" Small="true"/>
+                            <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer"
+                                     Underline="Underline.None" OnClick="() => OpenChart(chart)">
+                                <DifficultyBubble Chart="chart" Small="true"/>
+                                <SongImage Song="chart.Song"/>
+                            </MudLink>
                         }
                         <MudStack Spacing="0" Class="min-width-0">
                             @if (chart != null)
                             {
-                                <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
-                                         OnClick="() => OpenBoard(chart)">
+                                <MudLink title="@L["Chart Details"]" Style="cursor:pointer" Underline="Underline.None"
+                                         OnClick="() => OpenChart(chart)">
                                     <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
                                 </MudLink>
                             }
@@ -489,8 +496,9 @@ else
     </MudGrid>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
-                          Supplemented="Supplemented"/>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"
+                    BoardScope="ChartLeaderboardScopes.LeaderboardScope.Official"
+                    BoardSupplemented="Supplemented"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -499,8 +507,8 @@ else
 
     private bool _loading = true;
     private bool _debutsExpanded;
-    private bool _boardOpen;
-    private Chart? _boardChart;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
     private WeeklyHighlightsRecord? _highlights;
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
     private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
@@ -520,10 +528,10 @@ else
         _loading = false;
     }
 
-    private void OpenBoard(Chart chart)
+    private void OpenChart(Chart chart)
     {
-        _boardChart = chart;
-        _boardOpen = true;
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     // These boards are the one place a rival with no site account is a ROW rather than an

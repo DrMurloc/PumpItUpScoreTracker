@@ -216,7 +216,8 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>
     private IRenderedFragment RenderDialog(MixEnum mix = MixEnum.Phoenix,
-        ChartLeaderboardScopes.LeaderboardScope scope = ChartLeaderboardScopes.LeaderboardScope.World)
+        ChartLeaderboardScopes.LeaderboardScope scope = ChartLeaderboardScopes.LeaderboardScope.World,
+        bool officialSupplemented = false)
     {
         return Render(builder =>
         {
@@ -227,7 +228,145 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             builder.AddAttribute(3, nameof(ChartLeaderboardScopes.ChartId), ChartId);
             builder.AddAttribute(4, nameof(ChartLeaderboardScopes.Mix), mix);
             builder.AddAttribute(5, nameof(ChartLeaderboardScopes.InitialScope), scope);
+            builder.AddAttribute(6, nameof(ChartLeaderboardScopes.OfficialSupplemented), officialSupplemented);
             builder.CloseComponent();
+        });
+    }
+
+    private void SignIn(Guid me)
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(me, Name.From("ME"), false, null,
+            new Uri("https://example.invalid/me.png"), null));
+    }
+
+    private void GivenTheOfficialBoard(params OfficialChartBoardEntryRecord[] entries)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialChartBoardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialChartBoardRecord(When, entries));
+    }
+
+    private static OfficialChartBoardEntryRecord BoardEntry(int place, string tag, int score, Guid? userId = null,
+        bool isSupplemented = false) =>
+        new(place, new OfficialPlayerRecord(place, tag, null, userId), score, isSupplemented);
+
+    /// <summary>
+    ///     The Official Leaderboards section's Supplemented reading carries into the board: the
+    ///     PIU Scores tail is asked for, and its rows wear the section's rail under its key, so
+    ///     nothing below piugame's own rows reads as piugame's.
+    /// </summary>
+    [Fact]
+    public void TheOfficialBoardAsksForTheSupplementedTailAndRailsIt()
+    {
+        GivenTheOfficialBoard(BoardEntry(1, "BOARD#1", 999_000),
+            BoardEntry(2, "OURS#2", 998_000, isSupplemented: true));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official, officialSupplemented: true);
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.DoesNotContain("cld-row-supp", rows[0].ClassName);
+            Assert.Contains("cld-row-supp", rows[1].ClassName);
+            Assert.Contains("PIU Scores account", cut.Find("[data-testid='cld-supp-legend']").TextContent);
+        });
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.Supplemented),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void WithoutTheFlagTheOfficialBoardIsPiugamesAlone()
+    {
+        GivenTheOfficialBoard(BoardEntry(1, "BOARD#1", 999_000));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".weekly-lb-row")));
+        Assert.Empty(cut.FindAll("[data-testid='cld-supp-legend']"));
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => !q.Supplemented),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>A rival with no site account is a board tag, and the board is where they show up.</summary>
+    [Fact]
+    public void TheOfficialBoardGlowsAGhostRivalByTag()
+    {
+        SignIn(Guid.NewGuid());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RivalSubject(Guid.NewGuid(), null, "GHOST#9", "GHOST", null, true,
+                    RivalCapabilities.OfficialStandings, When)
+            });
+        GivenTheOfficialBoard(BoardEntry(1, "BOARD#1", 999_000), BoardEntry(2, "ghost#9", 998_000));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.DoesNotContain("is-rival", rows[0].ClassName);
+            Assert.Contains("is-rival", rows[1].ClassName);
+        });
+    }
+
+    /// <summary>
+    ///     A site rival whose account is private is matched by their account or not at all: lighting
+    ///     their tag would say which board player they are, which their privacy keeps off this board.
+    /// </summary>
+    [Fact]
+    public void TheOfficialBoardDoesNotGlowAPrivateSiteRivalsTag()
+    {
+        var hidden = Guid.NewGuid();
+        SignIn(Guid.NewGuid());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RivalSubject(Guid.NewGuid(), hidden, "HIDDEN#2", "HIDDEN", null, true,
+                    RivalCapabilities.LiveScores, When)
+            });
+        _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new User(hidden, Name.From("HIDDEN"), false, null, new Uri("https://example.invalid/h.png"), null)
+            });
+        GivenTheOfficialBoard(BoardEntry(1, "HIDDEN#2", 999_000, hidden));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() =>
+        {
+            var row = Assert.Single(cut.FindAll(".weekly-lb-row"));
+            Assert.Contains("HIDDEN#2", row.TextContent);
+            Assert.DoesNotContain("is-rival", row.ClassName);
+        });
+    }
+
+    /// <summary>Your own link is yours to see, private or not, and it is what puts you on the standing line.</summary>
+    [Fact]
+    public void YourOwnRowGlowsOnTheOfficialBoardEvenWhenYourAccountIsPrivate()
+    {
+        var me = Guid.NewGuid();
+        SignIn(me);
+        _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new User(me, Name.From("ME"), false, null, new Uri("https://example.invalid/me.png"), null)
+            });
+        GivenTheOfficialBoard(BoardEntry(1, "BOARD#1", 999_000), BoardEntry(2, "MINE#7", 998_000, me));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.Contains("weekly-lb-me", rows[1].ClassName);
+            // Still the board's own name for the row, never the site username.
+            Assert.Contains("MINE#7", rows[1].TextContent);
+            Assert.Contains("#2 of 2", cut.Find("[data-testid='cld-standing']").TextContent);
         });
     }
 

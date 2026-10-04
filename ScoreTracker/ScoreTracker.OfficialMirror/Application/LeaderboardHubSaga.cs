@@ -46,6 +46,9 @@ internal sealed class LeaderboardHubSaga :
     // Never a scraped board name — routing the co-op view here forces the computed path.
     private const string CoOpBoardName = "CO-OP (computed)";
 
+    /// <summary>The fifty a PUMBILITY pool is made of.</summary>
+    private const int PoolSize = 50;
+
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
     private readonly IMemoryCache _cache;
@@ -396,7 +399,33 @@ internal sealed class LeaderboardHubSaga :
             chartRows.Length == 0 ? 0 : chartRows.Min(r => r.Place),
             chartRows.Count(r => r.Place <= 10),
             history, placements,
-            pumbilityRow?.IsSupplemented ?? false);
+            pumbilityRow?.IsSupplemented ?? false,
+            PoolsFor(stats, playerStats, currentRows));
+    }
+
+    /// <summary>
+    ///     Each pool the snapshot publishes a board for, with the player's published value on it
+    ///     and whether the chart rows the mirror holds rebuild that value. Where the player is not
+    ///     on the pool's board there is nothing to check against, so a full fifty is the test.
+    /// </summary>
+    private static IReadOnlyList<OfficialPlayerPoolRecord> PoolsFor(SnapshotStats stats,
+        PlayerSnapshotStats? player, IReadOnlyList<PlayerTimelineRow> currentRows)
+    {
+        var pools = new List<OfficialPlayerPoolRecord> { Pool("All", PumbilityAll) };
+        if (stats.RatingBoards.ContainsKey(PumbilitySingles)) pools.Add(Pool("Singles", PumbilitySingles));
+        if (stats.RatingBoards.ContainsKey(PumbilityDoubles)) pools.Add(Pool("Doubles", PumbilityDoubles));
+        return pools;
+
+        OfficialPlayerPoolRecord Pool(string type, string boardName)
+        {
+            var published = currentRows.FirstOrDefault(r =>
+                r.LeaderboardType == LeaderboardTypes.Rating && r.BoardName == boardName)?.Score;
+            var rebuilt = (double)(player?.RatingFor(type) ?? 0m);
+            var complete = published is { } value
+                ? BoardPoolCheck.Confirms(rebuilt, (double)value)
+                : (player?.ChartsInPool(type) ?? 0) >= PoolSize;
+            return new OfficialPlayerPoolRecord(type, published, complete);
+        }
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
@@ -653,7 +682,8 @@ internal sealed class LeaderboardHubSaga :
 
     private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, double RatingAll,
         double RatingSingles, double RatingDoubles, double RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
-        IReadOnlyDictionary<Guid, double> ChartRatings, bool IsSupplementedStandard, bool IsSupplementedCoOp)
+        IReadOnlyDictionary<Guid, double> ChartRatings, bool IsSupplementedStandard, bool IsSupplementedCoOp,
+        int BoardsSingles, int BoardsDoubles)
     {
         /// <summary>
         ///     On the ranking of this type only because PIU Scores knows their scores. Per board,
@@ -679,6 +709,17 @@ internal sealed class LeaderboardHubSaga :
         public int BoardsFor(string type)
         {
             return type == CoOpType ? BoardsCoOp : BoardsInTop;
+        }
+
+        /// <summary>How many of the player's chart rows can enter the pool of this type.</summary>
+        public int ChartsInPool(string type)
+        {
+            return type switch
+            {
+                "Singles" => BoardsSingles,
+                "Doubles" => BoardsDoubles,
+                _ => BoardsSingles + BoardsDoubles
+            };
         }
     }
 
@@ -732,12 +773,14 @@ internal sealed class LeaderboardHubSaga :
 
         var chartDetails = details.Where(d => d.LeaderboardType == LeaderboardTypes.Chart).ToArray();
         var standardByPlayer = chartDetails
-            .Where(d => d.ChartType != ChartType.CoOp.ToString() && d.Level != null)
-            .GroupBy(d => d.PlayerId)
+            .Where(d => d.Level != null)
+            .Select(d => (Detail: d, Type: BoardRowPricing.TypeOf(d.ChartType)))
+            .Where(x => x.Type is { } type && type != ChartType.CoOp)
+            .GroupBy(x => x.Detail.PlayerId)
             .ToDictionary(g => g.Key, g => g
-                .Select(d => (Detail: d,
-                    Rating: scoring.GetScore(DifficultyLevel.From(d.Level!.Value),
-                        PhoenixScore.From((int)d.Score))))
+                .Select(x => (x.Detail,
+                    Rating: BoardRowPricing.Price(scoring, x.Type!.Value, x.Detail.Level!.Value,
+                        (int)x.Detail.Score)))
                 .ToArray());
         var coopByPlayer = chartDetails
             .Where(d => d.ChartType == ChartType.CoOp.ToString())
@@ -756,11 +799,14 @@ internal sealed class LeaderboardHubSaga :
             var coop = coopByPlayer.TryGetValue(playerId, out var c)
                 ? c
                 : Array.Empty<(PlacementDetail Detail, double Rating)>();
-            var top50 = contributions.OrderByDescending(x => x.Rating).Take(50).ToArray();
-            var singles = contributions.Where(x => x.Detail.ChartType == ChartType.Single.ToString())
-                .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
-            var doubles = contributions.Where(x => x.Detail.ChartType == ChartType.Double.ToString())
-                .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
+            var singlesPool = contributions.Where(x => x.Detail.ChartType == ChartType.Single.ToString()).ToArray();
+            var doublesPool = contributions.Where(x => x.Detail.ChartType == ChartType.Double.ToString()).ToArray();
+            // PUMBILITY counts singles and doubles only. A performance or half-double board is one
+            // the player is on, so it counts toward BoardsInTop, but no pool can hold it.
+            var pool = singlesPool.Concat(doublesPool).ToArray();
+            var top50 = pool.OrderByDescending(x => x.Rating).Take(50).ToArray();
+            var singles = singlesPool.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
+            var doubles = doublesPool.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
             var playerType = RecapPlayerTypeCalculator.Calculate(
                 top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray(), mix);
             // The CO-OP Rating is every co-op chart summed, not a top 50 — the mirror only holds
@@ -780,8 +826,9 @@ internal sealed class LeaderboardHubSaga :
                 // On a ranking only because PIU Scores knows their scores — judged over the rows
                 // that feed THAT ranking, the same rule the profile applies to its own rows. A
                 // player with no rows of a kind is not on that kind's ranking, so false there.
-                contributions.Length > 0 && contributions.All(x => x.Detail.IsSupplemented),
-                coop.Length > 0 && coop.All(x => x.Detail.IsSupplemented));
+                pool.Length > 0 && pool.All(x => x.Detail.IsSupplemented),
+                coop.Length > 0 && coop.All(x => x.Detail.IsSupplemented),
+                singlesPool.Length, doublesPool.Length);
         }
 
         return new SnapshotStats(byPlayer, ratingBoards);

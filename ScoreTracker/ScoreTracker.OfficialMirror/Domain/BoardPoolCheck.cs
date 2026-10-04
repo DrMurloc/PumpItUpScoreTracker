@@ -1,6 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -51,8 +50,7 @@ internal static class BoardPoolCheck
     {
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         return rows
-            .Select(r => scoring.GetScore(r.Type, DifficultyLevel.From(r.Level), PhoenixScore.From(r.Score),
-                ScoringConfiguration.ExpectedPlateForScore(PhoenixScore.From(r.Score))))
+            .Select(r => BoardRowPricing.Price(scoring, r.Type, r.Level, r.Score))
             .Where(v => v > 0)
             .OrderByDescending(v => v)
             .Take(PoolSize)

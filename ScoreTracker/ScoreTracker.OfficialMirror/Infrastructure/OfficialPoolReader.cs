@@ -83,11 +83,9 @@ internal sealed class OfficialPoolReader : IOfficialPoolReader, IOfficialPoolSou
         foreach (var row in scores)
         {
             if (linked.Contains(row.PlayerId)) continue;
-            if (!Enum.TryParse<ChartType>(row.ChartType, out var chartType)) continue;
+            if (BoardRowPricing.TypeOf(row.ChartType) is not { } chartType) continue;
             if (chartType is not (ChartType.Single or ChartType.Double)) continue;
-            var score = PhoenixScore.From((int)row.Score);
-            var value = scoring.GetScore(chartType, DifficultyLevel.From(row.Level), score,
-                ScoringConfiguration.ExpectedPlateForScore(score));
+            var value = BoardRowPricing.Price(scoring, chartType, row.Level, (int)row.Score);
             if (value <= 0) continue;
             (byPlayer.TryGetValue(row.PlayerId, out var list) ? list : byPlayer[row.PlayerId] = new())
                 .Add(new OfficialPricedChart(row.ChartId, chartType, value));

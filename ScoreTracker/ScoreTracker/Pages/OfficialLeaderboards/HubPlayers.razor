@@ -118,6 +118,32 @@ else
             </MudGrid>
         }
 
+        @* Only for a player holding a single or a double the catalog knows: co-op rows alone
+           are no PUMBILITY pool, and would leave the section an empty grid. *@
+        @if (HasPool(AllPools))
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-3 flex-wrap">
+                <MudText Typo="Typo.overline">@L["Top 50"]</MudText>
+                @* The board select only where the snapshot publishes per-type PUMBILITY boards.
+                   Co-op is not offered: it is not PUMBILITY. A board the player holds no charts
+                   on is greyed out rather than offered as an empty list. *@
+                @if (SplitsByType)
+                {
+                    <MudSelect T="string" Value="_pool" ValueChanged="SetPool" Label="@L["Board"]" Dense="true"
+                               Style="max-width:180px">
+                        <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Singles")"
+                                       Disabled="@(!HasPool("Singles"))">@L["Singles"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Doubles")"
+                                       Disabled="@(!HasPool("Doubles"))">@L["Doubles"]</MudSelectItem>
+                    </MudSelect>
+                }
+            </MudStack>
+            <div class="olb-player-top50">
+                <HubRankingsTopCharts Profile="_profile" TypeFilter="@_pool" Charts="Charts" OnOpen="OpenChart"/>
+            </div>
+        }
+
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
             @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
@@ -190,14 +216,12 @@ else
                 <MudTd>
                     @if (Charts.TryGetValue(context.ChartId, out var chart))
                     {
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer;gap:4px"
+                                 Underline="Underline.None" OnClick="() => OpenChart(chart.Id)">
                             <DifficultyBubble Chart="chart" Small="true"/>
                             <SongImage Song="chart.Song" Small="true"/>
-                            <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
-                                     OnClick="() => OpenBoard(chart)">
-                                <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
-                            </MudLink>
-                        </MudStack>
+                            <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
+                        </MudLink>
                     }
                 </MudTd>
                 <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
@@ -210,8 +234,9 @@ else
     </MudPaper>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
-                          Supplemented="Supplemented"/>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"
+                    BoardScope="ChartLeaderboardScopes.LeaderboardScope.Official"
+                    BoardSupplemented="Supplemented"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -226,8 +251,9 @@ else
     private string _selected = string.Empty;
     private string[] _names = Array.Empty<string>();
     private bool _loadingProfile;
-    private bool _boardOpen;
-    private Chart? _boardChart;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private string _pool = AllPools;
     private OfficialPlayerProfileRecord? _profile;
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
@@ -270,10 +296,28 @@ else
         }
     }
 
-    private void OpenBoard(Chart chart)
+    private const string AllPools = "All";
+
+    /// <summary>
+    ///     Whether the snapshot publishes PUMBILITY boards per chart type, so the Top 50 can be
+    ///     read pool by pool. The profile says which pools exist; the mix is never asked.
+    /// </summary>
+    private bool SplitsByType => _profile?.Pools?.Any(p => p.Type != AllPools) == true;
+
+    /// <summary>Whether the player holds any chart the named board's Top 50 can show.</summary>
+    private bool HasPool(string pool) =>
+        _profile != null && HubRankingsTopCharts.HasPool(_profile, Charts, pool);
+
+    private void SetPool(string pool)
     {
-        _boardChart = chart;
-        _boardOpen = true;
+        _pool = pool;
+    }
+
+    private void OpenChart(Guid chartId)
+    {
+        if (!Charts.TryGetValue(chartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     private bool? _loadedSupplemented;
@@ -297,6 +341,9 @@ else
 
     internal async Task SelectPlayer(string username)
     {
+        // A new player starts on the combined pool: the last one's Singles pick is not a
+        // question this player was asked.
+        if (username != _selected) _pool = AllPools;
         _selected = username;
         _profile = null;
         await SelectedChanged.InvokeAsync(username);
@@ -309,6 +356,9 @@ else
 
         _loadingProfile = true;
         _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username, Supplemented));
+        // A re-read can empty the chosen board (switching Supplemented off takes the PIU Scores
+        // rows away), and a greyed-out board cannot stay selected.
+        if (!HasPool(_pool)) _pool = AllPools;
         _pumbilityHistory = _profile?.History
                                 .Where(h => h.Pumbility != null)
                                 .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),

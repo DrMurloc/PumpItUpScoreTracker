@@ -1707,9 +1707,6 @@
   <data name="Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them." xml:space="preserve">
     <value>譜面知識と計画こそが肝です。スコアの出しやすい譜面はあるレベル帯では稼げて、別の帯では危険な選択になります。昔は弱体化していましたが、誰もやめませんでした。</value>
   </data>
-  <data name="Chart leaderboard" xml:space="preserve">
-    <value>譜面ランキング</value>
-  </data>
   <data name="Chart level" xml:space="preserve">
     <value>譜面レベル</value>
   </data>
@@ -5671,9 +5668,6 @@
   <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
     <value>このランキングにはまだ誰もいません。最初の週次再構築の後に埋まります。</value>
   </data>
-  <data name="Nobody is on this chart board yet." xml:space="preserve">
-    <value>この譜面ボードにはまだ誰もいません。</value>
-  </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>今週はPUMBILITYボードで順位を上げたプレイヤーはいません。</value>
   </data>
@@ -6265,6 +6259,9 @@
   </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>PG保持者 {0} のみ</value>
+  </data>
+  <data name="Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best." xml:space="preserve">
+    <value>このプレーヤーの譜面のうち譜面ボードに載っているのは{0}譜面だけなので、このリストには上位の譜面が一部欠けている可能性があります。</value>
   </data>
   <data name="only {0} pass it" xml:space="preserve">
     <value>クリア率{0}</value>
@@ -8537,9 +8534,6 @@
   <data name="Show all {0} plays" xml:space="preserve">
     <value>{0} 件すべて表示</value>
   </data>
-  <data name="Show all {0} scores" xml:space="preserve">
-    <value>{0}件の記録をすべて表示</value>
-  </data>
   <data name="Show difficulty glow" xml:space="preserve">
     <value>難易度の発光を表示</value>
   </data>
@@ -8551,9 +8545,6 @@
   </data>
   <data name="Show more comments" xml:space="preserve">
     <value>コメントをもっと見る</value>
-  </data>
-  <data name="Show more of {0} scores" xml:space="preserve">
-    <value>全{0}件のスコアをもっと見る</value>
   </data>
   <data name="Show original" xml:space="preserve">
     <value>原文を表示</value>
