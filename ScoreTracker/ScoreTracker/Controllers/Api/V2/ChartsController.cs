@@ -37,7 +37,10 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <summary>The chart catalog for one mix, with each chart's level and note count as that mix lists them.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
-    /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="typeValues">
+    ///     Only charts of these types: Single, Double, HalfDouble, CoOp, SinglePerformance,
+    ///     DoublePerformance. Several: a comma list, or repeat the parameter.
+    /// </param>
     /// <param name="addedIn">
     ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
     ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
@@ -62,6 +65,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
     ///     never matches, and a channel the mix does not offer is a 400.
     /// </param>
+    /// <param name="songTypes">
+    ///     Only charts whose song is one of these cuts: <c>Arcade</c>, <c>ShortCut</c>,
+    ///     <c>FullSong</c>, <c>Remix</c> — the row's <c>songType</c>. Several: a comma list, or repeat
+    ///     the parameter. Any other value is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
@@ -71,7 +79,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     public async Task<IActionResult> Get(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
-        [FromQuery(Name = "type")] string? typeValue = null,
+        [FromQuery(Name = "type")] string[]? typeValues = null,
         [FromQuery(Name = "addedInVersion")] string[]? addedIn = null,
         [FromQuery(Name = "addedByVersion")] string? addedBy = null,
         [FromQuery(Name = "addedAfterVersion")] string? addedAfterVersion = null,
@@ -79,19 +87,14 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
         [FromQuery(Name = "channel")] string[]? channels = null,
+        [FromQuery(Name = "songType")] string[]? songTypes = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var failure)) return failure!;
 
-        ChartType? type = null;
-        if (typeValue is not null)
-        {
-            if (!Enum.TryParse<ChartType>(typeValue, true, out var parsed))
-                return Problem("invalid-chart-type", "The type parameter is not a chart type.",
-                    detail: $"Valid values: {string.Join(", ", Enum.GetNames<ChartType>())}");
-            type = parsed;
-        }
+        var (types, typeProblem) = Picks.Resolve<ChartType>(typeValues, "invalid-chart-type", "chart type", ParameterProblem);
+        if (typeProblem is not null) return typeProblem;
 
         if (level is not null && !DifficultyLevel.IsValid(level.Value))
             return Problem("invalid-level", "The level parameter is out of range.",
@@ -99,12 +102,14 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
+        var (songTypePicks, songTypeProblem) = Picks.Resolve<SongType>(songTypes, "invalid-song-type", "song type", ParameterProblem);
+        if (songTypeProblem is not null) return songTypeProblem;
 
-        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
+        var fingerprint = ContinuationToken.FingerprintOf(mix, level, Picks.Fingerprint(typeValues), pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels));
+            Picks.Fingerprint(channels), Picks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -113,9 +118,11 @@ public sealed class ChartsController : ApiV2ControllerBase
         }
 
         var charts = (await _mediator.Send(new GetChartsQuery(mix,
-                level is null ? null : DifficultyLevel.From(level.Value), type)))
+                level is null ? null : DifficultyLevel.From(level.Value))))
+            .Where(c => Picks.Includes(types, c.Type))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
+            .Where(c => Picks.Includes(songTypePicks, c.Song.Type))
             .OrderBy(c => c.Id)
             .ToArray();
 
@@ -166,7 +173,10 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// </remarks>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
-    /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="typeValues">
+    ///     Only charts of these types: Single, Double, HalfDouble, CoOp, SinglePerformance,
+    ///     DoublePerformance. Several: a comma list, or repeat the parameter.
+    /// </param>
     /// <param name="addedIn">
     ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
     ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
@@ -191,6 +201,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
     ///     never matches, and a channel the mix does not offer is a 400.
     /// </param>
+    /// <param name="songTypes">
+    ///     Only charts whose song is one of these cuts: <c>Arcade</c>, <c>ShortCut</c>,
+    ///     <c>FullSong</c>, <c>Remix</c> — the row's <c>songType</c>. Several: a comma list, or repeat
+    ///     the parameter. Any other value is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
@@ -204,7 +219,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     public async Task<IActionResult> GetSkills(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
-        [FromQuery(Name = "type")] string? typeValue = null,
+        [FromQuery(Name = "type")] string[]? typeValues = null,
         [FromQuery(Name = "addedInVersion")] string[]? addedIn = null,
         [FromQuery(Name = "addedByVersion")] string? addedBy = null,
         [FromQuery(Name = "addedAfterVersion")] string? addedAfterVersion = null,
@@ -212,19 +227,14 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
         [FromQuery(Name = "channel")] string[]? channels = null,
+        [FromQuery(Name = "songType")] string[]? songTypes = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var failure)) return failure!;
 
-        ChartType? type = null;
-        if (typeValue is not null)
-        {
-            if (!Enum.TryParse<ChartType>(typeValue, true, out var parsed))
-                return Problem("invalid-chart-type", "The type parameter is not a chart type.",
-                    detail: $"Valid values: {string.Join(", ", Enum.GetNames<ChartType>())}");
-            type = parsed;
-        }
+        var (types, typeProblem) = Picks.Resolve<ChartType>(typeValues, "invalid-chart-type", "chart type", ParameterProblem);
+        if (typeProblem is not null) return typeProblem;
 
         if (level is not null && !DifficultyLevel.IsValid(level.Value))
             return Problem("invalid-level", "The level parameter is out of range.",
@@ -232,12 +242,14 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
+        var (songTypePicks, songTypeProblem) = Picks.Resolve<SongType>(songTypes, "invalid-song-type", "song type", ParameterProblem);
+        if (songTypeProblem is not null) return songTypeProblem;
 
-        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
+        var fingerprint = ContinuationToken.FingerprintOf(mix, level, Picks.Fingerprint(typeValues), pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels));
+            Picks.Fingerprint(channels), Picks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -246,9 +258,11 @@ public sealed class ChartsController : ApiV2ControllerBase
         }
 
         var chartIds = (await _mediator.Send(new GetChartsQuery(mix,
-                level is null ? null : DifficultyLevel.From(level.Value), type)))
+                level is null ? null : DifficultyLevel.From(level.Value))))
+            .Where(c => Picks.Includes(types, c.Type))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
+            .Where(c => Picks.Includes(songTypePicks, c.Song.Type))
             .Select(c => c.Id).ToArray();
 
         var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))
@@ -344,8 +358,14 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// </summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="count">How many charts to draw. Defaults to 5.</param>
-    /// <param name="chartTypes">Which chart types may be drawn: Single, Double, CoOp. Repeat the parameter for more than one.</param>
-    /// <param name="songTypes">Which song cuts may be drawn: Arcade, ShortCut, FullSong, Remix. Repeat the parameter for more than one.</param>
+    /// <param name="chartTypes">
+    ///     Which chart types may be drawn: Single, Double, CoOp. Several: a comma list, or repeat the
+    ///     parameter.
+    /// </param>
+    /// <param name="songTypes">
+    ///     Which song cuts may be drawn: Arcade, ShortCut, FullSong, Remix. Several: a comma list, or
+    ///     repeat the parameter.
+    /// </param>
     /// <param name="minLevel">The lowest level to draw from.</param>
     /// <param name="maxLevel">The highest level to draw from.</param>
     /// <param name="buckets">
@@ -401,8 +421,12 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
+        var (chartTypePicks, chartTypeProblem) = Picks.Resolve<ChartType>(chartTypes, "invalid-chart-type", "chart type", ParameterProblem);
+        if (chartTypeProblem is not null) return chartTypeProblem;
+        var (songTypePicks, songTypeProblem) = Picks.Resolve<SongType>(songTypes, "invalid-song-type", "song type", ParameterProblem);
+        if (songTypeProblem is not null) return songTypeProblem;
         // The debut names narrow the added-in picks: a debut in 1.01.0 is a chart added in 1.01.0
         // whose origin mix is this one, so the draw takes the intersection and the flag.
         IReadOnlySet<string>? picked = versions;
@@ -423,37 +447,27 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         // Unasked, a draw covers every type the mix has except co-op, whose "level" is a player
         // count and whose weights are a separate bucket. On RISE that means half-doubles.
-        var types = chartTypes is null
-            ? MixProfiles.For(mix).ChartTypes.Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray()
-            : chartTypes.Where(s => Enum.TryParse<ChartType>(s, true, out _))
-                .Select(s => Enum.Parse<ChartType>(s, true)).ToArray();
+        var types = chartTypePicks
+                    ?? MixProfiles.For(mix).ChartTypes.Where(t => t.Category() != ChartTypeCategory.CoOp).ToHashSet();
 
-        if (songTypes is not null)
-        {
-            if (songTypes.Any(s => !Enum.TryParse<SongType>(s, true, out _)))
-                return Problem("invalid-song-type", "songTypes contains a value that is not a song type.",
-                    detail: $"Valid values: {string.Join(", ", Enum.GetNames<SongType>())}");
-            foreach (var type in songTypes.Select(s => Enum.Parse<SongType>(s, true)))
-                settings.SongTypeWeights[type] = 1;
-        }
-        else
-        {
-            foreach (var type in Enum.GetValues<SongType>()) settings.SongTypeWeights[type] = 1;
-        }
+        foreach (var type in songTypePicks ?? Enum.GetValues<SongType>().ToHashSet())
+            settings.SongTypeWeights[type] = 1;
 
         foreach (var bucket in buckets ?? Array.Empty<string>())
         {
+            if (string.IsNullOrWhiteSpace(bucket)) continue;
             var split = bucket.Split(":");
             if (split.Length != 2 || !int.TryParse(split[1], out var weight) || weight < 1)
                 return BucketProblem(bucket);
 
-            if (Enum.TryParse<ChartType>(split[0], true, out var bucketType))
-            {
-                settings.ChartTypeMinimums[bucketType] = weight;
-            }
-            else if (DifficultyLevel.TryParse(split[0], out var bucketLevel))
+            // A number is a level; Enum.TryParse would also read it as a chart type.
+            if (DifficultyLevel.TryParse(split[0], out var bucketLevel))
             {
                 settings.LevelMinimums[bucketLevel] = weight;
+            }
+            else if (Enum.TryParse<ChartType>(split[0], true, out var bucketType) && Enum.IsDefined(bucketType))
+            {
+                settings.ChartTypeMinimums[bucketType] = weight;
             }
             else
             {
@@ -509,10 +523,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         ResolveVersions(MixEnum mix, string[]? addedIn, string? addedBy, string? addedAfterVersion, DateOnly? addedAfter,
             string[]? debutedIn)
     {
-        var inVersions = SplitPicks(addedIn);
-        var debutVersions = SplitPicks(debutedIn);
-        var addedAsked = inVersions is { Length: > 0 } || addedBy is not null || addedAfterVersion is not null || addedAfter is not null;
-        var debutAsked = debutVersions is { Length: > 0 };
+        var inVersions = Picks.Split(addedIn);
+        var debutVersions = Picks.Split(debutedIn);
+        var addedAsked = inVersions.Length > 0 || addedBy is not null || addedAfterVersion is not null || addedAfter is not null;
+        var debutAsked = debutVersions.Length > 0;
         if (!addedAsked && !debutAsked) return (null, null, null);
 
         var versions = await _mediator.Send(new GetMixVersionsQuery(mix));
@@ -528,13 +542,6 @@ public sealed class ChartsController : ApiV2ControllerBase
             return (null, null, UnknownVersion(mix, unknownDebut));
 
         return (names, debutNames, null);
-    }
-
-    private static string[]? SplitPicks(string[]? picks)
-    {
-        return picks?
-            .SelectMany(v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .ToArray();
     }
 
     private ObjectResult UnknownVersion(MixEnum mix, string? unknown)

@@ -181,6 +181,35 @@ public sealed class V2PlayerApiShapeTests
         Assert.Equal("https://piuscores.arroweclip.se/errors/too-many-chart-ids", problem.Type);
     }
 
+    // Enum.TryParse merges a comma list into one bitwise value: Single | Double is Double.
+    [Fact]
+    public async Task TheChartTypeFilterIsAUnion()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1, ApiTestData.Chart2 });
+        SetupScores(
+            new RecordedPhoenixScore(ApiTestData.ChartId1, PhoenixScore.From(900000), PhoenixPlate.FairGame,
+                false, ApiTestData.Date1),
+            new RecordedPhoenixScore(ApiTestData.ChartId2, PhoenixScore.From(978210), PhoenixPlate.MarvelousGame,
+                false, ApiTestData.Date2));
+
+        var both = await _controller.GetScores("me", "Phoenix", chartTypeValues: new[] { "Single,Double" });
+        var doubles = await _controller.GetScores("me", "Phoenix", chartTypeValues: new[] { "Double" });
+
+        Assert.Equal(2, Assert.IsType<PlayerScorePageDto>(Assert.IsType<JsonResult>(both).Value).Data.Length);
+        Assert.Equal(ApiTestData.ChartId2,
+            Assert.Single(Assert.IsType<PlayerScorePageDto>(Assert.IsType<JsonResult>(doubles).Value).Data).ChartId);
+    }
+
+    [Fact]
+    public async Task AChartTypeThatIsNotANameIs400()
+    {
+        var result = await _controller.GetScores("me", "Phoenix", chartTypeValues: new[] { "1" });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-type", problem.Type);
+    }
+
     [Fact]
     public async Task AnotherPlayersIdIs404NotForbidden()
     {

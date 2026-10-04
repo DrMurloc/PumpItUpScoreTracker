@@ -58,6 +58,12 @@ public abstract class ApiV2ControllerBase : Controller
         return new ObjectResult(problem) { StatusCode = status, ContentTypes = { "application/problem+json" } };
     }
 
+    /// <summary>A 400 in the shape the static parameter helpers take, <see cref="Picks" /> among them.</summary>
+    protected ObjectResult ParameterProblem(string type, string title, string? detail)
+    {
+        return Problem(type, title, detail: detail);
+    }
+
     /// <summary>404 rather than 403 for a resource the caller may not read — a 403 confirms it exists.</summary>
     protected ObjectResult NotFoundProblem(string detail)
     {

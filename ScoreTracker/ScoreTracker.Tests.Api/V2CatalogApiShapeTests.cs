@@ -146,6 +146,7 @@ public sealed class V2CatalogApiShapeTests
                   "debut": true,
                   "channel": null,
                   "songName": "Conflict",
+                  "songType": "Arcade",
                   "imageUrl": "https://piuimages.example.com/conflict.png",
                   "type": "Single",
                   "level": 20,
@@ -162,6 +163,22 @@ public sealed class V2CatalogApiShapeTests
               "next": null
             }
             """, result);
+    }
+
+    // Arcade is the enum's zero value, so the golden above would pass on a row that never read the
+    // song at all. A cut that is not the default is what shows the field is the song's.
+    [Fact]
+    public async Task ChartCarriesTheSongsCutBesideItsOwnType()
+    {
+        var shortCut = ApiTestData.Chart1 with { Song = ApiTestData.Chart1.Song with { Type = SongType.ShortCut } };
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { shortCut });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix");
+
+        var row = FirstRow(result);
+        Assert.Equal("ShortCut", row.GetProperty("songType").GetString());
+        Assert.Equal("Single", row.GetProperty("type").GetString());
     }
 
     // Scoring difficulty is chart metadata, not a separate resource — it keys on (chart, mix),
@@ -734,6 +751,24 @@ public sealed class V2CatalogApiShapeTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // A numbered bucket is a level. 4 is also CoOp's place in the chart type enum, and 22 is no
+    // chart type at all.
+    [Fact]
+    public async Task NumberedBucketsAreLevelMinimumsAndAnEmptyOneIsSkipped()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", buckets: new string[] { "22:3", "4:1", null! });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.LevelMinimums[22] == 3
+                && q.Settings.LevelMinimums[4] == 1
+                && q.Settings.ChartTypeMinimums.Values.All(v => v == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task AnUnknownVersionIsAProblemPointingAtTheVersionsList()
     {
@@ -972,5 +1007,255 @@ public sealed class V2CatalogApiShapeTests
         _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
                 q.Settings.Debut == debut && q.Settings.Channels.SetEquals(new[] { Channel.KPop })),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── Song type: the song's cut ───────────────────────────────────────────────────────────
+
+    private static readonly Guid ArcadeChart = Guid.Parse("cccccccc-0000-0000-0000-000000000001");
+    private static readonly Guid ShortCutChart = Guid.Parse("cccccccc-0000-0000-0000-000000000002");
+    private static readonly Guid FullSongChart = Guid.Parse("cccccccc-0000-0000-0000-000000000003");
+    private static readonly Guid RemixChart = Guid.Parse("cccccccc-0000-0000-0000-000000000004");
+
+    private static Chart OfCut(Guid id, SongType cut)
+    {
+        return ApiTestData.Chart1 with { Id = id, Song = ApiTestData.Chart1.Song with { Type = cut } };
+    }
+
+    /// <summary>One chart of each cut, so a filter's answer reads as the cuts it kept.</summary>
+    private void SeedOneChartPerCut()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                OfCut(ArcadeChart, SongType.Arcade),
+                OfCut(ShortCutChart, SongType.ShortCut),
+                OfCut(FullSongChart, SongType.FullSong),
+                OfCut(RemixChart, SongType.Remix)
+            });
+    }
+
+    /// <summary>The cursor inside a catalog page's next link.</summary>
+    private static string NextCursor(IActionResult result)
+    {
+        var next = System.Text.Json.JsonDocument.Parse(Assert.IsType<ContentResult>(result).Content!)
+            .RootElement.GetProperty("next").GetString();
+        Assert.NotNull(next);
+        return Uri.UnescapeDataString(next.Split("cursor=")[1]);
+    }
+
+    [Fact]
+    public async Task SongTypeFilterKeepsThePickedCutsAndTakesACommaListOrARepeatedParameter()
+    {
+        SeedOneChartPerCut();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix", songTypes: new[] { "ShortCut,FullSong" });
+        var repeated = await controller.Get("Phoenix", songTypes: new[] { "shortcut", "FULLSONG" });
+
+        Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(commaList));
+        Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(repeated));
+    }
+
+    // MVC binds ?songType= and a bare ?songType as one null element rather than an empty array.
+    [Fact]
+    public async Task AnEmptyFilterValueIsNoFilter()
+    {
+        SeedOneChartPerCut();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix",
+            addedIn: new string[] { null! }, debutedIn: new string[] { null! },
+            channels: new string[] { null! }, songTypes: new string[] { null! });
+
+        Assert.Equal(new[] { ArcadeChart, ShortCutChart, FullSongChart, RemixChart }, Ids(result));
+    }
+
+    // "Short Cut" is how the site prints it, "1" is ShortCut's place in the enum, and "Single" is
+    // the chart's type — none of them is a cut's token.
+    [Theory]
+    [InlineData("Short Cut")]
+    [InlineData("1")]
+    [InlineData("Single")]
+    public async Task AnythingButACutsTokenIsAProblemListingTheCuts(string songType)
+    {
+        SeedOneChartPerCut();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", songTypes: new[] { songType });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-song-type", problem.Type);
+        Assert.Contains("ShortCut", problem.Detail);
+    }
+
+    // Unlike a channel, a cut is never one the mix does not offer: every mix shares the four, so a
+    // mix with no remixes answers Remix with an empty page.
+    [Fact]
+    public async Task ACutTheMixHasNoChartsOfIsAnEmptyPageRatherThanAProblem()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", songTypes: new[] { "Remix" });
+
+        Assert.Equal(0, Total(result));
+    }
+
+    [Fact]
+    public async Task ACursorMintedForOneCutDoesNotPageAnother()
+    {
+        SeedOneChartPerCut();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var cursor = NextCursor(await controller.Get("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, limit: 1));
+        var sameCuts = await controller.Get("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, cursor: cursor, limit: 1);
+        var otherCut = await controller.Get("Phoenix", songTypes: new[] { "Remix" }, cursor: cursor, limit: 1);
+
+        Assert.Equal(new[] { ShortCutChart }, Ids(sameCuts));
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(otherCut).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
+    }
+
+    [Fact]
+    public async Task ChartSkillsTakeTheSongTypeFilter()
+    {
+        SeedOneChartPerCut();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillProfile>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetSkills("Phoenix", songTypes: new[] { "Remix" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetChartSkillProfilesQuery>(q =>
+            q.ChartIds!.SequenceEqual(new[] { RemixChart })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AChartSkillsCursorMintedForOneCutDoesNotPageAnother()
+    {
+        SeedOneChartPerCut();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartSkillProfile(ArcadeChart, 50726, 8.4, 18.4, 122, 140, true,
+                    Array.Empty<ChartSkillCoverage>(), Array.Empty<ChartRarePattern>()),
+                new ChartSkillProfile(ShortCutChart, 50726, 7.1, 15.2, 61, 70, false,
+                    Array.Empty<ChartSkillCoverage>(), Array.Empty<ChartRarePattern>())
+            });
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var cursor = NextCursor(await controller.GetSkills("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, limit: 1));
+        var otherCut = await controller.GetSkills("Phoenix", songTypes: new[] { "Remix" }, cursor: cursor, limit: 1);
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(otherCut).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
+    }
+
+    // ── Every list parameter is a union ─────────────────────────────────────────────────────
+
+    private static readonly Guid SingleChart = Guid.Parse("dddddddd-0000-0000-0000-000000000001");
+    private static readonly Guid DoubleChart = Guid.Parse("dddddddd-0000-0000-0000-000000000002");
+    private static readonly Guid CoOpChart = Guid.Parse("dddddddd-0000-0000-0000-000000000003");
+
+    /// <summary>One chart of each folder's type, so a filter's answer reads as the types it kept.</summary>
+    private void SeedOneChartPerType()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                ApiTestData.Chart1 with { Id = SingleChart, Type = ChartType.Single },
+                ApiTestData.Chart1 with { Id = DoubleChart, Type = ChartType.Double },
+                ApiTestData.Chart1 with { Id = CoOpChart, Type = ChartType.CoOp }
+            });
+    }
+
+    // Enum.TryParse merges a comma list into one bitwise value: Single | Double is Double.
+    [Fact]
+    public async Task TheTypeFilterIsAUnionOfACommaListOrARepeatedParameter()
+    {
+        SeedOneChartPerType();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix", typeValues: new[] { "Single,Double" });
+        var repeated = await controller.Get("Phoenix", typeValues: new[] { "single", "DOUBLE" });
+
+        Assert.Equal(new[] { SingleChart, DoubleChart }, Ids(commaList));
+        Assert.Equal(new[] { SingleChart, DoubleChart }, Ids(repeated));
+    }
+
+    // "1" is Double's place in the enum, and a list with one bad name is refused whole.
+    [Theory]
+    [InlineData("1")]
+    [InlineData("Single,Singles")]
+    public async Task AChartTypeThatIsNotANameIsAProblem(string type)
+    {
+        SeedOneChartPerType();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", typeValues: new[] { type });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-type", problem.Type);
+        Assert.Contains("HalfDouble", problem.Detail);
+    }
+
+    [Fact]
+    public async Task ChartSkillsReadTheTypeFilterAsAUnion()
+    {
+        SeedOneChartPerType();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillProfile>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetSkills("Phoenix", typeValues: new[] { "Double,CoOp" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetChartSkillProfilesQuery>(q =>
+            q.ChartIds!.SequenceEqual(new[] { DoubleChart, CoOpChart })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // Single | Double is Double, so the draw filled only the doubles bucket.
+    [Fact]
+    public async Task ARandomDrawReadsChartTypesAsAUnion()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", chartTypes: new[] { "Single,Double" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.LevelWeights.Values.Any(w => w > 0)
+                && q.Settings.DoubleLevelWeights.Values.Any(w => w > 0)
+                && q.Settings.PlayerCountWeights.Values.All(w => w == 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ShortCut | FullSong is Remix, so the draw came back nothing but remixes.
+    [Fact]
+    public async Task ARandomDrawReadsSongTypesAsAUnion()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", songTypes: new[] { "ShortCut,FullSong" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.SongTypeWeights[SongType.ShortCut] == 1
+                && q.Settings.SongTypeWeights[SongType.FullSong] == 1
+                && q.Settings.SongTypeWeights[SongType.Arcade] == 0
+                && q.Settings.SongTypeWeights[SongType.Remix] == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // An unknown chart type is a 400 rather than a name the draw silently drops, and a number is
+    // never a song type.
+    [Fact]
+    public async Task ARandomDrawRefusesAListValueThatIsNotAName()
+    {
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var chartType = await controller.GetRandom("Phoenix", chartTypes: new[] { "Singles" });
+        var songType = await controller.GetRandom("Phoenix", songTypes: new[] { "7" });
+
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-type",
+            Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(chartType).Value).Type);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-song-type",
+            Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(songType).Value).Type);
     }
 }
