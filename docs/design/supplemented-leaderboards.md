@@ -260,7 +260,8 @@ streamed rather than materialised (587k rows on Phoenix). Implementation in
 
 **Presentation** — the switch, the What-It-Takes hiding and the count line (`GetSupplementedSummaryQuery`)
 in `OfficialSectionFrame`; the flag threaded
-through `HubRankings`, `HubPlayers`, `HubThisWeek`, and from them into `ChartDetailsDialog`'s Official
+through `HubRankings`, `HubPlayers`, `HubThisWeek`, and from them and `HubPopularity` into
+`ChartDetailsDialog`'s Official
 scope (`OfficialChartBoardDialog` until [official-leaderboards-overhaul.md](official-leaderboards-overhaul.md)
 §12 L1 retired it); the disclaimer and
 count line on `HubPopularity`; `.olb-row-supp` in `site.css` (rail only, so it composes with both
