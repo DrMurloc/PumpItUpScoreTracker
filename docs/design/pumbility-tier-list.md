@@ -315,8 +315,10 @@ else is as before (`PassPeerWeights` in ChartIntelligence's Domain):
 
 One rule for every Phoenix-scored mix, no mix branch: one bulk folder read and one stats read replace the
 seven title reads and seven score reads per folder, and the activity set is read once per mix on the
-injected clock. A passer with no stats row counts nothing rather than faulting the job. The
-`GetUsersOnLevel` port went with it.
+injected clock. The Pass list skips a passer with no stats row instead of throwing. The PG list the
+same job builds just before it in every folder is unchanged and still reads the stats row without a
+check, so a PG holder with no row would still stop the rest of that mix's run; the local copy has no
+such holder on any mix (2026-10-03). The `GetUsersOnLevel` port went with it.
 
 Options weighed and not taken:
 
@@ -355,6 +357,23 @@ least one pass, on the same local data:
 Folders 14 and up are 80–100% rated. It is a population effect and fills in as weaker players arrive.
 Widening the window changes the weights the §10 bullet above defers, so it waits for that session; the
 cheap version, if wanted, clamps offsets above +3 to weight 3.
+
+**Known gap: the hard end of a Phoenix 2 folder is mostly empty, so its folders read easier than they
+are.** The bands are cut at the folder's mean sum minus one and one and a half standard deviations
+(`TierListProcessor.ProcessIntoTierList`), and every Not Rated chart's zero counts toward both. Phoenix 2's
+sums spread about as wide as their own mean (mean ÷ SD 0.49–1.22 in every folder from S10 to S22 and D10
+to D24, against 1.33–2.69 on Phoenix 1 in the same folders under the same grouping), so no chart in those
+folders lands in **Very Hard** or **Underrated**: 10 of 3,644 Phoenix 2 charts do, all in folders 23 and
+up, against 530 of 3,501 on Phoenix 1. **Hard** is still reached, except in S10, S11, D10, D19 and the
+ten-chart D27, where the zeros pull the mean down far enough that every rated chart lands Medium or
+easier. Same local data, same date. Two ways out, neither taken here because both change the algorithm
+the brief accepted as it is:
+
+- Leave the zeros out of the cut-offs. Hard comes back to those five folders; Very Hard newly appears
+  only in D11 and D13.
+- Band on the log scale the PUMBILITY list already uses (`ProcessIntoLogScaledTierList`, §4a), which
+  also leaves the zeros out. 523 Phoenix 2 charts land in Very Hard or Underrated. It moves Phoenix 1 as
+  well: 975 of 3,501 charts by one band, none by two.
 
 **Post-deploy, once:** trigger `process-pass-tier-list` in `/hangfire` (or wait for the 09:30 UTC
 nightly). The nightly upsert overwrites the all-`Unrecorded` rows in place — no SQL. The Charts SRP

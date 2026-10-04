@@ -686,8 +686,8 @@ mix.
   rotation, Daily Step, the PUMBILITY tier list, Hardmode and the leaderboard import (the bug check found the
   fan-out faulting on the first score). No new job, no SCHEDULED-JOBS row. The pass tiers ran empty on both Rise
   mixes until 2026-10-03, because they grouped players by difficulty title; they now weight players by
-  competitive level as well, a passer without a stats row counting nothing rather than faulting the job
-  ([pumbility-tier-list.md §10a](pumbility-tier-list.md)).
+  competitive level as well, the Pass list skipping a passer without a stats row (the PG list built beside it
+  still expects one — [pumbility-tier-list.md §10a](pumbility-tier-list.md)).
 - `Services/HomeDashboard/WidgetRegistry.cs`: the two mixes on every widget whose data exists on them (quick record,
   import, account stats, by-level breakdown, sessions); not the PUMBILITY widget, not Daily Step (its rotation is
   off).
