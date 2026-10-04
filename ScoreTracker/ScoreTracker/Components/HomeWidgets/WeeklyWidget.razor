@@ -15,8 +15,8 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* W3 (design doc §3): this week's board, difficulty descending with CO-OPs last.
-   Placement color is percentile (place ÷ entrant totals) through ThemeScales — never
-   hand-rolled bands. Unplayed charts are content, not emptiness; the row trophy opens
+   Placement color is the place's share of the entrants through ThemeScales.PlaceStyle, so
+   #1 is the top band on a board of any size — never hand-rolled bands. Unplayed charts are content, not emptiness; the row trophy opens
    the per-chart leaderboard dialog. *@
 
 @if (!_hasContent)
@@ -59,7 +59,7 @@ else
                     else if (row.Place != null)
                     {
                         <span class="dash-weekly-place"
-                              style="@ThemeScales.RarityStyle(1.0 - (double)row.Place.Value / row.Total)">
+                              style="@ThemeScales.PlaceStyle(row.Place.Value, row.Total)">
                             @row.Place/@row.Total
                         </span>
                     }

@@ -78,6 +78,17 @@ public static class ThemeScales
         percentile == null ? string.Empty : $"color:{CssVar(BandFor(percentile.Value))};";
 
     /// <summary>
+    ///     A place on a board as a percentile: the share of the field at or below it, so first place
+    ///     is 1.0 on a board of any size. Tied rows share a place and so a value; a place outside the
+    ///     field (a pinned row past the board's end) and an empty field both read 0.
+    /// </summary>
+    public static double PlaceFraction(int place, int fieldSize) =>
+        fieldSize <= 0 || place <= 0 ? 0 : Math.Clamp((fieldSize - place + 1) / (double)fieldSize, 0, 1);
+
+    /// <summary>The inline color for a printed place, through <see cref="PlaceFraction" />.</summary>
+    public static string PlaceStyle(int place, int fieldSize) => RarityStyle(PlaceFraction(place, fieldSize));
+
+    /// <summary>
     /// Glow class implementing the monotonic treatment ramp — brightness of hue alone
     /// can't order the bands, so glow does (accessibility: color is never the only channel).
     /// </summary>

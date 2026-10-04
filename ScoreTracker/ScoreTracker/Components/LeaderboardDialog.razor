@@ -47,7 +47,7 @@
             @foreach (var row in _rows)
             {
                 <div class="weekly-lb-row @RowHighlight(row)">
-                    <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
+                    <span class="weekly-lb-place" style="@ThemeScales.PlaceStyle(row.Place, _rows.Count)">
                         #@row.Place
                     </span>
                     <span class="weekly-lb-user">
@@ -127,7 +127,7 @@
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
-    private sealed record LeaderboardRow(int Place, double Percentile, WeeklyTournamentEntry Entry, bool IsMe);
+    private sealed record LeaderboardRow(int Place, WeeklyTournamentEntry Entry, bool IsMe);
 
     private const string RelevantKey = "WeeklyCharts__RelevantPlayers";
 
@@ -166,16 +166,24 @@
     }
 
     // Ranks come from position in whatever the dialog shows, so filtering renumbers by itself.
+    // Rows on the same score share a place and the next place skips past the tie, so two
+    // perfect games are both #1 and the score under them is #3.
     private void BuildRows()
     {
         var shown = InRangeUserIds != null && _relevantOnly
             ? _ordered.Where(e => InRangeUserIds.Contains(e.UserId)).ToArray()
             : _ordered;
         var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-        _rows = shown
-            .Select((e, i) => new LeaderboardRow(i + 1, shown.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / shown.Length, e,
-                e.UserId == me))
-            .ToList();
+        var rows = new List<LeaderboardRow>(shown.Length);
+        for (var i = 0; i < shown.Length; i++)
+        {
+            var entry = shown[i];
+            var tied = i > 0 && shown[i - 1].IsBroken == entry.IsBroken &&
+                       (int)shown[i - 1].Score == (int)entry.Score;
+            rows.Add(new LeaderboardRow(tied ? rows[i - 1].Place : i + 1, entry, entry.UserId == me));
+        }
+
+        _rows = rows;
     }
 
     private async Task ToggleRelevant(bool value)

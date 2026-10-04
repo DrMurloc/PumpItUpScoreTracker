@@ -79,7 +79,7 @@ else
                         <div class="dash-top3-row @(row == null ? "dash-top3-empty" : RowClass(row))"
                              title="@(row == null ? null : ((int)row.Entry.Score).ToString("N0"))">
                             <span class="dash-top3-place"
-                                  style="@(row == null ? null : ThemeScales.RarityStyle(1.0 - (double)p / _rows.Count))">@p</span>
+                                  style="@(row == null ? null : ThemeScales.PlaceStyle(row.Place, _rows.Count))">@(row?.Place ?? p)</span>
                             <span class="dash-top3-name">@(row?.User?.Name.ToString() ?? "—")</span>
                             <span class="dash-top3-grade">@(row == null ? "—" : GradeText(row.Entry))</span>
                         </div>
@@ -203,7 +203,7 @@ else
 
     private RenderFragment RowFragment(Row row) =>@<div class="dash-lb-row @RowClass(row)">
         <span class="dash-lb-place"
-              style="@ThemeScales.RarityStyle(_rows.Count <= 0 ? 0 : 1.0 - (double)row.Place / _rows.Count)">@row.Place</span>
+              style="@ThemeScales.PlaceStyle(row.Place, _rows.Count)">@row.Place</span>
         <span class="dash-lb-who">
             @if (row.User != null)
             {
@@ -305,8 +305,16 @@ else
                 ? entries.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
                 : entries.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
-        var rows = ordered.Select((e, i) => new Row(i + 1, e, users.GetValueOrDefault(e.UserId),
-            e.UserId == me, _communityIds.Contains(e.UserId), _rivalIds.Contains(e.UserId))).ToList();
+        // Rows on the same score share a place and the next place skips past the tie — the
+        // numbering the placement query and the challenges page's board give the same entries.
+        var rows = new List<Row>(ordered.Length);
+        for (var i = 0; i < ordered.Length; i++)
+        {
+            var e = ordered[i];
+            var tied = i > 0 && ordered[i - 1].IsBroken == e.IsBroken && (int)ordered[i - 1].Score == (int)e.Score;
+            rows.Add(new Row(tied ? rows[i - 1].Place : i + 1, e, users.GetValueOrDefault(e.UserId),
+                e.UserId == me, _communityIds.Contains(e.UserId), _rivalIds.Contains(e.UserId)));
+        }
 
         _chart = chart;
         _rows = rows;

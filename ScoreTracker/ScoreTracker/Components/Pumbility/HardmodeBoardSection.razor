@@ -34,7 +34,7 @@
     @if (Standing is { Rank: not null })
     {
         <div class="cld-standing">
-            <span class="cld-standing-place" style="@ThemeScales.RarityStyle(Percentile)">
+            <span class="cld-standing-place" style="@StandingStyle">
                 @string.Format(L["#{0} of {1}"], Standing.Rank, Standing.Field)
             </span>
             <span class="cld-standing-scope">
@@ -92,7 +92,7 @@
             @foreach (var row in Page)
             {
                 <div class="olb-grid-row @row.Glow">
-                    <span class="olb-grid-num hmd-rank" style="@ThemeScales.RarityStyle(RowPercentile(row.Place))">
+                    <span class="olb-grid-num hmd-rank" style="@ThemeScales.PlaceStyle(row.Place, _rows.Count)">
                         @($"#{row.Place}")
                     </span>
                     <span class="hmd-player">
@@ -174,15 +174,13 @@
         _ => L["All"]
     };
 
-    /// <summary>1.0 is first place — the flip the printed place makes unnecessary, but the colour needs.</summary>
-    private double Percentile => Standing is { Rank: not null, Field: > 1 }
-        ? (Standing.Field.Value - Standing.Rank!.Value) / (double)(Standing.Field.Value - 1)
-        : 1;
-
-    private double RowPercentile(int place)
-    {
-        return _rows.Count > 1 ? (_rows.Count - place) / (double)(_rows.Count - 1) : 1;
-    }
+    /// <summary>
+    ///     The standing's color, through the same place rule as the rows. A rank whose field has not
+    ///     come back is read as a field of its own size.
+    /// </summary>
+    private string StandingStyle => Standing is { Rank: { } rank }
+        ? ThemeScales.PlaceStyle(rank, Standing.Field ?? rank)
+        : string.Empty;
 
     private IReadOnlyList<Row> Rows => _filter.Length == 0
         ? _rows
