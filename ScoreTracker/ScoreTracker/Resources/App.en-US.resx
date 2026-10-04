@@ -5731,9 +5731,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Not checked yet. Save first, then check.</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>not comparable to modern levels</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>Not counting</value>
   </data>
@@ -8099,9 +8096,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand.</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>scale</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>Scheduling. Back-to-back players fit two-hour slots with time to swap.</value>

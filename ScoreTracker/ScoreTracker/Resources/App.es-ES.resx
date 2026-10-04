@@ -5701,9 +5701,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Aún sin comprobar. Guarda primero y luego comprueba.</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>no comparable con los niveles modernos</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>No cuenta</value>
   </data>
@@ -8055,9 +8052,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>Guardado: {0} no recibirá roles de título de {1} aquí. Pero un rol no se pudo quitar ahora mismo — probablemente está por encima del bot en Ajustes del servidor → Roles, así que un administrador tiene que moverlo o quitarlo a mano.</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>escala</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>Por logística. Los jugadores en cadena caben en turnos de dos horas con tiempo para el relevo.</value>
