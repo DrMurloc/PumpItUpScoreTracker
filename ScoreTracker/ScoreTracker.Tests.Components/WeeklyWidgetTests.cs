@@ -117,6 +117,15 @@ public sealed class WeeklyWidgetTests : ComponentTestBase
     }
 
     [Fact]
+    public void FirstPlaceIsTheTopOfTheRampWhateverTheBoardSize()
+    {
+        var cut = Render();
+
+        var first = cut.FindAll(".dash-weekly-place").Single(e => e.TextContent.Trim() == "1/8");
+        Assert.Contains("--rarity-prism", first.GetAttribute("style"));
+    }
+
+    [Fact]
     public void AliveBoardYouAreAbsentFromStillShowsItsCount()
     {
         var cut = Render();
