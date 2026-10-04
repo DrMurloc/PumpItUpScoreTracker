@@ -77,6 +77,10 @@ public sealed record OfficialRankingRecord(int Rank, int? PreviousRank, Official
 ///     PUMBILITY value at all, which is why it is not spelled "is official": a null number is
 ///     nobody's.
 /// </param>
+/// <param name="Pools">
+///     One entry per PUMBILITY pool the snapshot publishes a board for: "All" always, and
+///     "Singles" and "Doubles" where the mix splits its board. Null on a record built without them.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerProfileRecord(
     OfficialPlayerRecord Player,
@@ -90,7 +94,19 @@ public sealed record OfficialPlayerProfileRecord(
     int TopTens,
     IReadOnlyList<OfficialPlayerHistoryPoint> History,
     IReadOnlyList<OfficialPlayerChartRecord> Placements,
-    bool PumbilityIsSupplemented = false);
+    bool PumbilityIsSupplemented = false,
+    IReadOnlyList<OfficialPlayerPoolRecord>? Pools = null);
+
+/// <summary>One PUMBILITY pool as it stands for one board player.</summary>
+/// <param name="Type">"All", "Singles" or "Doubles" — the board names the rankings query takes.</param>
+/// <param name="Published">What the pool's board prints for the player; null when they are not on it.</param>
+/// <param name="IsComplete">
+///     Whether the mirrored chart boards account for the pool: the fifty rebuilt from them reaches the
+///     published value, or, with no published value to check against, the pool holds fifty charts.
+///     False means a list of the player's top charts is missing some of their best.
+/// </param>
+[ExcludeFromCodeCoverage]
+public sealed record OfficialPlayerPoolRecord(string Type, decimal? Published, bool IsComplete);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumbility, int? PumbilityRank,

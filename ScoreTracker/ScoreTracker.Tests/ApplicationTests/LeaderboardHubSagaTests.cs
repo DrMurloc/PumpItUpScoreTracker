@@ -8,6 +8,7 @@ using Moq;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
+using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
@@ -607,5 +608,137 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal("NIMBUS9", tags[linked]);
         Assert.Equal("NEWTAG#1", tags[renamed]);
         Assert.False(tags.ContainsKey(unlinked));
+    }
+
+    private static Fixture ArrangeProfile(MixEnum mix, IReadOnlyList<PlacementDetail> details,
+        params PlayerTimelineRow[] currentRows)
+    {
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlayerByUsername(mix, "NIMBUS9", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerDimension(11, "NIMBUS9", null, null));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(details);
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(currentRows);
+        return f;
+    }
+
+    private static PlayerTimelineRow ChartRow(Guid chartId, int place, decimal score) =>
+        new(2, Week2, LeaderboardTypes.Chart, $"Board {chartId}", chartId, place, score);
+
+    private static PlayerTimelineRow PoolRow(string board, decimal value) =>
+        new(2, Week2, LeaderboardTypes.Rating, board, null, 1, value);
+
+    /// <summary>
+    ///     Phoenix 2 prices a single one level up the base curve, so the same grade on the same
+    ///     level is worth more as a Single — and a board row carries no plate, so it is priced at the
+    ///     one its score most plausibly carries: a Marvelous Game at 990,000.
+    /// </summary>
+    [Fact]
+    public async Task AProfilePricesEachMirroredChartByItsOwnTypeAndInferredPlate()
+    {
+        var f = ArrangeProfile(MixEnum.Phoenix2, new[]
+            {
+                Chart(11, ChartA, 1, 990_000, level: 24, type: "Single", boardId: 500),
+                Chart(11, ChartB, 1, 990_000, level: 24, type: "Double", boardId: 501)
+            },
+            ChartRow(ChartA, 1, 990_000), ChartRow(ChartB, 1, 990_000));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NIMBUS9"),
+            CancellationToken.None);
+
+        // SSS is 1.49 and a Marvelous Game adds 0.006: Base(24) is 250, and 260 for a Single.
+        Assert.Equal(260 * 1.496, profile!.Placements.Single(p => p.ChartId == ChartA).ComputedRating, 6);
+        Assert.Equal(250 * 1.496, profile.Placements.Single(p => p.ChartId == ChartB).ComputedRating, 6);
+    }
+
+    [Fact]
+    public async Task PhoenixPricesASingleAndADoubleAtTheSameLevelAlike()
+    {
+        var f = ArrangeProfile(MixEnum.Phoenix, new[]
+            {
+                Chart(11, ChartA, 1, 990_000, level: 24, type: "Single", boardId: 500),
+                Chart(11, ChartB, 1, 990_000, level: 24, type: "Double", boardId: 501)
+            },
+            ChartRow(ChartA, 1, 990_000), ChartRow(ChartB, 1, 990_000));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix, "NIMBUS9"),
+            CancellationToken.None);
+
+        var single = profile!.Placements.Single(p => p.ChartId == ChartA).ComputedRating;
+        Assert.True(single > 0);
+        Assert.Equal(single, profile.Placements.Single(p => p.ChartId == ChartB).ComputedRating, 6);
+    }
+
+    /// <summary>
+    ///     The snapshot stats behind every hub view are one computation, so a row it cannot price
+    ///     has to drop out of it rather than take the whole section down with it.
+    /// </summary>
+    [Fact]
+    public async Task AChartRowWhoseTypeDoesNotParseIsSkippedAndTheProfileStillBuilds()
+    {
+        var f = ArrangeProfile(MixEnum.Phoenix2, new[]
+            {
+                Chart(11, ChartA, 1, 990_000, level: 24, type: "Double", boardId: 500),
+                new PlacementDetail(11, 501, LeaderboardTypes.Chart, "Board", ChartB, null, 24, 1, 990_000)
+            },
+            ChartRow(ChartA, 1, 990_000), ChartRow(ChartB, 1, 990_000));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NIMBUS9"),
+            CancellationToken.None);
+
+        Assert.NotNull(profile);
+        Assert.True(profile!.Placements.Single(p => p.ChartId == ChartA).ComputedRating > 0);
+        Assert.Equal(0d, profile.Placements.Single(p => p.ChartId == ChartB).ComputedRating);
+    }
+
+    /// <summary>
+    ///     Each pool the snapshot publishes a board for, and whether the chart rows the mirror holds
+    ///     rebuild the player's value on it: short of the published number by more than the plate
+    ///     band means charts are missing, and a pool with no published number needs a full fifty.
+    /// </summary>
+    [Fact]
+    public async Task AProfileSaysWhichPublishedPoolsTheChartBoardsAccountFor()
+    {
+        // One D24 at 990,000 and nothing else: 374.00 rebuilt in every pool it belongs to.
+        var f = ArrangeProfile(MixEnum.Phoenix2, new[]
+            {
+                Chart(11, ChartA, 1, 990_000, level: 24, type: "Double", boardId: 500),
+                Pumbility(11, 1, 18_000m),
+                Pumbility(11, 1, 380m, PumbilityBoards.Doubles),
+                Pumbility(12, 1, 9_000m, PumbilityBoards.Singles)
+            },
+            ChartRow(ChartA, 1, 990_000), PoolRow(PumbilityBoards.Combined, 18_000m),
+            PoolRow(PumbilityBoards.Doubles, 380m));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NIMBUS9"),
+            CancellationToken.None);
+
+        var pools = profile!.Pools!.ToDictionary(p => p.Type);
+        Assert.Equal(new[] { "All", "Singles", "Doubles" }, profile.Pools!.Select(p => p.Type).ToArray());
+        Assert.Equal(18_000m, pools["All"].Published);
+        Assert.False(pools["All"].IsComplete);
+        // Not on the singles board, and no singles charts at all.
+        Assert.Null(pools["Singles"].Published);
+        Assert.False(pools["Singles"].IsComplete);
+        // 380 published against 374 rebuilt is inside the plate band.
+        Assert.True(pools["Doubles"].IsComplete);
+    }
+
+    [Fact]
+    public async Task AMixWithOneBoardHasOnePool()
+    {
+        var f = ArrangeProfile(MixEnum.Phoenix, new[]
+            {
+                Chart(11, ChartA, 1, 990_000, level: 24, type: "Double", boardId: 500),
+                Pumbility(11, 1, 900m)
+            },
+            ChartRow(ChartA, 1, 990_000), PoolRow(PumbilityBoards.Combined, 900m));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix, "NIMBUS9"),
+            CancellationToken.None);
+
+        var only = Assert.Single(profile!.Pools!);
+        Assert.Equal("All", only.Type);
     }
 }
