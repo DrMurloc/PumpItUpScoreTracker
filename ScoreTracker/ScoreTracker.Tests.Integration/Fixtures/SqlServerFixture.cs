@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Respawn;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Data.Persistence.Entities;
 using Testcontainers.MsSql;
 
 namespace ScoreTracker.Tests.Integration.Fixtures;
@@ -24,6 +25,13 @@ public sealed class SqlServerFixture : IAsyncLifetime
     public IDbContextFactory<ChartAttemptDbContext> DbContextFactory =>
         _factory ?? throw new InvalidOperationException("Fixture not initialized. Call InitializeAsync first.");
 
+    /// <summary>
+    ///     The <c>scores.Mix</c> rows exactly as the migrations seeded them. Read straight after
+    ///     migrating, because the first <see cref="ResetAsync" /> clears that table along with every
+    ///     other one in the schema.
+    /// </summary>
+    public IReadOnlyList<MixEntity> MigratedMixes { get; private set; } = Array.Empty<MixEntity>();
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
@@ -35,6 +43,7 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var context = await _factory.CreateDbContextAsync();
         await context.Database.MigrateAsync();
+        MigratedMixes = await context.Mix.AsNoTracking().ToListAsync();
 
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -51,6 +60,27 @@ public sealed class SqlServerFixture : IAsyncLifetime
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
         await _respawner.ResetAsync(connection);
+    }
+
+    /// <summary>
+    ///     A second database on the same server, migrated from nothing and never reset: the state a
+    ///     local run leaves a developer's database in before anything else writes to it. It costs a
+    ///     second full migration, so only a test that needs the seeded reference data intact asks.
+    /// </summary>
+    public async Task<IDbContextFactory<ChartAttemptDbContext>> CreateMigratedDatabaseAsync()
+    {
+        var connectionString = new SqlConnectionStringBuilder(ConnectionString)
+        {
+            InitialCatalog = $"Migrated_{Guid.NewGuid():N}"
+        }.ConnectionString;
+        var options = new DbContextOptionsBuilder<ChartAttemptDbContext>()
+            .UseSqlServer(connectionString)
+            .Options;
+        IDbContextFactory<ChartAttemptDbContext> factory = new TestDbContextFactory(options);
+
+        await using var context = await factory.CreateDbContextAsync();
+        await context.Database.MigrateAsync();
+        return factory;
     }
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
