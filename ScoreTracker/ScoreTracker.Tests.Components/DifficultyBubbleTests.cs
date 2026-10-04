@@ -32,8 +32,7 @@ public sealed class DifficultyBubbleTests : ComponentTestBase
     public void ARiseHalfDoubleDrawsTheHDoubleStepballFromThePhoenix2Set()
     {
         var cut = RenderComponent<DifficultyBubble>(p => p
-            .Add(x => x.Chart, MakeChart(MixEnum.Rise, ChartType.HalfDouble, 24))
-            .Add(x => x.Tooltip, false));
+            .Add(x => x.Chart, MakeChart(MixEnum.Rise, ChartType.HalfDouble, 24)));
 
         Assert.EndsWith("/difficulty/Phoenix2/hdb24.png", cut.Find("img").GetAttribute("src"));
         Assert.Empty(cut.FindAll(".legacy-chip"));
@@ -43,8 +42,7 @@ public sealed class DifficultyBubbleTests : ComponentTestBase
     public void ARiseSingleBorrowsThePhoenix2Stepball()
     {
         var cut = RenderComponent<DifficultyBubble>(p => p
-            .Add(x => x.Chart, MakeChart(MixEnum.Rise, ChartType.Single, 16))
-            .Add(x => x.Tooltip, false));
+            .Add(x => x.Chart, MakeChart(MixEnum.Rise, ChartType.Single, 16)));
 
         Assert.EndsWith("/difficulty/Phoenix2/s16.png", cut.Find("img").GetAttribute("src"));
     }
@@ -53,8 +51,7 @@ public sealed class DifficultyBubbleTests : ComponentTestBase
     public void AnInfinityHalfDoubleStaysTheNeutralChip()
     {
         var cut = RenderComponent<DifficultyBubble>(p => p
-            .Add(x => x.Chart, MakeChart(MixEnum.Infinity, ChartType.HalfDouble, 12))
-            .Add(x => x.Tooltip, false));
+            .Add(x => x.Chart, MakeChart(MixEnum.Infinity, ChartType.HalfDouble, 12)));
 
         Assert.Single(cut.FindAll(".legacy-chip"));
         Assert.Empty(cut.FindAll("img"));
@@ -67,8 +64,7 @@ public sealed class DifficultyBubbleTests : ComponentTestBase
         var cut = RenderComponent<DifficultyBubble>(p => p
             .Add(x => x.Type, ChartType.HalfDouble)
             .Add(x => x.Level, DifficultyLevel.From(18))
-            .Add(x => x.Mix, MixEnum.Rise)
-            .Add(x => x.Tooltip, false));
+            .Add(x => x.Mix, MixEnum.Rise));
 
         Assert.EndsWith("/difficulty/Phoenix2/hdb18.png", cut.Find("img").GetAttribute("src"));
     }

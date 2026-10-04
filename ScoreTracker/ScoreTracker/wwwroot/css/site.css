@@ -11617,7 +11617,6 @@ button.chart-card-art {
 }
 
 /* The 1x1 hero leads with the difficulty ball — nothing else in that cell names the folder. */
-.dash-fl-hero > .mud-tooltip-root,
 .dash-fl-hero > .difficulty-bubble {
     flex: none;
 }
