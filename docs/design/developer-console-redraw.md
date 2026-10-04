@@ -73,7 +73,7 @@ returning maker wants.
 | `/Developers/{toolId}/api` | — | Keys |
 | `/Developers/{toolId}/players` | — | Invite links + connected |
 | `/Developers/{toolId}/webhooks` | — | Mode, URL, header, secret, verify, test |
-| `/Developers/{toolId}/code` | — | API + Webhook snippets, four languages |
+| `/Developers/{toolId}/code` | — | API + Webhook snippets, four languages. The API snippet lists the players the tool can read (`GET players`) and reads each one's scores by id, because a tool key has no `me` (`400 tool-has-no-self`); it follows `next` as the absolute URL it already is |
 | `/Developers/{toolId}/insights` | — | Directory / API / webhook figures, recent deliveries, latest |
 | `/Developers/{id}/Console` | Activity log | **301** → `/Developers/{id}/insights` |
 | `/Developers/{id}/Debug` | Test + replay | **301** → `/Developers/{id}/webhooks` |
