@@ -5731,9 +5731,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Bam murgl mo. Blorp blomurp, opa murgl.</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>murm urggrrglgrgl grgl rglmurm plglgrrgl</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>Blub grogmrgl</value>
   </data>
@@ -7561,6 +7558,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>Blgrlargl mrp orgab ap mrp mrglblarg ug morggrrgl ap.</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>Blgrlargl mrp orgab ap gorpo algro mrglrgl morggrrgl lurgmurp maglmurp.</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>Mrogla blarp</value>
   </data>
@@ -8099,9 +8099,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>Murpmurm: {0} bo grolgo mrgl roglubrgl urg {1} urgbam. Mor mrp roglub bo grarg ub bam — bam prgloru mrogl grorpmurg Murpgl ur Blubmurg Murmargl → Roglubrgl, ro mrp grogmurpl arglmr blarg bam ro blarg bam ub mag bragl.</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>murpgrrgl</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>Plagrubgrgl. Morp ap morp gab ap blugrob-grogl glargrog murm grglmrgl ap grobmurg.</value>

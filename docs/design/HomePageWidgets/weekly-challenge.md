@@ -10,7 +10,8 @@ starter trio).**
   **expiration is per chart** (staggered rotation, not one board reset; the mock's single countdown was
   a simplification). `GetWeeklyChartEntriesQuery(mix)` → my entries **and** per-chart entrant totals;
   `GetUserWeeklyPlacementsQuery(userId, mix, chartIds)` → `(ChartId, Place)`. Percentile =
-  `1 − place/total` → `ThemeScales.RarityStyle` (never hand-rolled bands). Live pull.
+  `(total − place + 1)/total` through `ThemeScales.PlaceStyle` (never hand-rolled bands), so #1 is the
+  top band on a board of any size. Live pull.
 - **Config v1**: mix scope (boards are parallel per mix); **board filter mode** (owner, 2026-07-12):
   - **Match my range** (default) — reuses `WeeklyChartSuggestionPolicy.GetSuggestedCharts`, the exact
     logic behind the WeeklyCharts page's competitive filter (including its "only when both competitive

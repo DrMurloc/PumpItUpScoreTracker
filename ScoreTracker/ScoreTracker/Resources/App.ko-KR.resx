@@ -5701,9 +5701,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>아직 확인하지 않았습니다. 먼저 저장한 뒤 확인하세요.</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>현행 레벨과 비교할 수 없습니다</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>미반영</value>
   </data>
@@ -7522,6 +7519,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>세션과 해당 보드를 불러오고 있습니다.</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>세션과 동료들 사이에서 각 점수의 위치를 불러오고 있습니다.</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>채보 읽는 중</value>
   </data>
@@ -8055,9 +8055,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>저장됨: {0}은(는) 여기서 {1}의 칭호 역할을 받지 않습니다. 하지만 지금 회수할 수 없는 역할이 있습니다 — 아마 서버 설정 → 역할에서 봇보다 위에 있을 테니, 관리자가 옮기거나 직접 회수해야 합니다.</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>기준</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>일정 때문입니다. 두 시간 단위면 교대 시간까지 넣어 연달아 돌릴 수 있습니다.</value>

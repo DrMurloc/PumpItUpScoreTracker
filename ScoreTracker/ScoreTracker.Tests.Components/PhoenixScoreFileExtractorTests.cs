@@ -28,6 +28,9 @@ public sealed class PhoenixScoreFileExtractorTests
 {
     private const string Header = "Song,Difficulty,Score,LetterGrade,Plate,IsBroken\r\n";
 
+    /// <summary>U+FEFF, the character a UTF-8 file's byte-order mark decodes to when a reader keeps it.</summary>
+    private const char ByteOrderMark = (char)0xFEFF;
+
     private readonly Mock<IMediator> _mediator = new();
 
     public PhoenixScoreFileExtractorTests()
@@ -131,6 +134,29 @@ public sealed class PhoenixScoreFileExtractorTests
         _mediator.Verify(m => m.Send(
             It.Is<GetChartQuery>(q => q.Mix == MixEnum.Phoenix2 && q.Type == ChartType.Double && (int)q.Level == 20),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AQuotedTitleWithACommaReadsAsOneSong()
+    {
+        var (scores, errors) = await Extract(Header + "\"Dizzy Dance, Street Light\",D24,990032,sss,fg,false\r\n");
+
+        Assert.Single(scores);
+        Assert.Empty(errors);
+        _mediator.Verify(m => m.Send(
+            It.Is<GetChartQuery>(q => q.SongName.ToString() == "Dizzy Dance, Street Light" && (int)q.Level == 24),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFileStartingWithAByteOrderMarkStillFindsItsColumns()
+    {
+        // Every CSV download the site and the console script hand out starts with the UTF-8 mark,
+        // and Excel keeps it when a player saves an edited copy.
+        var (scores, errors) = await Extract(ByteOrderMark + Header + "\"Arcana Force\",D20,990032,sss,fg,false\r\n");
+
+        Assert.Single(scores);
+        Assert.Empty(errors);
     }
 
     private Task<(IEnumerable<RecordedPhoenixScore> Scores, IEnumerable<SpreadsheetScoreErrorDto> Errors)> Extract(

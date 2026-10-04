@@ -53,7 +53,7 @@
                 @foreach (var row in View.Rows)
                 {
                     <tr class="@RowClass(row)">
-                        <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
+                        <td class="challenge-mono-place" style="@ThemeScales.PlaceStyle(row.Place, View.Rows.Count)">@row.Place</td>
                         <td>
                             <span class="challenge-mrow-who">
                                 @* The label draws the avatar so the country wash covers both;
@@ -135,9 +135,6 @@
 
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-
-    private double Fraction(int place) =>
-        View == null || View.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
 
     private string TypeLabel(ChartType? type) => type switch
     {

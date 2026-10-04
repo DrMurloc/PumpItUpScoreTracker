@@ -238,6 +238,66 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task APeerProjectionKeepsTheBetterPlateYouHold()
+    {
+        // Held 985,708 Superb Game; the peers' median is 991,632, where the curve guesses Marvelous
+        // Game. The game would keep the Superb Game beside the new score: SSS SG, 367.01, against the
+        // 364.56 held — not SSS MG's 366.52.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 22);
+        foreach (var score in new[] { 990_000, 991_000, 991_632, 993_000, 994_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+        ctx.WithOwnScore(chart, 985_708, PhoenixPlate.SuperbGame);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(991_632, (int)result.ExpectedScores[chart.Id]);
+        Assert.Equal(2.45, result.ProjectedGains[chart.Id], 2);
+    }
+
+    [Fact]
+    public async Task APeerProjectionAtOrBelowYourScoreOffersNothing()
+    {
+        // Held SSS Talented Game; the peers' median is a lower SSS. The curve's Marvelous Game at that
+        // score would out-price what is held on the plate alone, but the play would not change the
+        // card: the score held stays, and so does its plate.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 22);
+        foreach (var score in new[] { 990_000, 991_000, 991_632, 993_000, 994_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+        ctx.WithOwnScore(chart, 993_000, PhoenixPlate.TalentedGame);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        Assert.True(scoring.GetScore(chart, 991_632, ScoringConfiguration.ExpectedPlateForScore(991_632), false)
+                    > scoring.GetScore(chart, 993_000, PhoenixPlate.TalentedGame, false),
+            "the guessed plate must out-price the held record, or this asserts nothing");
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.DoesNotContain(chart.Id, result.ProjectedGains.Keys);
+    }
+
+    [Fact]
+    public async Task APeerProjectionOverABrokenHoldStillPays()
+    {
+        // A broken run is worth nothing and has no plate, so the projection is priced whole even
+        // though the broken score sits above it.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 22);
+        foreach (var score in new[] { 990_000, 991_000, 991_632, 993_000, 994_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+        ctx.WithOwnScore(chart, 995_000, isBroken: true);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(scoring.GetScore(chart, 991_632, ScoringConfiguration.ExpectedPlateForScore(991_632), false),
+            result.ProjectedGains[chart.Id], 6);
+    }
+
+    [Fact]
     public async Task AChartThatCannotClearTheBarIsNotOffered()
     {
         // A weak 15 against a pool of 22s. Its value at a PERFECT game is still under the bar,
@@ -910,9 +970,11 @@ public sealed partial class PumbilityProjectionSagaTests
         }
 
         /// <summary>One of the viewer's own scores, as the best-score read and the top-fifty query both see it.</summary>
-        public ProjectionContext WithOwnScore(Chart chart, int score, PhoenixPlate plate = PhoenixPlate.MarvelousGame)
+        public ProjectionContext WithOwnScore(Chart chart, int score, PhoenixPlate plate = PhoenixPlate.MarvelousGame,
+            bool isBroken = false)
         {
-            _topScores.Add(new RecordedPhoenixScore(chart.Id, score, plate, false, Now.AddDays(-30)));
+            _topScores.Add(new RecordedPhoenixScore(chart.Id, score, isBroken ? null : plate, isBroken,
+                Now.AddDays(-30)));
             return this;
         }
 

@@ -7,50 +7,16 @@
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
-@inject ChartScoringLevels ScoringLevels
 @inject DifficultyGlow Glow
 @if (Chart != null || (Type != null && Level != null))
 {
-    @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
-       tree). The tooltip is a hover affordance, so a static render drops it and keeps the
-       bubble; in a circuit it comes back. *@
-    @if (RendererInfo.IsInteractive && Tooltip)
-    {
-        <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
-            <ChildContent>@Bubble</ChildContent>
-            <TooltipContent>
-                @if (Chart != null)
-                {
-                    <MudText Typo="Typo.caption">@Chart.Song.Name @(UseLegacyChip ? ChipText : Chart.DifficultyString)</MudText><br/>
-                    @if (UseLegacyChip && Chart.Slot != null)
-                    {
-                        <MudText Typo="Typo.caption">@Chart.Mix.GetName() @L["scale"] — @L["not comparable to modern levels"]</MudText><br/>
-                    }
-                    <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
-                    <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
-                    @if (GlowReason is { } reason)
-                    {
-                        @* Says which end of the folder the glow marks, so the glow explains itself
-                           the first time a player wonders why this bubble is lit (D32). *@
-                        <br/>
-                        <MudText Typo="Typo.caption">@reason</MudText>
-                    }
-                }
-                else
-                {
-                    <MudText Typo="Typo.caption">@DiffString</MudText>
-                }
-            </TooltipContent>
-        </MudTooltip>
-    }
-    else
-    {
-        @Bubble
-    }
+    @* No tooltip and no tab stop: the picture's alt (or the chip's own text) names the
+       difficulty, and a glowing bubble's title is its only hover text. *@
+    @Bubble
 }
 @code {
     private RenderFragment Bubble => UseLegacyChip
-        ? @<span tabindex="0" class="legacy-chip" style="border-color:@ThemeScales.SlotColor(Chart?.Slot);color:@ThemeScales.SlotColor(Chart?.Slot);font-size:@(Small ? ".62rem" : ".78rem");">@ChipText</span>
+        ? @<span class="legacy-chip difficulty-bubble" title="@GlowReason" style="border-color:@ThemeScales.SlotColor(Chart?.Slot);color:@ThemeScales.SlotColor(Chart?.Slot);font-size:@(Small ? ".62rem" : ".78rem");">@ChipText</span>
         @* Legacy chips are deliberately rendered, not image bubbles: pre-Exceed slots have no
            official art, and looking different from the modern bubbles IS the message — these
            numbers live on a different scale (docs/design/legacy-mixes.md). *@
@@ -58,10 +24,10 @@
            alpha and haloes the shape rather than boxing it (D24). Red for the week's Hardmode
            charts, mint for each folder's most held (D32). Never suppressed anywhere, the
            Hardmode page's own qualifying list included - a folder where every chart glows is
-           the point there. *@
-        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown" Class="@GlowClass"></MudImage>;
+           the point there. The title names which end the glow marks, so the color never
+           carries that meaning alone; it is null, and left off, on a bubble that doesn't glow. *@
+        : @<MudImage Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown" Class="@($"difficulty-bubble {GlowClass}".TrimEnd())" title="@GlowReason"></MudImage>;
 
-    private double? _scoringLevel;
     private DifficultyGlowKind _glow;
 
     private string? GlowClass => _glow switch
@@ -73,24 +39,21 @@
 
     private string? GlowReason => _glow switch
     {
-        DifficultyGlowKind.Hard => L["Almost nobody holds this in a PUMBILITY top 50 — one of this week's Hardmode charts."],
-        DifficultyGlowKind.Easy => L["One of the most-held charts in this folder's PUMBILITY top 50s."],
+        DifficultyGlowKind.Hard => L["Almost nobody holds this in a PUMBILITY top 50 — one of this week's Hardmode charts."].Value,
+        DifficultyGlowKind.Easy => L["One of the most-held charts in this folder's PUMBILITY top 50s."].Value,
         _ => null
     };
-    private string ScoringLevelString => _scoringLevel == null ? "" : $"{_scoringLevel:0.0}";
 
     protected override async Task OnParametersSetAsync()
     {
         if (Chart == null)
         {
-            _scoringLevel = null;
             _glow = DifficultyGlowKind.None;
             return;
         }
 
-        // Both memoized per circuit, so forty bubbles on a page cost one read each rather than
-        // forty. The chart-less mode has no id to ask about and never glows.
-        _scoringLevel = await ScoringLevels.GetScoringLevel(Chart.Id);
+        // Memoized per circuit, so forty bubbles on a page cost one read rather than forty.
+        // The chart-less mode has no id to ask about and never glows.
         _glow = await Glow.GlowFor(Chart.Mix, Chart.Id);
     }
 
@@ -110,14 +73,6 @@
 
     [Parameter]
     public bool Small { get; set; } = false;
-
-    /// <summary>
-    ///     Off when the bubble sits inside something that already explains itself on hover —
-    ///     two overlapping tooltips on one tile is worse than none. Same opt-out ScoreBreakdown
-    ///     carries.
-    /// </summary>
-    [Parameter]
-    public bool Tooltip { get; set; } = true;
 
     [Parameter]
     public int? Height { get; set; }

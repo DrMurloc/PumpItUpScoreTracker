@@ -124,6 +124,44 @@ public sealed class ScoreStyleTests
         Assert.Contains("--hue-6", ThemeScales.ScoreStyleFor(Standing(0), null, With(ScoreColorSystem.SingleHue)).Style);
     }
 
+    /// <summary>
+    ///     Every standing system's top color, against cohorts of two and five and a Perfect Game tied
+    ///     with three peers — first place is first however few peers stand behind it.
+    /// </summary>
+    public static TheoryData<ScoreColorSystem, string, int, int> FirstOfASmallCohort()
+    {
+        var tops = new (ScoreColorSystem System, string Token)[]
+        {
+            (ScoreColorSystem.JudgementSpectrum, "var(--rarity-prism)"),
+            (ScoreColorSystem.Classic, "--classic-7"),
+            (ScoreColorSystem.GradeMetals, "--plate-pg"),
+            (ScoreColorSystem.Podium, "--plate-sg"),
+            (ScoreColorSystem.SingleHue, "--hue-6"),
+            (ScoreColorSystem.ResultScreen, "--judg-perfect"),
+            (ScoreColorSystem.ThreeSteps, "var(--rarity-sapphire)")
+        };
+        var cohorts = new (int Passed, int PerfectGames)[] { (1, 0), (4, 0), (3, 3) };
+        var data = new TheoryData<ScoreColorSystem, string, int, int>();
+        foreach (var (system, token) in tops)
+        foreach (var (passed, perfectGames) in cohorts)
+            data.Add(system, token, passed, perfectGames);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(FirstOfASmallCohort))]
+    public void FirstPlaceAmongAFewPeersIsEverySystemsTopColor(ScoreColorSystem system, string token,
+        int passed, int perfectGames)
+    {
+        var first = new PeerStanding(passed, passed, 0, perfectGames, 0, Array.Empty<PeerStandingSource>(), null);
+
+        var style = ThemeScales.ScoreStyleFor(first, Progress(perfectGames > 0 ? 1_000_000 : 990_000),
+            With(system));
+
+        Assert.Equal(1, first.Place);
+        Assert.Contains(token, style.Style);
+    }
+
     [Fact]
     public void AStandingSystemPaintsNothingWhenNoPeerHasPassedTheChart()
     {

@@ -5730,9 +5730,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Pas encore vérifié. Enregistrez d'abord, puis vérifiez.</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>non comparable aux niveaux modernes</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>Non comptée</value>
   </data>
@@ -7560,6 +7557,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>Lecture de la session et du tableau qui la porte.</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>Lecture de la session et de la place de chaque score parmi les pairs.</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>Lecture du pattern</value>
   </data>
@@ -8098,9 +8098,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>Enregistré : {0} ne recevra plus de rôles de titre de {1} ici. Mais un rôle n'a pas pu être retiré pour l'instant — il est probablement au-dessus du bot dans Paramètres du serveur → Rôles, donc un administrateur doit le déplacer ou le retirer à la main.</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>échelle</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>Question d'organisation. Des joueurs qui s'enchaînent tiennent dans des créneaux de deux heures avec le temps de se relayer.</value>

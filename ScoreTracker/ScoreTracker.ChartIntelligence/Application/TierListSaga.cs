@@ -8,6 +8,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -131,11 +132,23 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         // RISE's doubles folder is half-doubles, so that is what gets a folder here.
         var folderTypes = MixProfiles.For(mix).ChartTypes
             .Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray();
+        // A mix with difficulty titles groups passers by their highest one, reading activity per
+        // title level; a mix without them groups passers by competitive level against the mix's
+        // active players, read once here.
+        var byDifficultyTitle = TitleLists.HasDifficultyTitles(mix);
+        var activePlayers = byDifficultyTitle
+            ? new HashSet<Guid>()
+            : await _scores.GetActiveUserIds(mix, _clock.Now - PassPeerWeights.ActivityWindow,
+                context.CancellationToken);
         foreach (var level in Enumerable.Range(10, 20))
         foreach (var chartType in folderTypes)
         {
             await ProcessPgTierList(mix, level, chartType, context.CancellationToken);
-            await ProcessPassTierList(mix, level, chartType, context.CancellationToken);
+            if (byDifficultyTitle)
+                await ProcessPassTierListByDifficultyTitle(mix, level, chartType, context.CancellationToken);
+            else
+                await ProcessPassTierListByCompetitiveLevel(mix, level, chartType, activePlayers,
+                    context.CancellationToken);
         }
 
         foreach (var playerCount in Enumerable.Range(2, 5))
@@ -379,9 +392,11 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var pgSums = charts.ToDictionary(c => c.Id, c => 0.0);
         foreach (var record in pgUsers)
         {
+            if (!stats.TryGetValue(record.UserId, out var playerStats) || !pgSums.ContainsKey(record.ChartId))
+                continue;
             var competitiveLevel = chartType == ChartType.Single
-                ? stats[record.UserId].SinglesCompetitiveLevel
-                : stats[record.UserId].DoublesCompetitiveLevel;
+                ? playerStats.SinglesCompetitiveLevel
+                : playerStats.DoublesCompetitiveLevel;
             if (competitiveLevel < 5)
                 continue;
             pgSums[record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);
@@ -396,7 +411,13 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         await _tierLists.SaveEntries(mix, result, cancellationToken);
     }
 
-    private async Task ProcessPassTierList(MixEnum mix, DifficultyLevel level, ChartType chartType,
+    /// <summary>
+    ///     The community Pass list for one folder of a mix with difficulty titles: passers are
+    ///     grouped by their highest difficulty title, three levels below the folder through three
+    ///     above it, and each unbroken pass adds its group's weight. The groups at or below the
+    ///     folder hold only active players.
+    /// </summary>
+    private async Task ProcessPassTierListByDifficultyTitle(MixEnum mix, DifficultyLevel level, ChartType chartType,
         CancellationToken cancellationToken)
     {
         var charts =
@@ -430,6 +451,42 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var result = new List<SongTierListEntry>();
         result.AddRange(TierListProcessor.ProcessIntoTierList("Pass Count", chartSums));
         await _tierLists.SaveEntries(mix, result, cancellationToken);
+    }
+
+    /// <summary>
+    ///     The community Pass list for one folder of a mix without difficulty titles: every unbroken
+    ///     pass in it, weighted by where the passer's competitive level for the chart type sits
+    ///     against the folder (<see cref="PassPeerWeights" />). A chart nobody counted for sums to
+    ///     zero and is saved unrecorded.
+    /// </summary>
+    private async Task ProcessPassTierListByCompetitiveLevel(MixEnum mix, DifficultyLevel level, ChartType chartType,
+        IReadOnlySet<Guid> activePlayers, CancellationToken cancellationToken)
+    {
+        var charts =
+            (await _chartRepository.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
+            .ToArray();
+        if (charts.Length == 0) return;
+
+        var passes = (await _scores.GetScores(mix, chartType, level, cancellationToken))
+            .Where(s => !s.Record.IsBroken).ToArray();
+        var competitiveLevels =
+            (await _playerStats.GetStats(mix, passes.Select(p => p.UserId).Distinct().ToArray(),
+                cancellationToken))
+            .ToDictionary(s => s.UserId, s => chartType.Category() is ChartTypeCategory.Single
+                ? s.SinglesCompetitiveLevel
+                : s.DoublesCompetitiveLevel);
+        var chartSums = charts.ToDictionary(c => c.Id, c => 0);
+        foreach (var (userId, record) in passes)
+        {
+            // A passer with no stats row has no level to place them by, so they count nothing.
+            if (!chartSums.ContainsKey(record.ChartId) ||
+                !competitiveLevels.TryGetValue(userId, out var competitiveLevel)) continue;
+            chartSums[record.ChartId] +=
+                PassPeerWeights.For(level, competitiveLevel, activePlayers.Contains(userId));
+        }
+
+        await _tierLists.SaveEntries(mix, TierListProcessor.ProcessIntoTierList("Pass Count", chartSums),
+            cancellationToken);
     }
 
     // --- The PUMBILITY tier lists (docs/design/pumbility-tier-list.md) -----------------------

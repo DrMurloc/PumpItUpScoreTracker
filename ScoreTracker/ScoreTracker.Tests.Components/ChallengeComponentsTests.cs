@@ -121,11 +121,41 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         Assert.Single(cut.FindAll(RowFaces(".challenge-lb-row")));
     }
 
+    [Fact]
+    public void DailyRailCardPaintsFirstPlaceTheTopOfTheRamp()
+    {
+        var chart = MakeChart();
+        var day = new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero);
+        var board = new DailyStepBoard(chart.Id, day, false, day.AddHours(6));
+        var view = new DailyStepBoardView(board,
+            new[] { DailyRow(1, chart.Id, 990_000), DailyRow(2, chart.Id, 980_000) }, null);
+
+        var cut = RenderComponent<DailyStepRailCard>(p => p
+            .Add(x => x.View, view).Add(x => x.Chart, chart).Add(x => x.IsLoggedIn, false));
+
+        Assert.Contains("--rarity-prism", cut.FindAll(".challenge-lb-place")[0].GetAttribute("style"));
+    }
+
     // ---- MonthlyRailCard ----------------------------------------------------
 
     private static MonthlyLeaderboardRow MonthlyRow(int place, User player, double total,
         double competitiveLevel = 21.4) =>
         new(place, player, total, Array.Empty<MonthlyEntry>(), Array.Empty<MonthlyEntry>(), competitiveLevel);
+
+    [Fact]
+    public void MonthlyRailCardPaintsFirstPlaceTheTopOfTheRamp()
+    {
+        var view = new MonthlyLeaderboardView(new[]
+        {
+            MonthlyRow(1, MakeUser(), 3137),
+            MonthlyRow(2, MakeUser("PIUPRO"), 2489)
+        }, 1, 4, null, null);
+
+        var cut = RenderComponent<MonthlyRailCard>(p => p
+            .Add(x => x.Boards, new[] { new MonthlyRailBoard(null, view) }));
+
+        Assert.Contains("--rarity-prism", cut.FindAll(".challenge-lb-place")[0].GetAttribute("style"));
+    }
 
     [Fact]
     public void MonthlyRailCardRendersAllFourBoardsWithOnlyTheActiveVisible()

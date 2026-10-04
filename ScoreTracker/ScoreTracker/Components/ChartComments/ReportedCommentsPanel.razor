@@ -27,7 +27,7 @@
             <div class="rcp-row" data-testid="@($"reported-{row.ReportId}")">
                 @if (_charts.TryGetValue(row.ChartId, out var chart))
                 {
-                    <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                     <span class="rcp-song">@chart.Song.Name</span>
                 }
                 else

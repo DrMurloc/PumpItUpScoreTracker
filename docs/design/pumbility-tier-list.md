@@ -175,7 +175,8 @@ deliberately not worth more: Phoenix 1 PUMBILITY has a few weeks of relevance le
   three rounds is what D53 is: the pool of the type IS the type-aware definition, and it needed no
   title track to exist.
 - Phoenix 1 needs no new read: `ITitleRepository.GetUserIdsOnHighestLevel` already exists and
-  `ProcessPassTierList` already calls it. Phoenix 2's nightly pass reads no stats at all now.
+  community Pass's difficulty-title groups already call it on Phoenix 1 (§10a). Phoenix 2's nightly
+  pass reads no stats at all now.
 
 ## 6. Coverage, and what happens outside your band
 
@@ -278,10 +279,128 @@ the same commit as the manifest change, or `AccountPurgeCoverageTests` fails.
   keeps its now-always-empty skill and similar-players fields until then.
 - **Community Pass's inverted peer-group weights** — level+1 counts 1, level+2 counts 2, level+3
   counts 3, so a player three levels stronger than the folder counts triple one a single level
-  stronger. Below the folder it is correctly monotonic (7/6/5/4). Its own session.
+  stronger. Below the folder it is correctly monotonic (7/6/5/4). Its own session. Phoenix 1 still
+  places players by their highest difficulty title; since 2026-10-03 a mix without difficulty titles
+  (Phoenix 2, RISE, RISE Arcade) places them by their competitive level for the folder's chart type
+  instead (§10a). Both use the same weights, so the inversion stands on both.
 - **In-title levels for Phoenix 1** (the in-game Diamond 1–5 rungs that were never ingested).
 - **Cross-folder "charts above my comfort zone that people like me hold"** — really a
   Suggested Charts question, not a tier-list one.
+
+### 10a. Community Pass groups players by competitive level where a mix has no difficulty titles (2026-10-03)
+
+Owner, 2026-10-03: *"Pass ranking on phoenix 2 still not working (we might need to just turn this on
+until we find a better pass difficulty algorithm)"*. Owner, 2026-10-04, on a first cut that regrouped
+Phoenix 1 as well: *"Yeah, phoenix 1 should stay the same as today"*.
+
+**Why it was dark.** The nightly Pass job (`TierListSaga`, the stored `Pass Count`
+list) built its seven weighted groups from `ITierListRepository.GetUsersOnLevel`, which read each
+player's highest **difficulty** title off `UserHighestTitle`. Only a `PhoenixDifficultyTitle` writes that
+table. Phoenix 2's title list holds none, and RISE and RISE Arcade have no title list at all, so on those
+three mixes every group was empty, every chart summed to zero, and the whole folder was saved as
+`Unrecorded` — *Not Rated* on the Pass lens, and on every surface that reads the list (the Charts SRP
+facet and sort, the chart-page PassVsScore verdict, the details placement chip, the Discord chart card,
+`api/v2` `pass-difficulty` and v1 tier lists, the PUMBILITY Play targets' difficulty, approachable charts
+in Recommended Charts). A full folder of `Unrecorded` rows also kept the Phoenix 2 → Phoenix 1
+provisional fallback from ever firing. Nothing switched Pass off, so "turn this on" could not be a flag;
+it is read as *make the existing algorithm produce answers now, flaws accepted*.
+
+**What changed.** Which grouping a mix gets is the domain's answer to whether it has chart-level
+difficulty titles, `TitleLists.HasDifficultyTitles(mix)` — not a mix check, so it flips on its own if
+Phoenix 2's title list ever gains them.
+
+- **A mix with difficulty titles — Phoenix 1 — is unchanged.** Its groups are still the players' highest
+  difficulty titles from `ITierListRepository.GetUsersOnLevel`, with the same weights, the same guards at
+  the top of the ladder, the same seven title reads and seven score reads per folder and the repository's
+  own 120-day activity read, so the same data gives the same list it gave before 2026-10-03.
+- **A mix without them — Phoenix 2, RISE, RISE Arcade — groups by competitive level.** The groups come
+  from the player's own **competitive level for the folder's chart type** — singles for a singles folder,
+  doubles for a doubles folder, so RISE's half-doubles read the doubles level (D20 in [rise.md](rise.md)) —
+  floored to a whole level, minus the folder's level. The weights and the activity rule are Phoenix 1's
+  (`PassPeerWeights` in ChartIntelligence's Domain):
+
+| Offset from the folder | −3 | −2 | −1 | 0 | +1 | +2 | +3 | anything else |
+|---|---|---|---|---|---|---|---|---|
+| Weight | 7 | 6 | 5 | 4 | 1 | 2 | 3 | 0 |
+| Must be active (a best in the last 120 days) | yes | yes | yes | yes | no | no | no | — |
+
+On the competitive-level path one bulk folder read and one stats read replace the title and score reads,
+and the activity set is read once per mix on the injected clock, only for a mix that takes this path. The
+Pass list there skips a passer with no stats row instead of throwing. The PG list the same job builds just
+before it in every folder skips a holder with no row on every mix — a PG holder with no row would otherwise
+stop the rest of that mix's run before the Pass list was reached (the local copy had no such holder on any
+mix, 2026-10-03). `GetUsersOnLevel` stays: it is the Phoenix 1 path's read.
+
+Options weighed and not taken:
+
+- **Let the Phoenix 2 → Phoenix 1 fallback fire.** The fallback was for *"until P2 data accumulates"*
+  ([phoenix2-implementation.md](phoenix2-implementation.md)) and it has — roughly 45k unbroken Phoenix 2
+  passes in folders 10–29 from 375 players. The bands are folder-relative and 338 charts changed level
+  between the mixes, the Charts SRP facet reads the repository directly with no fallback, and it would
+  never heal.
+- **Group by the PUMBILITY title ladder.** No rung-to-folder mapping exists, it is type-blind (round
+  three's problem, §5 History), Phoenix 2 only, and RISE has no PUMBILITY.
+- **A plain pass count.** Drops the weighting, which turns the list into a popularity count (§1).
+- **Regroup Phoenix 1 on competitive level too.** The first cut (2026-10-03) ran the competitive-level
+  rule on every mix. Phoenix 1 stays on its difficulty titles (owner, 2026-10-04, quoted above); what the
+  regrouping would have moved is below.
+
+**What regrouping Phoenix 1 would have moved** (local prod-synced copy, 2026-10-03; not shipped). It is
+a re-keying, not a transcription: competitive level runs about two levels below the difficulty title
+(title 22 ≈ 20.75 singles / 20.39 doubles; title 26 ≈ 23.41 / 25.07), and the floor takes about another
+half level, so the same −3..+3 window sits about two title levels higher. A SQL rebuild of the title
+grouping matched the stored list on 3,451 of 3,501 charts; regrouping on competitive level would have
+moved 686 of 3,501 Phoenix 1 charts by one tier and 8 by two or more. Rank agreement with the title list
+was 0.95–0.996 in every Single and Double folder from 14 up and 0.78–0.93 in D10–D13. Shifting by +2 to
+line the scales up did not help (625 moved, 15 by two or more). For scale, a plain unweighted pass count
+agrees with the title list at 0.93–0.997: the seven weights do little beyond counting passes.
+
+**Known gap: low Phoenix 2 folders stay partly Not Rated.** Most Phoenix 2 players who pass S10–S13 sit
+more than three levels above the folder, and those players weigh 0. Charts rated against charts with at
+least one pass, on the same local data:
+
+| Folder | Rated | With a pass |
+|---|---|---|
+| S10 | 64 | 101 |
+| S11 | 61 | 118 |
+| S12 | 83 | 123 |
+| S13 | 68 | 84 |
+| D10 | 27 | 35 |
+| D11 | 35 | 50 |
+
+Folders 14 and up are 80–100% rated. It is a population effect and fills in as weaker players arrive.
+Widening the window changes the weights the §10 bullet above defers, so it waits for that session; the
+cheap version, if wanted, clamps offsets above +3 to weight 3.
+
+**Known gap: the hard end of a Phoenix 2 folder is mostly empty, so its folders read easier than they
+are.** The bands are cut at the folder's mean sum minus one and one and a half standard deviations
+(`TierListProcessor.ProcessIntoTierList`), and every Not Rated chart's zero counts toward both. Phoenix 2's
+sums spread about as wide as their own mean (mean ÷ SD 0.49–1.22 in every folder from S10 to S22 and D10
+to D24, against 1.33–2.69 on Phoenix 1 in the same folders, measured with Phoenix 1 regrouped the same way
+in the first cut), so no chart in those folders lands in **Very Hard** or **Underrated**: 10 of 3,644
+Phoenix 2 charts do, all in folders 23 and up, against 530 of 3,501 on that regrouped Phoenix 1. **Hard**
+is still reached, except in S10, S11, D10, D19 and the
+ten-chart D27, where the zeros pull the mean down far enough that every rated chart lands Medium or
+easier. Same local data, same date. Two ways out, neither taken here because both change the algorithm
+the brief accepted as it is:
+
+- Leave the zeros out of the cut-offs. Hard comes back to those five folders; Very Hard newly appears
+  only in D11 and D13.
+- Band on the log scale the PUMBILITY list already uses (`ProcessIntoLogScaledTierList`, §4a), which
+  also leaves the zeros out. 523 Phoenix 2 charts land in Very Hard or Underrated. The banding is shared,
+  so it moves Phoenix 1 as well: against the regrouped first cut, 975 of 3,501 charts by one band, none
+  by two.
+
+**Neither is taken: Phoenix 2's Pass list bands exactly as Phoenix 1's does** (owner, 2026-10-03: *"just
+match phoenix 1 for now. I don't want to make adjustments until I get some dedicated measurement time
+in."*). The banding, the zeros and the weights wait for that measurement session, together with §10's
+deferred weights question.
+
+**Post-deploy, once:** trigger `process-pass-tier-list` in `/hangfire` (or wait for the 09:30 UTC
+nightly). The nightly upsert overwrites the all-`Unrecorded` rows on Phoenix 2, Rise and Rise Arcade in
+place — no SQL; Phoenix 1's rows come out as they do today. The Charts SRP
+community bundle and the chart verdicts pick the new list up at their next recompute; **Clear Cache**
+shows it sooner.
 
 ## 11. Post-deploy, once
 

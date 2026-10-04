@@ -106,14 +106,12 @@
     /// <summary>Site-user rivals — their rows glow red, or segmented if they are also clubmates.</summary>
     [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
 
-    private double Fraction(int place) => View!.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
-
     private string RowClass(DailyStepBoardRow row) =>
         CommunityGlowReader.RowClass(row.Player?.Id ?? Guid.Empty, UserId, RivalUserIds, CommunityUserIds,
             "mine", "community");
 
     private RenderFragment LbRow(DailyStepBoardRow row) =>@<div class="challenge-lb-row @RowClass(row)">
-        <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</span>
+        <span class="challenge-lb-place" style="@ThemeScales.PlaceStyle(row.Place, View!.Rows.Count)">@row.Place</span>
         @* The label draws the avatar so the country wash covers both; a row whose account is
            gone has no label to draw it, so it keeps the fallback face. *@
         <span class="challenge-lb-name">

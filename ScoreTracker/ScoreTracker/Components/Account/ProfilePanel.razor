@@ -2,9 +2,7 @@
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
-@using System.Globalization
 @using System.Web
-@using CsvHelper
 @using MediatR
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -535,18 +533,6 @@
                 }).ToArray();
         }
 
-        var stream = new MemoryStream();
-        await using var writer = new StreamWriter(stream);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(result);
-        await writer.FlushAsync();
-        await csv.FlushAsync();
-        const string fileName = "scores.csv";
-
-        using var streamRef = new DotNetStreamReference(stream: stream);
-        stream.Seek(0, SeekOrigin.Begin);
-
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        await CsvText.DownloadAsync(JSRuntime, "scores.csv", result);
     }
 }

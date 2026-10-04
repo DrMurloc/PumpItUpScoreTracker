@@ -326,10 +326,9 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
-    ///     A chart with siblings renders their DifficultyBubbles statically — and those wrap a
-    ///     MudTooltip, which must survive static SSR. The lone-chart head fact above never
-    ///     exercises this path (one difficulty, no sibling row), so a chart that has siblings
-    ///     is what proves the hero's static section doesn't throw on a popover component.
+    ///     A chart with siblings renders their DifficultyBubbles statically. The lone-chart head
+    ///     fact above never exercises this path (one difficulty, no sibling row), so a chart that
+    ///     has siblings is what proves the hero's static sibling row renders without throwing.
     /// </summary>
     [Fact]
     public async Task AChartWithSiblingsRendersStaticallyWithoutThrowing()
@@ -340,8 +339,8 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
-        // Both siblings' bubbles are in the raw HTML — the static hero rendered its
-        // MudTooltip-wrapped bubbles, pre-circuit.
+        // Both siblings' bubbles are in the raw HTML — the static hero rendered them,
+        // pre-circuit.
         Assert.Contains("chart-hero-siblings", body);
     }
 

@@ -5731,9 +5731,6 @@
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>まだ確認していません。先に保存してから確認してください。</value>
   </data>
-  <data name="not comparable to modern levels" xml:space="preserve">
-    <value>現行レベルとは比較できません</value>
-  </data>
   <data name="Not Counting" xml:space="preserve">
     <value>対象外</value>
   </data>
@@ -7561,6 +7558,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>セッションとそのボードを読み込み中。</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>セッションと、ピアの中での各スコアの位置を読み込み中。</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>譜面を読んでいます</value>
   </data>
@@ -8099,9 +8099,6 @@
   </data>
   <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
     <value>保存しました：{0} はここで {1} の称号ロールを受け取りません。ただし、いま外せなかったロールがあります — おそらくサーバー設定 → ロールでボットより上にあるため、管理者が移動するか手動で外す必要があります。</value>
-  </data>
-  <data name="scale" xml:space="preserve">
-    <value>基準</value>
   </data>
   <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
     <value>スケジュール上の都合です。2時間枠なら交代の時間を含めて次々に回せます。</value>
