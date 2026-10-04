@@ -305,8 +305,9 @@ else
                 ? entries.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
                 : entries.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
-        // Rows on the same score share a place and the next place skips past the tie — the
-        // numbering the placement query and the challenges page's board give the same entries.
+        // Rows on the same score share a place and the next place skips past the tie, so two
+        // perfect games are both #1 and the score under them is #3. A pass and a broken run on
+        // the same score are not a tie: passes rank first.
         var rows = new List<Row>(ordered.Length);
         for (var i = 0; i < ordered.Length; i++)
         {

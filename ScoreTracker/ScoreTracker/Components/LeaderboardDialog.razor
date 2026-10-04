@@ -167,7 +167,8 @@
 
     // Ranks come from position in whatever the dialog shows, so filtering renumbers by itself.
     // Rows on the same score share a place and the next place skips past the tie, so two
-    // perfect games are both #1 and the score under them is #3.
+    // perfect games are both #1 and the score under them is #3. A pass and a broken run on
+    // the same score are not a tie: passes rank first.
     private void BuildRows()
     {
         var shown = InRangeUserIds != null && _relevantOnly
