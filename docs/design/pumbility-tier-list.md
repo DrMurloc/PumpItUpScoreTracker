@@ -375,6 +375,11 @@ the brief accepted as it is:
   also leaves the zeros out. 523 Phoenix 2 charts land in Very Hard or Underrated. It moves Phoenix 1 as
   well: 975 of 3,501 charts by one band, none by two.
 
+**Neither is taken: Phoenix 2's Pass list bands exactly as Phoenix 1's does** (owner, 2026-10-03: *"just
+match phoenix 1 for now. I don't want to make adjustments until I get some dedicated measurement time
+in."*). The banding, the zeros and the weights wait for that measurement session, together with §10's
+deferred weights question.
+
 **Post-deploy, once:** trigger `process-pass-tier-list` in `/hangfire` (or wait for the 09:30 UTC
 nightly). The nightly upsert overwrites the all-`Unrecorded` rows in place — no SQL. The Charts SRP
 community bundle and the chart verdicts pick the new list up at their next recompute; **Clear Cache**
