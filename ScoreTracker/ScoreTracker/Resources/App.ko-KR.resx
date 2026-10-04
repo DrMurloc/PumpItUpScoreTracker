@@ -1699,9 +1699,6 @@
   <data name="Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them." xml:space="preserve">
     <value>채보 지식과 계획이 핵심입니다. 점수 내기 쉬운 채보는 어떤 레벨대에선 이득이고 다른 데선 위험한 선택입니다. 예전엔 너프했는데, 아무도 안 그만두더군요.</value>
   </data>
-  <data name="Chart leaderboard" xml:space="preserve">
-    <value>채보 리더보드</value>
-  </data>
   <data name="Chart level" xml:space="preserve">
     <value>채보 레벨</value>
   </data>
@@ -5641,9 +5638,6 @@
   <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
     <value>아직 이 보드에 아무도 없습니다. 첫 주간 재계산 후에 채워집니다.</value>
   </data>
-  <data name="Nobody is on this chart board yet." xml:space="preserve">
-    <value>아직 이 채보 보드에 아무도 없습니다.</value>
-  </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>이번 주에는 PUMBILITY 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
@@ -6231,6 +6225,9 @@
   </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>{0}만 PG 보유</value>
+  </data>
+  <data name="Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best." xml:space="preserve">
+    <value>이 유저의 채보 중 채보 보드에 오른 것은 {0}개뿐이라, 이 목록에 상위 채보 일부가 빠져 있을 수 있습니다.</value>
   </data>
   <data name="only {0} pass it" xml:space="preserve">
     <value>클리어율 {0}</value>
@@ -8485,9 +8482,6 @@
   <data name="Show all {0} plays" xml:space="preserve">
     <value>전체 {0}개 보기</value>
   </data>
-  <data name="Show all {0} scores" xml:space="preserve">
-    <value>{0}개 기록 모두 보기</value>
-  </data>
   <data name="Show difficulty glow" xml:space="preserve">
     <value>난이도 발광 표시</value>
   </data>
@@ -8499,9 +8493,6 @@
   </data>
   <data name="Show more comments" xml:space="preserve">
     <value>댓글 더 보기</value>
-  </data>
-  <data name="Show more of {0} scores" xml:space="preserve">
-    <value>{0}개 점수 더 보기</value>
   </data>
   <data name="Show original" xml:space="preserve">
     <value>원문 보기</value>

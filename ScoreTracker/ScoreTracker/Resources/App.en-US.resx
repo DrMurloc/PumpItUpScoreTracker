@@ -1707,9 +1707,6 @@
   <data name="Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them." xml:space="preserve">
     <value>Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them.</value>
   </data>
-  <data name="Chart leaderboard" xml:space="preserve">
-    <value>Chart leaderboard</value>
-  </data>
   <data name="Chart level" xml:space="preserve">
     <value>Chart level</value>
   </data>
@@ -5671,9 +5668,6 @@
   <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
     <value>Nobody is on this board yet — it fills in after the first weekly rebuild.</value>
   </data>
-  <data name="Nobody is on this chart board yet." xml:space="preserve">
-    <value>Nobody is on this chart board yet.</value>
-  </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nobody moved up the PUMBILITY board this week.</value>
   </data>
@@ -6262,6 +6256,9 @@
   </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>only {0} have PG</value>
+  </data>
+  <data name="Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best." xml:space="preserve">
+    <value>Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best.</value>
   </data>
   <data name="only {0} pass it" xml:space="preserve">
     <value>only {0} pass it</value>
@@ -8534,9 +8531,6 @@
   <data name="Show all {0} plays" xml:space="preserve">
     <value>Show all {0} plays</value>
   </data>
-  <data name="Show all {0} scores" xml:space="preserve">
-    <value>Show all {0} scores</value>
-  </data>
   <data name="Show difficulty glow" xml:space="preserve">
     <value>Show difficulty glow</value>
   </data>
@@ -8548,9 +8542,6 @@
   </data>
   <data name="Show more comments" xml:space="preserve">
     <value>Show more comments</value>
-  </data>
-  <data name="Show more of {0} scores" xml:space="preserve">
-    <value>Show more of {0} scores</value>
   </data>
   <data name="Show original" xml:space="preserve">
     <value>Show original</value>
