@@ -10043,8 +10043,8 @@
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>上位 8% · サファイア</value>
   </data>
-  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
-    <value>算出レーティング順の上位譜面 - ボード合計は公式値、譜面ごとの貢献はスコアとグレードから算出しています。</value>
+  <data name="Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred." xml:space="preserve">
+    <value>算出レーティング順の上位譜面 - ボード合計は公式値、各譜面の値はスコアから推定したプレートで算出しています。</value>
   </data>
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>

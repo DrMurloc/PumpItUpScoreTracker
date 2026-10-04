@@ -639,9 +639,10 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         var cut = await RenderPlayer(MixEnum.Phoenix2,
             ProfileWith(new[] { Placement(chart, 400) }, new OfficialPlayerPoolRecord("All", 400m, true)),
             new Dictionary<Guid, Chart> { [chart.Id] = chart });
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".olb-player-top50 .tier-chart-card-jacket")));
+        // A compact card is one target: the click handler sits on the card, not on its jacket.
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".olb-player-top50 .tier-chart-card-compact")));
 
-        await cut.Find(".olb-player-top50 .tier-chart-card-jacket").ClickAsync(new MouseEventArgs());
+        await cut.Find(".olb-player-top50 .tier-chart-card-compact").ClickAsync(new MouseEventArgs());
 
         Assert.True(Details(cut).Visible);
         Assert.Equal(chart.Id, Details(cut).Chart!.Id);
@@ -719,6 +720,97 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             new OfficialPlayerPoolRecord("Singles", 9_000m, true)).FindAll("[data-testid='olb-top50-short']"));
         Assert.Empty(TopCharts("All", new OfficialPlayerPoolRecord("All", 770m, true))
             .FindAll("[data-testid='olb-top50-short']"));
+    }
+
+    private IRenderedComponent<HubRankingsTopCharts> TopFifty(string board, IDictionary<Guid, Chart> charts,
+        params OfficialPlayerChartRecord[] placements) =>
+        RenderComponent<HubRankingsTopCharts>(p => p
+            .Add(x => x.Profile, ProfileWith(placements, new OfficialPlayerPoolRecord("All", null, true)))
+            .Add(x => x.TypeFilter, board)
+            .Add(x => x.Charts, charts));
+
+    [Fact]
+    public void TheTop50IsCompactCardsWithTheGradeInOneCornerAndTheValueInTheOther()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+
+        var cut = TopFifty("All", new Dictionary<Guid, Chart> { [chart.Id] = chart }, Placement(chart, 389.62));
+
+        var card = cut.Find(".tier-chart-card-compact");
+        // The card prints neither the song nor the score, so its accessible name carries both.
+        var label = card.GetAttribute("aria-label");
+        Assert.Contains("1948", label);
+        Assert.Contains("990,000", label);
+        Assert.NotNull(card.QuerySelector(".tier-chart-card-corner-start.pmb-corner-gain img"));
+        // The site's estimate, not a figure quoted from piugame's board, so it prints whole.
+        Assert.Equal("390", card.QuerySelector(".tier-chart-card-compact-grade.tier-chart-card-corner")!
+            .TextContent.Trim());
+        // Compact draws no score, so the tooltip carries it beside the value.
+        Assert.Equal("390 · 990,000", cut.FindComponent<TierListChartCard>().Instance.TooltipNote);
+        // A board player's passes are theirs: no card wears the green frame that means yours.
+        Assert.Empty(cut.FindAll(".tier-chart-card-pass"));
+    }
+
+    [Fact]
+    public void TheTop50IsBandedByValueIntoNamedSectionsThatDoNotFold()
+    {
+        var single = MakeChart("Single Song", ChartType.Single, 24);
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+
+        var cut = TopFifty("All", new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles },
+            Placement(single, 380), Placement(doubles, 390));
+
+        // The processor's own cuts over 390 and 380 (mean 385, sigma 5), named in the PUMBILITY
+        // Breakdown's vocabulary: these bands are what a chart is worth, best first.
+        Assert.Equal(new[] { "Very High", "Low" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        // Compact prints no song name; the difficulty bubble says which chart sits where.
+        Assert.Equal("D24", cut.Find("[data-testid='olb-top50-section-VeryEasy'] img.difficulty-bubble")
+            .GetAttribute("alt"));
+        Assert.Equal("S24", cut.Find("[data-testid='olb-top50-section-Hard'] img.difficulty-bubble")
+            .GetAttribute("alt"));
+        // Named, not folding: every header is a heading with nothing to press.
+        Assert.Equal(2, cut.FindAll(".tier-section-header.tier-section-header-static").Count);
+        Assert.Empty(cut.FindAll(".tier-section-header[role]"));
+        Assert.Equal(2, cut.FindAll(".tier-section-body").Count);
+    }
+
+    [Fact]
+    public void AChartPricedAtZeroTakesNoPlaceInTheFifty()
+    {
+        var single = MakeChart("Single Song", ChartType.Single, 24);
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+        var unpriced = MakeChart("Unpriced Song", ChartType.Single, 24);
+
+        var cut = TopFifty("All",
+            new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles, [unpriced.Id] = unpriced },
+            Placement(single, 380), Placement(doubles, 390), Placement(unpriced, 0));
+
+        Assert.Equal(2, cut.FindAll(".tier-chart-card-compact").Count);
+        Assert.DoesNotContain("Unpriced Song", cut.Markup);
+        // Counted, the zero would have pulled the mean to 257 and filed both charts as High.
+        Assert.Equal(new[] { "Very High", "Low" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+    }
+
+    /// <summary>
+    ///     The co-op estimate is not PUMBILITY and moves only with the grade, so its fifty get the
+    ///     same compact cards and corners in one grid, with no PUMBILITY band names over them.
+    /// </summary>
+    [Fact]
+    public void TheCoOpTop50IsOneGridOfCompactCardsWithNoSections()
+    {
+        var perfect = MakeChart("Co-op Perfect", ChartType.CoOp, 3);
+        var ultimate = MakeChart("Co-op Ultimate", ChartType.CoOp, 2);
+
+        var cut = TopFifty("CoOp", new Dictionary<Guid, Chart> { [perfect.Id] = perfect, [ultimate.Id] = ultimate },
+            Placement(ultimate, 121.28), Placement(perfect, 121.6));
+
+        Assert.Empty(cut.FindAll(".tier-section"));
+        Assert.Equal(new[] { "122", "121" },
+            cut.FindAll(".tier-chart-card-compact-grade.tier-chart-card-corner").Select(c => c.TextContent.Trim())
+                .ToArray());
+        Assert.Equal(2, cut.FindAll(".tier-chart-card-corner-start img").Count);
     }
 
     // ── Popularity ───────────────────────────────────────────────────────────

@@ -9985,8 +9985,8 @@
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>상위 8% · 사파이어</value>
   </data>
-  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
-    <value>계산 레이팅 기준 상위 채보 - 보드 합계는 공식 값이며, 채보별 기여도는 점수와 등급으로 계산됩니다.</value>
+  <data name="Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred." xml:space="preserve">
+    <value>계산 레이팅 기준 상위 채보 - 보드 합계는 공식 값이며, 채보별 값은 점수로 추정한 플레이트를 적용해 계산합니다.</value>
   </data>
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>

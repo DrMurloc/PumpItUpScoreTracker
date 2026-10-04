@@ -1,25 +1,26 @@
 @namespace ScoreTracker.Web.Components
 
-@* One collapsible tier section: diff-ramp stripe, localized name, count, optional
-   personal stat. Collapse persistence is the page's job (global by tier name). *@
+@* One tier section: diff-ramp stripe, localized name, count, optional personal stat. It folds
+   by default; collapse persistence is the page's job (global by tier name). A list read as a
+   reference rather than worked through passes Collapsible="false" — the same stripe, name and
+   count drawn as a heading, with no chevron, nothing to press, and the body always shown. *@
 <div class="tier-section" style="--tier-section-color:@Color">
-    <div class="tier-section-header" role="button" tabindex="0" @onclick="Toggle"
-         @onkeydown="OnHeaderKey" aria-expanded="@(!Collapsed)">
-        <MudIcon Size="Size.Small"
-                 Icon="@(Collapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"></MudIcon>
-        <MudText Typo="Typo.h5" Class="tier-section-name">@Name</MudText>
-        @* The stat ("9 / 43 cleared") already carries the count — showing both is
-           redundant (round 8), so the bare count is the anonymous fallback only. *@
-        @if (!string.IsNullOrWhiteSpace(Stat))
-        {
-            <MudText Typo="Typo.caption" Class="tier-section-stat">@Stat</MudText>
-        }
-        else
-        {
-            <MudText Typo="Typo.caption" Class="tier-section-count">@Count</MudText>
-        }
-    </div>
-    @if (!Collapsed)
+    @if (Collapsible)
+    {
+        <div class="tier-section-header" role="button" tabindex="0" @onclick="Toggle"
+             @onkeydown="OnHeaderKey" aria-expanded="@(!Collapsed)">
+            <MudIcon Size="Size.Small"
+                     Icon="@(Collapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"></MudIcon>
+            @Heading
+        </div>
+    }
+    else
+    {
+        <div class="tier-section-header tier-section-header-static">
+            @Heading
+        </div>
+    }
+    @if (!Collapsible || !Collapsed)
     {
         <div class="tier-section-body">@ChildContent</div>
     }
@@ -36,11 +37,32 @@
 
     [Parameter] public string? Stat { get; set; }
 
+    /// <summary>
+    ///     Whether the header folds the section. False draws it as a heading rather than a button
+    ///     and always renders the body, whatever <see cref="Collapsed" /> says.
+    /// </summary>
+    [Parameter] public bool Collapsible { get; set; } = true;
+
     [Parameter] public bool Collapsed { get; set; }
 
     [Parameter] public EventCallback<bool> CollapsedChanged { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // The name, then the stat or the bare count — the same in both headers.
+    private RenderFragment Heading => @<text>
+        <MudText Typo="Typo.h5" Class="tier-section-name">@Name</MudText>
+        @* The stat ("9 / 43 cleared") already carries the count — showing both is
+           redundant (round 8), so the bare count is the anonymous fallback only. *@
+        @if (!string.IsNullOrWhiteSpace(Stat))
+        {
+            <MudText Typo="Typo.caption" Class="tier-section-stat">@Stat</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Class="tier-section-count">@Count</MudText>
+        }
+    </text>;
 
     private Task Toggle()
     {

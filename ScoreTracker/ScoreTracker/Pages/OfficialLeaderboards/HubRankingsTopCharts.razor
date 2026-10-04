@@ -1,38 +1,67 @@
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* A board player's Top 50 chart cards, by computed rating — the rankings card's expansion
-   body and the Players page's Top 50. The pool is the board's own: Singles, Doubles, co-op,
-   or singles and doubles together for the combined board. *@
+@* A board player's Top 50 by computed rating — the rankings card's expansion body and the
+   Players page's Top 50 (docs/design/official-leaderboards-overhaul.md L1, L2). The pool is the
+   board's own: Singles, Doubles, co-op, or singles and doubles together for the combined board.
+   Compact cards carry the grade in one bottom corner and the chart's value in the other. A
+   PUMBILITY board's fifty band by value into the Breakdown page's named sections, which do not
+   fold; co-op keeps one grid, because its estimate is not PUMBILITY and moves only with the
+   grade, so bands would just restate the grades. *@
 @if (Profile == null)
 {
     <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
 }
 else
 {
-    var pool = Profile.Placements
-        .Where(p => Charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, TypeFilter))
-        .ToArray();
     <MudText Typo="Typo.caption" Class="d-block pa-2">
-        @L[TypeFilter == CoOp
+        @L[IsCoOp
             ? "Top co-op charts by estimated rating - plates inferred from score."
-            : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
+            : "Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred."]
     </MudText>
-    <div class="tier-card-grid pa-2">
-        @foreach (var placement in pool.OrderByDescending(p => p.ComputedRating).Take(50))
-        {
-            <TierListChartCard Chart="Charts[placement.ChartId]" Score="MirrorScore(placement)"
-                               ShowToDo="false" OnOpen="OnOpen"/>
-        }
-    </div>
-    @if (IsShort && pool.Length > 0)
+    @if (IsCoOp)
+    {
+        <div class="tier-card-grid tier-card-grid-compact pa-2">
+            @foreach (var placement in _fifty)
+            {
+                @Card(placement)
+            }
+        </div>
+    }
+    else
+    {
+        <div class="px-2">
+            @foreach (var section in _sections)
+            {
+                <div data-testid="@($"olb-top50-section-{section.Tier}")">
+                    <TierSection Name="@L[PumbilityTierNames.PoolNameOf(section.Tier)]"
+                                 Color="@ThemeScales.PumbilityColor(section.Tier)" Count="section.Rows.Count"
+                                 Collapsible="false">
+                        <div class="tier-card-grid tier-card-grid-compact">
+                            @foreach (var placement in section.Rows)
+                            {
+                                @Card(placement)
+                            }
+                        </div>
+                    </TierSection>
+                </div>
+            }
+        </div>
+    }
+    @if (IsShort && _poolCount > 0)
     {
         <MudText Typo="Typo.caption" Class="d-block px-2 pb-2" data-testid="olb-top50-short">
-            @L["Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best.", pool.Length]
+            @L["Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best.", _poolCount]
         </MudText>
     }
 }
@@ -40,12 +69,60 @@ else
 @code {
     private const string CoOp = "CoOp";
 
+    /// <summary>The list the fifty band under — a name for the processor, never rendered.</summary>
+    private const string TopFiftyListName = "OfficialTop50";
+
     [Parameter] public OfficialPlayerProfileRecord? Profile { get; set; }
 
     /// <summary>The board whose pool the cards come from: "All", "Singles", "Doubles" or "CoOp".</summary>
     [Parameter] public string TypeFilter { get; set; } = "All";
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public EventCallback<Guid> OnOpen { get; set; }
+
+    private sealed record Section(TierListCategory Tier, IReadOnlyList<OfficialPlayerChartRecord> Rows);
+
+    private int _poolCount;
+    private IReadOnlyList<OfficialPlayerChartRecord> _fifty = Array.Empty<OfficialPlayerChartRecord>();
+    private IReadOnlyList<Section> _sections = Array.Empty<Section>();
+
+    private bool IsCoOp => TypeFilter == CoOp;
+
+    protected override void OnParametersSet()
+    {
+        if (Profile == null) return;
+        var pool = Profile.Placements
+            .Where(p => Charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, TypeFilter))
+            .ToArray();
+        _poolCount = pool.Length;
+        // A chart counts once, however many board rows name it. A row priced at zero holds no
+        // PUMBILITY, so it takes no place in the fifty: counted, it would drag the bands' cuts
+        // and then land in no section at all.
+        _fifty = pool
+            .Where(p => p.ComputedRating > 0)
+            .GroupBy(p => p.ChartId)
+            .Select(g => g.MaxBy(p => p.ComputedRating)!)
+            .OrderByDescending(p => p.ComputedRating)
+            .Take(50)
+            .ToArray();
+        _sections = IsCoOp ? Array.Empty<Section>() : Band(_fifty);
+    }
+
+    /// <summary>
+    ///     The fifty banded by value the way the PUMBILITY Breakdown bands your own: the shared
+    ///     processor's standard-deviation cuts, named Highest down to Lowest, best band first and
+    ///     the most valuable chart first within it.
+    /// </summary>
+    private static IReadOnlyList<Section> Band(IReadOnlyList<OfficialPlayerChartRecord> fifty)
+    {
+        if (fifty.Count == 0) return Array.Empty<Section>();
+        var banded = TierListProcessor
+            .ProcessIntoTierList(TopFiftyListName, fifty.ToDictionary(p => p.ChartId, p => p.ComputedRating))
+            .ToDictionary(e => e.ChartId, e => e.Category);
+        return PumbilityTierNames.Tiers
+            .Select(tier => new Section(tier, fifty.Where(p => banded[p.ChartId] == tier).ToArray()))
+            .Where(s => s.Rows.Count > 0)
+            .ToArray();
+    }
 
     /// <summary>
     ///     Whether a chart belongs to the named board's pool. PUMBILITY counts singles and doubles,
@@ -72,6 +149,21 @@ else
         TypeFilter != CoOp
         && Profile?.Pools?.FirstOrDefault(p => p.Type == (TypeFilter is "Singles" or "Doubles" ? TypeFilter : "All"))
             is { IsComplete: false };
+
+    // The value takes the bottom-right corner and the grade the bottom-left. The value prints
+    // whole: it is the site's estimate at an inferred plate, not a figure quoted from piugame's
+    // board. Compact draws neither the name nor the score, so the tooltip carries the score.
+    private RenderFragment Card(OfficialPlayerChartRecord placement) =>
+        @<TierListChartCard Chart="Charts[placement.ChartId]" Score="MirrorScore(placement)"
+                            Density="UiDensity.Compact" ShowToDo="false"
+                            CornerBadge="@placement.ComputedRating.ToString("N0")" CornerBadgeClass="pmb-corner-gain"
+                            CornerBadgeStart="Grade(placement)" CornerBadgeStartClass="pmb-corner-gain"
+                            TooltipNote="@($"{placement.ComputedRating:N0} · {placement.Score:N0}")"
+                            OnOpen="OnOpen"/>;
+
+    private RenderFragment Grade(OfficialPlayerChartRecord placement) =>
+        @<LetterGradeIcon Grade="PhoenixScore.From(placement.Score).LetterGradeFor(Charts[placement.ChartId].Mix)"
+                          Height="14"/>;
 
     private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
     {

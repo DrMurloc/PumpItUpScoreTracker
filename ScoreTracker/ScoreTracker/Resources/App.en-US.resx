@@ -10043,8 +10043,8 @@
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>Top 8% · Sapphire</value>
   </data>
-  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
-    <value>Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade.</value>
+  <data name="Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred." xml:space="preserve">
+    <value>Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred.</value>
   </data>
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Top co-op charts by estimated rating - plates inferred from score.</value>
