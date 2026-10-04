@@ -2126,9 +2126,11 @@ html.sheet-open .more-sheet-scrim {
 /* Two per row on a phone rather than one. auto-fill against a 170px minimum needs 350px of
    content box for a second column, and a narrow handset does not have it once the page's own
    padding is out — so the tiles went full width and a fold showed two charts (owner, field test
-   round three). Below the fold-out width the count is stated instead of derived. */
+   round three). Below the fold-out width the count is stated instead of derived. Compact keeps
+   its own 96px auto-fill, which fits three across: it has to be excluded by name, because this
+   rule comes after .tier-card-grid-compact at equal specificity and would otherwise win. */
 @media (max-width: 479.98px) {
-    .tier-card-grid {
+    .tier-card-grid:not(.tier-card-grid-compact) {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
