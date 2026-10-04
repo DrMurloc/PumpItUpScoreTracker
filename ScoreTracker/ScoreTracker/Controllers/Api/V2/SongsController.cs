@@ -40,10 +40,10 @@ public sealed class SongsController : ApiV2ControllerBase
     {
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var failure)) return failure!;
 
-        var (picked, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (picked, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
 
-        var fingerprint = ContinuationToken.FingerprintOf(mix, pageSize, ChannelPicks.Fingerprint(channels));
+        var fingerprint = ContinuationToken.FingerprintOf(mix, pageSize, Picks.Fingerprint(channels));
         var offset = 0;
         if (cursor is not null)
         {

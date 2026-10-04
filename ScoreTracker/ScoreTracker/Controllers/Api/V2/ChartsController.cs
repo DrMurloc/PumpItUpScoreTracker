@@ -105,14 +105,14 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
-        var (songTypePicks, songTypeProblem) = SongTypePicks.Resolve(songTypes, (type, title, detail) => Problem(type, title, detail: detail));
+        var (songTypePicks, songTypeProblem) = Picks.Resolve<SongType>(songTypes, "invalid-song-type", "song type", ParameterProblem);
         if (songTypeProblem is not null) return songTypeProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels), SongTypePicks.Fingerprint(songTypes));
+            Picks.Fingerprint(channels), Picks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -124,7 +124,7 @@ public sealed class ChartsController : ApiV2ControllerBase
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
-            .Where(c => SongTypePicks.Matches(c, songTypePicks))
+            .Where(c => Picks.Includes(songTypePicks, c.Song.Type))
             .OrderBy(c => c.Id)
             .ToArray();
 
@@ -247,14 +247,14 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
-        var (songTypePicks, songTypeProblem) = SongTypePicks.Resolve(songTypes, (type, title, detail) => Problem(type, title, detail: detail));
+        var (songTypePicks, songTypeProblem) = Picks.Resolve<SongType>(songTypes, "invalid-song-type", "song type", ParameterProblem);
         if (songTypeProblem is not null) return songTypeProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels), SongTypePicks.Fingerprint(songTypes));
+            Picks.Fingerprint(channels), Picks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -266,7 +266,7 @@ public sealed class ChartsController : ApiV2ControllerBase
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
-            .Where(c => SongTypePicks.Matches(c, songTypePicks))
+            .Where(c => Picks.Includes(songTypePicks, c.Song.Type))
             .Select(c => c.Id).ToArray();
 
         var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))
@@ -419,7 +419,7 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
-        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, ParameterProblem);
         if (channelProblem is not null) return channelProblem;
         // The debut names narrow the added-in picks: a debut in 1.01.0 is a chart added in 1.01.0
         // whose origin mix is this one, so the draw takes the intersection and the flag.
@@ -529,10 +529,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         ResolveVersions(MixEnum mix, string[]? addedIn, string? addedBy, string? addedAfterVersion, DateOnly? addedAfter,
             string[]? debutedIn)
     {
-        var inVersions = SplitPicks(addedIn);
-        var debutVersions = SplitPicks(debutedIn);
-        var addedAsked = inVersions is { Length: > 0 } || addedBy is not null || addedAfterVersion is not null || addedAfter is not null;
-        var debutAsked = debutVersions is { Length: > 0 };
+        var inVersions = Picks.Split(addedIn);
+        var debutVersions = Picks.Split(debutedIn);
+        var addedAsked = inVersions.Length > 0 || addedBy is not null || addedAfterVersion is not null || addedAfter is not null;
+        var debutAsked = debutVersions.Length > 0;
         if (!addedAsked && !debutAsked) return (null, null, null);
 
         var versions = await _mediator.Send(new GetMixVersionsQuery(mix));
@@ -548,14 +548,6 @@ public sealed class ChartsController : ApiV2ControllerBase
             return (null, null, UnknownVersion(mix, unknownDebut));
 
         return (names, debutNames, null);
-    }
-
-    private static string[]? SplitPicks(string[]? picks)
-    {
-        // An empty query value binds as a null element, which picks nothing.
-        return picks?
-            .SelectMany(v => (v ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .ToArray();
     }
 
     private ObjectResult UnknownVersion(MixEnum mix, string? unknown)

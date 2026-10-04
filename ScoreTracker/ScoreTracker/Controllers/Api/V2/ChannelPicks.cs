@@ -17,20 +17,8 @@ internal static class ChannelPicks
     public static async Task<(IReadOnlySet<Channel>? Picked, ObjectResult? Problem)> Resolve(IMediator mediator,
         MixEnum mix, string[]? channels, Func<string, string, string?, ObjectResult> problem)
     {
-        // An empty query value binds as a null element, which picks nothing.
-        var tokens = channels?
-            .SelectMany(v => (v ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .ToArray();
-        if (tokens is null || tokens.Length == 0) return (null, null);
-
-        var picked = new HashSet<Channel>();
-        foreach (var token in tokens)
-        {
-            if (!ChannelHelperMethods.TryParse(token, out var channel))
-                return (null, problem("invalid-channel", $"'{token}' is not a channel.",
-                    $"Valid values: {string.Join(", ", Enum.GetNames<Channel>())}."));
-            picked.Add(channel);
-        }
+        var (picked, invalid) = Picks.Resolve<Channel>(channels, "invalid-channel", "channel", problem);
+        if (picked is null) return (null, invalid);
 
         var offered = (await mediator.Send(new GetMixChannelsQuery(mix))).Select(c => c.Channel).ToHashSet();
         var missing = picked.FirstOrDefault(c => !offered.Contains(c), (Channel)(-1));
@@ -45,11 +33,5 @@ internal static class ChannelPicks
     public static bool Matches(Chart chart, IReadOnlySet<Channel>? picked)
     {
         return picked is null || (chart.Song.Channel is { } channel && picked.Contains(channel));
-    }
-
-    /// <summary>The parameter as written, ordered, so the cursor fingerprint carries it.</summary>
-    public static string Fingerprint(string[]? channels)
-    {
-        return channels is null ? string.Empty : string.Join(",", channels.OrderBy(v => v, StringComparer.Ordinal));
     }
 }
