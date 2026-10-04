@@ -609,7 +609,10 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="minLevel">Only charts at or above this level.</param>
     /// <param name="maxLevel">Only charts at or below this level.</param>
-    /// <param name="chartTypeValue">Only charts of this type: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="chartTypeValues">
+    ///     Only charts of these types: Single, Double, HalfDouble, CoOp, SinglePerformance,
+    ///     DoublePerformance. Several: a comma list, or repeat the parameter.
+    /// </param>
     /// <param name="isBroken">Only failed bests (true) or only passes (false).</param>
     /// <param name="recordedAfter">
     ///     Only scores whose <c>recordedAt</c> is after this instant — the date the play happened, not
@@ -631,7 +634,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "minLevel")] int? minLevel = null,
         [FromQuery(Name = "maxLevel")] int? maxLevel = null,
-        [FromQuery(Name = "chartType")] string? chartTypeValue = null,
+        [FromQuery(Name = "chartType")] string[]? chartTypeValues = null,
         [FromQuery(Name = "isBroken")] bool? isBroken = null,
         [FromQuery(Name = "recordedAfter")] DateTimeOffset? recordedAfter = null,
         [FromQuery(Name = "chartIds")] string? chartIdsValue = null,
@@ -644,20 +647,14 @@ public sealed class PlayersController : ApiV2ControllerBase
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
 
-        ChartType? chartType = null;
-        if (chartTypeValue is not null)
-        {
-            if (!Enum.TryParse<ChartType>(chartTypeValue, true, out var parsed))
-                return Problem("invalid-chart-type", "The chartType parameter is not a chart type.",
-                    detail: $"Valid values: {string.Join(", ", Enum.GetNames<ChartType>())}");
-            chartType = parsed;
-        }
+        var (chartTypes, chartTypeProblem) = Picks.Resolve<ChartType>(chartTypeValues, "invalid-chart-type", "chart type", ParameterProblem);
+        if (chartTypeProblem is not null) return chartTypeProblem;
 
         if (!TryParseChartIds(chartIdsValue, out var chartIds, out var chartIdsFailure)) return chartIdsFailure!;
 
         // The set rides the fingerprint in sorted form so the same charts in a different order
         // still validate the cursor they were issued under.
-        var fingerprint = ContinuationToken.FingerprintOf(userId, mix, minLevel, maxLevel, chartType,
+        var fingerprint = ContinuationToken.FingerprintOf(userId, mix, minLevel, maxLevel, Picks.Fingerprint(chartTypeValues),
             isBroken, recordedAfter, pageSize,
             chartIds is null ? null : string.Join(",", chartIds.OrderBy(id => id)));
         ContinuationToken? from = null;
@@ -679,7 +676,7 @@ public sealed class PlayersController : ApiV2ControllerBase
             .Where(r => isBroken is null || r.IsBroken == isBroken.Value)
             .Where(r => minLevel is null || (int)charts[r.ChartId].Level >= minLevel.Value)
             .Where(r => maxLevel is null || (int)charts[r.ChartId].Level <= maxLevel.Value)
-            .Where(r => chartType is null || charts[r.ChartId].Type == chartType.Value)
+            .Where(r => Picks.Includes(chartTypes, charts[r.ChartId].Type))
             // Newest first, chart id as tiebreaker, matching the keyset the cursor carries.
             .OrderByDescending(r => r.RecordedDate)
             .ThenByDescending(r => r.ChartId)

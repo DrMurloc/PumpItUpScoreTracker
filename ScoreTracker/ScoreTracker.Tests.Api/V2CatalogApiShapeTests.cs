@@ -1147,4 +1147,115 @@ public sealed class V2CatalogApiShapeTests
         var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(otherCut).Value);
         Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
     }
+
+    // ── Every list parameter is a union ─────────────────────────────────────────────────────
+
+    private static readonly Guid SingleChart = Guid.Parse("dddddddd-0000-0000-0000-000000000001");
+    private static readonly Guid DoubleChart = Guid.Parse("dddddddd-0000-0000-0000-000000000002");
+    private static readonly Guid CoOpChart = Guid.Parse("dddddddd-0000-0000-0000-000000000003");
+
+    /// <summary>One chart of each folder's type, so a filter's answer reads as the types it kept.</summary>
+    private void SeedOneChartPerType()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                ApiTestData.Chart1 with { Id = SingleChart, Type = ChartType.Single },
+                ApiTestData.Chart1 with { Id = DoubleChart, Type = ChartType.Double },
+                ApiTestData.Chart1 with { Id = CoOpChart, Type = ChartType.CoOp }
+            });
+    }
+
+    // Enum.TryParse merges a comma list into one bitwise value: Single | Double is Double.
+    [Fact]
+    public async Task TheTypeFilterIsAUnionOfACommaListOrARepeatedParameter()
+    {
+        SeedOneChartPerType();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix", typeValues: new[] { "Single,Double" });
+        var repeated = await controller.Get("Phoenix", typeValues: new[] { "single", "DOUBLE" });
+
+        Assert.Equal(new[] { SingleChart, DoubleChart }, Ids(commaList));
+        Assert.Equal(new[] { SingleChart, DoubleChart }, Ids(repeated));
+    }
+
+    // "1" is Double's place in the enum, and a list with one bad name is refused whole.
+    [Theory]
+    [InlineData("1")]
+    [InlineData("Single,Singles")]
+    public async Task AChartTypeThatIsNotANameIsAProblem(string type)
+    {
+        SeedOneChartPerType();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", typeValues: new[] { type });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-type", problem.Type);
+        Assert.Contains("HalfDouble", problem.Detail);
+    }
+
+    [Fact]
+    public async Task ChartSkillsReadTheTypeFilterAsAUnion()
+    {
+        SeedOneChartPerType();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillProfile>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetSkills("Phoenix", typeValues: new[] { "Double,CoOp" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetChartSkillProfilesQuery>(q =>
+            q.ChartIds!.SequenceEqual(new[] { DoubleChart, CoOpChart })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // Single | Double is Double, so the draw filled only the doubles bucket.
+    [Fact]
+    public async Task ARandomDrawReadsChartTypesAsAUnion()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", chartTypes: new[] { "Single,Double" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.LevelWeights.Values.Any(w => w > 0)
+                && q.Settings.DoubleLevelWeights.Values.Any(w => w > 0)
+                && q.Settings.PlayerCountWeights.Values.All(w => w == 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ShortCut | FullSong is Remix, so the draw came back nothing but remixes.
+    [Fact]
+    public async Task ARandomDrawReadsSongTypesAsAUnion()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", songTypes: new[] { "ShortCut,FullSong" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.SongTypeWeights[SongType.ShortCut] == 1
+                && q.Settings.SongTypeWeights[SongType.FullSong] == 1
+                && q.Settings.SongTypeWeights[SongType.Arcade] == 0
+                && q.Settings.SongTypeWeights[SongType.Remix] == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // An unknown chart type is a 400 rather than a name the draw silently drops, and a number is
+    // never a song type.
+    [Fact]
+    public async Task ARandomDrawRefusesAListValueThatIsNotAName()
+    {
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var chartType = await controller.GetRandom("Phoenix", chartTypes: new[] { "Singles" });
+        var songType = await controller.GetRandom("Phoenix", songTypes: new[] { "7" });
+
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-type",
+            Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(chartType).Value).Type);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-song-type",
+            Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(songType).Value).Type);
+    }
 }
