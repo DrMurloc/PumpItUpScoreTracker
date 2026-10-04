@@ -10,9 +10,10 @@ namespace ScoreTracker.Data.DevTooling;
 internal interface IDevCatalogWriter
 {
     /// <summary>
-    ///     Replaces the entire local catalog in one transaction. Anything referencing a chart —
-    ///     scores, saved charts — goes with it, because a chart id that no longer resolves is worse
-    ///     than no data.
+    ///     Replaces the local catalog in one transaction. Anything referencing a chart — scores,
+    ///     saved charts — goes with it, because a chart id that no longer resolves is worse than no
+    ///     data. The mix rows themselves are left as the migrations seeded them; every row written
+    ///     refers to those.
     /// </summary>
     Task ReplaceCatalog(DevCatalogSnapshot snapshot, CancellationToken cancellationToken = default);
 
@@ -26,7 +27,6 @@ internal interface IDevCatalogWriter
 
 [ExcludeFromCodeCoverage]
 internal sealed record DevCatalogSnapshot(
-    IReadOnlyList<DevMixRow> Mixes,
     IReadOnlyList<DevSongRow> Songs,
     IReadOnlyList<DevChartRow> Charts,
     IReadOnlyList<DevTierListRow> TierListEntries,
@@ -36,9 +36,6 @@ internal sealed record DevCatalogSnapshot(
 /// <summary>One patch of a mix, as <c>api/v2/versions</c> lists it (docs/design/chart-versions.md).</summary>
 [ExcludeFromCodeCoverage]
 internal sealed record DevMixVersionRow(MixEnum Mix, string Name, DateOnly? ReleaseDate, int SortOrder);
-
-[ExcludeFromCodeCoverage]
-internal sealed record DevMixRow(MixEnum Mix, string DisplayName, int SortOrder, bool IsPrimary);
 
 /// <summary>Songs are keyed by name — the catalog has no song id on the wire.</summary>
 [ExcludeFromCodeCoverage]
