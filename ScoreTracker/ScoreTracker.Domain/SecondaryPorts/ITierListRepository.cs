@@ -9,6 +9,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
     {
         Task SaveEntry(MixEnum mix, SongTierListEntry entry, CancellationToken cancellationToken);
 
+        Task<IEnumerable<Guid>> GetUsersOnLevel(MixEnum mix, DifficultyLevel level,
+            CancellationToken cancellationToken, bool requireActive = false);
+
         Task<IEnumerable<SongTierListEntry>> GetAllEntries(MixEnum mix, Name tierListName,
             CancellationToken cancellationToken);
 
