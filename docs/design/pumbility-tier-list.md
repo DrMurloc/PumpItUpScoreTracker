@@ -315,10 +315,10 @@ else is as before (`PassPeerWeights` in ChartIntelligence's Domain):
 
 One rule for every Phoenix-scored mix, no mix branch: one bulk folder read and one stats read replace the
 seven title reads and seven score reads per folder, and the activity set is read once per mix on the
-injected clock. The Pass list skips a passer with no stats row instead of throwing. The PG list the
-same job builds just before it in every folder is unchanged and still reads the stats row without a
-check, so a PG holder with no row would still stop the rest of that mix's run; the local copy has no
-such holder on any mix (2026-10-03). The `GetUsersOnLevel` port went with it.
+injected clock. The Pass list skips a passer with no stats row instead of throwing, and so does the PG
+list the same job builds just before it in every folder — a PG holder with no row would otherwise stop
+the rest of that mix's run before the Pass list was reached (the local copy had no such holder on any mix,
+2026-10-03). The `GetUsersOnLevel` port went with it.
 
 Options weighed and not taken:
 
