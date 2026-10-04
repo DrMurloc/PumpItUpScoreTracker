@@ -75,11 +75,11 @@
     <p class="pmb-block-lede">@FolderSummary</p>
 
     <div class="pmb-list">
-        @foreach (var section in Sections)
+        @foreach (var tierSection in Sections)
         {
-            <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count"
-                         Collapsed="_collapsed.Contains(section.Key)"
-                         CollapsedChanged="c => SetCollapsed(section.Key, c)">
+            <TierSection Name="@tierSection.Name" Color="@tierSection.Color" Count="tierSection.Rows.Count"
+                         Collapsed="_collapsed.Contains(tierSection.Key)"
+                         CollapsedChanged="c => SetCollapsed(tierSection.Key, c)">
                 @if (_density == UiDensity.Table)
                 {
                     <div class="tier-table-wrap">
@@ -95,7 +95,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach (var row in section.Rows)
+                            @foreach (var row in tierSection.Rows)
                             {
                                 <tr class="pmb-row @(row.State == HardmodeState.InPool ? "tier-row-pass" : null)">
                                     <td class="tier-table-jacket-cell">
@@ -132,7 +132,7 @@
                 else
                 {
                     <div class="@(_density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
-                        @foreach (var row in section.Rows)
+                        @foreach (var row in tierSection.Rows)
                         {
                             <TierListChartCard Chart="row.Chart"
                                                Density="_density"
