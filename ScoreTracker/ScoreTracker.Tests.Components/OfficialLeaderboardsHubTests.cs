@@ -592,6 +592,46 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Empty(cut.FindComponents<MudSelect<string>>());
     }
 
+    /// <summary>
+    ///     Co-op is no PUMBILITY pool, so a player whose only board rows are co-op has no Top 50 to
+    ///     show: no heading, no board select, no empty grid. Their placements still list.
+    /// </summary>
+    [Fact]
+    public async Task APlayerWithOnlyCoOpRowsHasNoTop50Section()
+    {
+        var coop = MakeChart("Co-op Song", ChartType.CoOp, 3);
+        var cut = await RenderPlayer(MixEnum.Phoenix2,
+            ProfileWith(new[] { Placement(coop, 120) },
+                new OfficialPlayerPoolRecord("All", null, false),
+                new OfficialPlayerPoolRecord("Singles", null, false),
+                new OfficialPlayerPoolRecord("Doubles", null, false)),
+            new Dictionary<Guid, Chart> { [coop.Id] = coop });
+
+        cut.WaitForAssertion(() => Assert.Contains("Co-op Song", cut.Find(".olb-board-table").TextContent));
+        Assert.Empty(cut.FindAll(".olb-player-top50"));
+        Assert.Empty(cut.FindComponents<MudSelect<string>>());
+    }
+
+    [Fact]
+    public async Task ABoardThePlayerHoldsNoChartsOnIsGreyedOut()
+    {
+        var doubles = MakeChart("Double Song", ChartType.Double, 24);
+        var cut = await RenderPlayer(MixEnum.Phoenix2,
+            ProfileWith(new[] { Placement(doubles, 390) },
+                new OfficialPlayerPoolRecord("All", null, false),
+                new OfficialPlayerPoolRecord("Singles", null, false),
+                new OfficialPlayerPoolRecord("Doubles", null, false)),
+            new Dictionary<Guid, Chart> { [doubles.Id] = doubles });
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".olb-player-top50 .tier-chart-card")));
+        // MudSelect renders its items only once the popover opens, so they are read off the tree.
+        var disabled = cut.FindComponents<MudSelectItem<string>>()
+            .ToDictionary(i => i.Instance.Value!, i => i.Instance.Disabled);
+        Assert.False(disabled["All"]);
+        Assert.True(disabled["Singles"]);
+        Assert.False(disabled["Doubles"]);
+    }
+
     [Fact]
     public async Task APlayersTop50CardOpensChartDetailsOnTheOfficialBoard()
     {
@@ -631,9 +671,17 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         var single = MakeChart("Single Song", ChartType.Single, 24);
         var doubles = MakeChart("Double Song", ChartType.Double, 24);
         var coop = MakeChart("Co-op Song", ChartType.CoOp, 3);
-        var profile = ProfileWith(new[] { Placement(single, 380), Placement(doubles, 390), Placement(coop, 120) },
+        // PUMBILITY does not count a performance chart, so no board's Top 50 shows one.
+        var performance = MakeChart("Performance Song", ChartType.SinglePerformance, 24);
+        var profile = ProfileWith(new[]
+            {
+                Placement(single, 380), Placement(doubles, 390), Placement(coop, 120), Placement(performance, 0)
+            },
             new OfficialPlayerPoolRecord("All", null, true));
-        var charts = new Dictionary<Guid, Chart> { [single.Id] = single, [doubles.Id] = doubles, [coop.Id] = coop };
+        var charts = new Dictionary<Guid, Chart>
+        {
+            [single.Id] = single, [doubles.Id] = doubles, [coop.Id] = coop, [performance.Id] = performance
+        };
 
         Guid[] Cards(string board) =>
             RenderComponent<HubRankingsTopCharts>(p => p

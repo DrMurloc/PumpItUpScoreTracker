@@ -118,19 +118,24 @@ else
             </MudGrid>
         }
 
-        @if (_profile.Placements.Any())
+        @* Only for a player holding a single or a double the catalog knows: co-op rows alone
+           are no PUMBILITY pool, and would leave the section an empty grid. *@
+        @if (HasPool(AllPools))
         {
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-3 flex-wrap">
                 <MudText Typo="Typo.overline">@L["Top 50"]</MudText>
                 @* The board select only where the snapshot publishes per-type PUMBILITY boards.
-                   Co-op is not offered: it is not PUMBILITY. *@
+                   Co-op is not offered: it is not PUMBILITY. A board the player holds no charts
+                   on is greyed out rather than offered as an empty list. *@
                 @if (SplitsByType)
                 {
                     <MudSelect T="string" Value="_pool" ValueChanged="SetPool" Label="@L["Board"]" Dense="true"
                                Style="max-width:180px">
                         <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Singles")"
+                                       Disabled="@(!HasPool("Singles"))">@L["Singles"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Doubles")"
+                                       Disabled="@(!HasPool("Doubles"))">@L["Doubles"]</MudSelectItem>
                     </MudSelect>
                 }
             </MudStack>
@@ -299,6 +304,10 @@ else
     /// </summary>
     private bool SplitsByType => _profile?.Pools?.Any(p => p.Type != AllPools) == true;
 
+    /// <summary>Whether the player holds any chart the named board's Top 50 can show.</summary>
+    private bool HasPool(string pool) =>
+        _profile != null && HubRankingsTopCharts.HasPool(_profile, Charts, pool);
+
     private void SetPool(string pool)
     {
         _pool = pool;
@@ -347,6 +356,9 @@ else
 
         _loadingProfile = true;
         _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username, Supplemented));
+        // A re-read can empty the chosen board (switching Supplemented off takes the PIU Scores
+        // rows away), and a greyed-out board cannot stay selected.
+        if (!HasPool(_pool)) _pool = AllPools;
         _pumbilityHistory = _profile?.History
                                 .Where(h => h.Pumbility != null)
                                 .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),

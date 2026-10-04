@@ -7,7 +7,7 @@
 
 @* A board player's Top 50 chart cards, by computed rating — the rankings card's expansion
    body and the Players page's Top 50. The pool is the board's own: Singles, Doubles, co-op,
-   or both standard types for the combined board. *@
+   or singles and doubles together for the combined board. *@
 @if (Profile == null)
 {
     <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
@@ -15,7 +15,7 @@
 else
 {
     var pool = Profile.Placements
-        .Where(p => Charts.TryGetValue(p.ChartId, out var chart) && InPool(chart))
+        .Where(p => Charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, TypeFilter))
         .ToArray();
     <MudText Typo="Typo.caption" Class="d-block pa-2">
         @L[TypeFilter == CoOp
@@ -47,13 +47,22 @@ else
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public EventCallback<Guid> OnOpen { get; set; }
 
-    private bool InPool(Chart chart) => TypeFilter switch
+    /// <summary>
+    ///     Whether a chart belongs to the named board's pool. PUMBILITY counts singles and doubles,
+    ///     so the combined board holds those two and nothing else; co-op is a board of its own.
+    /// </summary>
+    internal static bool InPool(Chart chart, string typeFilter) => typeFilter switch
     {
         "Singles" => chart.Type == ChartType.Single,
         "Doubles" => chart.Type == ChartType.Double,
         CoOp => chart.Type == ChartType.CoOp,
-        _ => chart.Type != ChartType.CoOp
+        _ => chart.Type is ChartType.Single or ChartType.Double
     };
+
+    /// <summary>Whether any of the player's placements is a chart the catalog knows in the named board's pool.</summary>
+    internal static bool HasPool(OfficialPlayerProfileRecord profile, IDictionary<Guid, Chart> charts,
+        string typeFilter) =>
+        profile.Placements.Any(p => charts.TryGetValue(p.ChartId, out var chart) && InPool(chart, typeFilter));
 
     /// <summary>
     ///     Whether the mirrored boards fall short of the player's fifty in this pool. Co-op is

@@ -741,4 +741,46 @@ public sealed class LeaderboardHubSagaTests
         var only = Assert.Single(profile!.Pools!);
         Assert.Equal("All", only.Type);
     }
+
+    /// <summary>
+    ///     PUMBILITY counts singles and doubles only. A performance chart's board is one the player is
+    ///     on, but no pool can hold it: it is worth nothing, and it does not make up the fifty a pool
+    ///     with no published value needs.
+    /// </summary>
+    [Fact]
+    public async Task APerformanceChartIsWorthNothingAndDoesNotFillThePool()
+    {
+        var singles = Enumerable.Range(0, 49).Select(_ => Guid.NewGuid()).ToArray();
+        var performance = Guid.NewGuid();
+        var f = ArrangeProfile(MixEnum.Phoenix,
+            singles.Select((id, i) => Chart(11, id, 1, 990_000, type: "Single", boardId: 600 + i))
+                .Append(Chart(11, performance, 1, 990_000, type: "SinglePerformance", boardId: 700))
+                .ToArray(),
+            ChartRow(performance, 1, 990_000));
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix, "NIMBUS9"),
+            CancellationToken.None);
+
+        Assert.Equal(0d, profile!.Placements.Single(p => p.ChartId == performance).ComputedRating);
+        // Forty-nine singles with no published value to check them against: not a fifty.
+        Assert.False(Assert.Single(profile.Pools!).IsComplete);
+    }
+
+    [Fact]
+    public async Task APerformanceChartStillCountsAmongTheBoardsARankedPlayerIsOn()
+    {
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Chart(11, ChartA, 1, 990_000, type: "Single", boardId: 500),
+                Chart(11, ChartB, 1, 990_000, type: "SinglePerformance", boardId: 501),
+                Pumbility(11, 1, 900m)
+            });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.Equal(2, Assert.Single(result.Rankings).BoardsInTop);
+    }
 }
