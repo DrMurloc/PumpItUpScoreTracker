@@ -209,7 +209,7 @@ the palette, unused on these boards.
 | Rankings | Merged board, renumbered, markers. Only board where rows interleave. |
 | Players | Placement sheet gains the player's full ledger; profile tiles recompute. |
 | This Week | Pulse, movers, climbers, gainers, floors, debuts recompute. World firsts unchanged. |
-| Chart board dialog | Official 1–300, then the supplemented tail. |
+| Chart details dialog, Official scope | Official 1–300, then the supplemented tail, railed. |
 | Popularity | Unchanged board, plus the disclaimer. |
 | What It Takes | **Chip hidden from the nav.** Landing there by direct URL renders it normally — not worth a redirect. |
 
@@ -260,14 +260,17 @@ streamed rather than materialised (587k rows on Phoenix). Implementation in
 
 **Presentation** — the switch, the What-It-Takes hiding and the count line (`GetSupplementedSummaryQuery`)
 in `OfficialSectionFrame`; the flag threaded
-through `HubRankings`, `HubPlayers`, `HubThisWeek`, `OfficialChartBoardDialog`; the disclaimer and
+through `HubRankings`, `HubPlayers`, `HubThisWeek`, and from them into `ChartDetailsDialog`'s Official
+scope (`OfficialChartBoardDialog` until [official-leaderboards-overhaul.md](official-leaderboards-overhaul.md)
+§12 L1 retired it); the disclaimer and
 count line on `HubPopularity`; `.olb-row-supp` in `site.css` (rail only, so it composes with both
 glows); a fourth button on `/Admin/OfficialLeaderboards` beside Run import / Rebuild highlights /
 Refresh popularity, same `_xQueued` pattern. ~9 localization keys ×9 locales, two of which are
 already present from round 6.
 
 **Not touched:** `HubWhatItTakes`, `CutlineCalculator`, `TierListProcessor`, the `api/v2/official`
-controller and its contract goldens, the chart details page.
+controller and its contract goldens, the chart details page (its board takes the flag only from the
+section's hosts, so the page itself stays official-only).
 
 ## 10. Growth
 
@@ -282,7 +285,7 @@ permanent artifact of the mix's final months — which is most of the point.
 |---|---|
 | `DomainTests` | `SupplementMerge` — dedupe, higher-score-wins, tie ordering, the chart-board tail-append invariant; `HighlightsCalculator` with `IncludeRecordKinds=false`; supplemented-baseline silence. |
 | `ArchitectureTests` | The placement-set chokepoint ratchet. |
-| `Tests.Components` | The switch; the marker composing with both glow classes; What It Takes hidden; the disclaimer; the count line. |
+| `Tests.Components` | The switch; the marker composing with both glow classes; What It Takes hidden; the disclaimer; the count line; the Official scope asking for the tail and railing it under its legend. |
 | `Tests.Integration` | The leak test (official mode returns zero supplemented rows against real SQL); account purge; public→private flip at read time; rollup idempotency; both migrations. |
 | `Tests.Api` | Assert-only — no golden changes. |
 
