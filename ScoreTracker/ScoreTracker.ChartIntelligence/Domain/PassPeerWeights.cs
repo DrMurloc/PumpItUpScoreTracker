@@ -10,7 +10,7 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 ///         At or below the folder a player counts only while active — a best recorded within
 ///         <see cref="ActivityWindow" />. Above the folder activity is not asked, and the weights
 ///         rise with distance, so a player three levels stronger counts triple one a single level
-///         stronger (docs/design/pumbility-tier-list.md §10, §10a).
+///         stronger.
 ///     </para>
 /// </summary>
 internal static class PassPeerWeights

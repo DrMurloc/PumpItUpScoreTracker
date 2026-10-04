@@ -125,7 +125,8 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
     public void DailyRailCardPaintsFirstPlaceTheTopOfTheRamp()
     {
         var chart = MakeChart();
-        var board = new DailyStepBoard(chart.Id, DateTimeOffset.UtcNow, false, DateTimeOffset.UtcNow.AddHours(6));
+        var day = new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero);
+        var board = new DailyStepBoard(chart.Id, day, false, day.AddHours(6));
         var view = new DailyStepBoardView(board,
             new[] { DailyRow(1, chart.Id, 990_000), DailyRow(2, chart.Id, 980_000) }, null);
 
