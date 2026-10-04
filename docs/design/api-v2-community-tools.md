@@ -734,6 +734,20 @@ registered routes, because they once diverged: it asked for
 `api/v2/chart-analysis/chart-scoring-levels`, which never existed, and `/Dev/Populate` failed
 outright for two commits.
 
+**`Mix` stays with the migrations (2026-10-03).** Of the six reference tables above, the harness
+rebuilds five. `scores.Mix` is reference data the migrations seed — every mix's row, with its
+`MixIds` id, its stored short name (`1st`, `NXA`, `Pro 2`; the enum name for the primaries) and its
+picker order — so a migrated database already holds it, and Populate never clears or rewrites it.
+Column parity is waived for this one table rather than met: api/v2 carries a mix's enum name and its
+display name and never the stored short name, and publishing the short name would add a field
+nothing in the app reads. Writing the display name instead is what broke Populate from 2026-08-01
+on: `scores.Mix.Name` is `nvarchar(10)`, thirteen display names are longer (`The 1st Dance Floor`,
+`Rise Arcade`, …), and the first one was in the first row staged, so every run rolled back after
+the whole download. A new mix reaches a local database the way it reaches every other environment —
+by migration — and a catalog row naming a mix the database has no row for fails on a foreign key
+rather than being filled in. A value that does not fit its column now fails naming the table as well as the
+column's complaint, which is the message the Populate page prints.
+
 ---
 
 ## 12. UI surfaces
