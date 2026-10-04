@@ -1,11 +1,11 @@
 namespace ScoreTracker.ChartIntelligence.Domain;
 
 /// <summary>
-///     How much one player's pass counts toward a chart's place on the community Pass list.
-///     A player is placed by their competitive level for the folder's chart type, floored to a
-///     whole level, relative to the folder: three, two and one levels below it count 7, 6 and 5,
-///     the folder's own level counts 4, and one, two and three levels above it count 1, 2 and 3.
-///     Anyone further away counts nothing.
+///     How much one player's pass counts toward a chart's place on the community Pass list of a
+///     mix without difficulty titles. A player is placed by their competitive level for the
+///     folder's chart type, floored to a whole level, relative to the folder: three, two and one
+///     levels below it count 7, 6 and 5, the folder's own level counts 4, and one, two and three
+///     levels above it count 1, 2 and 3. Anyone further away counts nothing.
 ///     <para>
 ///         At or below the folder a player counts only while active — a best recorded within
 ///         <see cref="ActivityWindow" />. Above the folder activity is not asked, and the weights

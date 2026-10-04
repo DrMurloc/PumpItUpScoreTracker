@@ -22,6 +22,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
@@ -190,21 +191,142 @@ public sealed class TierListSagaTests
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetActiveUserIds(MixEnum.Phoenix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new HashSet<Guid>());
         scores.Setup(s => s.GetPgUsers(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid UserId, Guid ChartId)>());
-        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid UserId, RecordedPhoenixScore Record)>());
-        var saga = BuildSaga(charts: charts, scores: scores);
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+                It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(t => t.GetUsersOnLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>(),
+                It.IsAny<bool>()))
+            .ReturnsAsync(Array.Empty<Guid>());
+        var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists);
 
         await saga.Consume(BuildContext(new ProcessPassTierListCommand()));
 
         var times = expected ? Times.AtLeastOnce() : Times.Never();
         charts.Verify(c => c.GetCharts(MixEnum.Phoenix, DifficultyLevel.From(level), ChartType.Single,
             It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), times);
+    }
+
+    [Fact]
+    public async Task PassTierListGroupsPhoenixPassersByDifficultyTitleNotCompetitiveLevel()
+    {
+        var passedTwiceFromThreeBelow = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedOnTheFolder = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedThreeAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedOneAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedOnlyOffTheTitles = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var titleSeventeen = Guid.NewGuid(); // three below the folder, weight 7
+        var alsoTitleSeventeen = Guid.NewGuid();
+        var titleTwenty = Guid.NewGuid(); // the folder's own title, weight 4
+        var titleTwentyThree = Guid.NewGuid(); // three above, weight 3
+        var titleTwentyOne = Guid.NewGuid(); // one above, weight 1
+        var inNoTitleGroup = Guid.NewGuid();
+        var charts = EmptyChartsMock();
+        charts.Setup(c => c.GetCharts(MixEnum.Phoenix, DifficultyLevel.From(20), ChartType.Single,
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                passedTwiceFromThreeBelow, passedOnTheFolder, passedThreeAbove, passedOneAbove, passedOnlyOffTheTitles
+            });
+        var saved = new List<SongTierListEntry>();
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(t => t.SaveEntries(MixEnum.Phoenix, It.IsAny<IEnumerable<SongTierListEntry>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, IEnumerable<SongTierListEntry>, CancellationToken>((_, entries, _) =>
+                saved.AddRange(entries.Where(e => (string)e.TierListName == "Pass Count")))
+            .Returns(Task.CompletedTask);
+        void TitleGroup(int titleLevel, bool requireActive, params Guid[] players) =>
+            tierLists.Setup(t => t.GetUsersOnLevel(MixEnum.Phoenix, DifficultyLevel.From(titleLevel),
+                    It.IsAny<CancellationToken>(), requireActive))
+                .ReturnsAsync(players);
+        TitleGroup(17, true, titleSeventeen, alsoTitleSeventeen);
+        TitleGroup(20, true, titleTwenty);
+        TitleGroup(21, false, titleTwentyOne);
+        TitleGroup(23, false, titleTwentyThree);
+        var passes = new Dictionary<Guid, RecordedPhoenixScore[]>
+        {
+            [titleSeventeen] = new[] { Score(passedTwiceFromThreeBelow.Id, 900000) },
+            [alsoTitleSeventeen] = new[] { Score(passedTwiceFromThreeBelow.Id, 910000) },
+            [titleTwenty] = new[] { Score(passedOnTheFolder.Id, 900000) },
+            [titleTwentyThree] = new[] { Score(passedThreeAbove.Id, 900000) },
+            [titleTwentyOne] = new[]
+            {
+                Score(passedOneAbove.Id, 900000),
+                new RecordedPhoenixScore(passedOnlyOffTheTitles.Id, PhoenixScore.From(700000), null, true,
+                    DateTimeOffset.MinValue)
+            },
+            [inNoTitleGroup] = new[] { Score(passedOnlyOffTheTitles.Id, 900000) }
+        };
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), ChartType.Single,
+                DifficultyLevel.From(20), DifficultyLevel.From(20), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, ChartType _, DifficultyLevel _, DifficultyLevel _,
+                CancellationToken _) => ids.Where(passes.ContainsKey).SelectMany(id => passes[id]).ToArray());
+        // The competitive-level reads would give the opposite answer: every passer is active, and
+        // only the player in no title group sits near the folder.
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(passes.SelectMany(kv => kv.Value.Select(record => (kv.Key, record))).ToArray());
+        scores.Setup(s => s.GetActiveUserIds(MixEnum.Phoenix, It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(passes.Keys.ToHashSet());
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(passes.Keys
+                .Select(id => LevelStats(id, singles: id == inNoTitleGroup ? 20.5 : 5.0, doubles: 5.0)).ToArray());
+        var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists, playerStats: playerStats);
+
+        await saga.Consume(BuildContext(new ProcessPassTierListCommand(MixEnum.Phoenix)));
+
+        // 7 + 7, 4, 3 and 1; the broken attempt and the player in no title group add nothing.
+        var sums = new Dictionary<Guid, int>
+        {
+            [passedTwiceFromThreeBelow.Id] = 14, [passedOnTheFolder.Id] = 4, [passedThreeAbove.Id] = 3,
+            [passedOneAbove.Id] = 1, [passedOnlyOffTheTitles.Id] = 0
+        };
+        Assert.Equal(
+            TierListProcessor.ProcessIntoTierList("Pass Count", sums).Select(e => (e.ChartId, e.Category, e.Order)),
+            saved.Select(e => (e.ChartId, e.Category, e.Order)));
+        Assert.Equal(
+            new[]
+            {
+                passedOnlyOffTheTitles.Id, passedOneAbove.Id, passedThreeAbove.Id, passedOnTheFolder.Id,
+                passedTwiceFromThreeBelow.Id
+            },
+            saved.OrderBy(e => e.Order).Select(e => e.ChartId).ToArray());
+        Assert.Equal(TierListCategory.Unrecorded,
+            saved.Single(e => e.ChartId == passedOnlyOffTheTitles.Id).Category);
+        tierLists.Verify(t => t.GetUsersOnLevel(MixEnum.Phoenix, It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.AtLeastOnce);
+        scores.Verify(s => s.GetActiveUserIds(It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        scores.Verify(s => s.GetScores(MixEnum.Phoenix, It.Is<ChartType>(t => t != ChartType.CoOp),
+            It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Phoenix2)]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public async Task PassTierListNeverReadsDifficultyTitlesOnAMixWithoutThem(MixEnum mix)
+    {
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetActiveUserIds(mix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<Guid>());
+        var tierLists = new Mock<ITierListRepository>();
+        var saga = BuildSaga(scores: scores, tierLists: tierLists);
+
+        await saga.Consume(BuildContext(new ProcessPassTierListCommand(mix)));
+
+        tierLists.Verify(t => t.GetUsersOnLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Never);
+        scores.Verify(s => s.GetScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+            It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()), Times.Never);
+        scores.Verify(s => s.GetActiveUserIds(mix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
