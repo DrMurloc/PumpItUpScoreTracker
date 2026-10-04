@@ -1707,9 +1707,6 @@
   <data name="Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them." xml:space="preserve">
     <value>Conoscere i chart e pianificare è il punto. I chart facili da scorare pagano ad alcuni livelli e sono scelte rischiose ad altri. Una volta li nerfavo; nessuno ha smesso di giocarli.</value>
   </data>
-  <data name="Chart leaderboard" xml:space="preserve">
-    <value>Classifica del chart</value>
-  </data>
   <data name="Chart level" xml:space="preserve">
     <value>Livello del chart</value>
   </data>
@@ -5671,9 +5668,6 @@
   <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
     <value>Non c’è ancora nessuno in questa classifica: si riempie dopo la prima ricostruzione settimanale.</value>
   </data>
-  <data name="Nobody is on this chart board yet." xml:space="preserve">
-    <value>Nessuno è ancora in questa classifica.</value>
-  </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nessuno è salito nella classifica PUMBILITY questa settimana.</value>
   </data>
@@ -6265,6 +6259,9 @@
   </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>solo {0} hanno il PG</value>
+  </data>
+  <data name="Only {0} of this player's charts are on the chart boards, so this list may be missing some of their best." xml:space="preserve">
+    <value>Solo {0} chart di questo giocatore sono nelle classifiche dei chart, quindi a questa lista potrebbero mancare alcuni dei suoi migliori.</value>
   </data>
   <data name="only {0} pass it" xml:space="preserve">
     <value>solo il {0} la passa</value>
@@ -8537,9 +8534,6 @@
   <data name="Show all {0} plays" xml:space="preserve">
     <value>Mostra tutti i {0} tentativi</value>
   </data>
-  <data name="Show all {0} scores" xml:space="preserve">
-    <value>Mostra tutti i {0} punteggi</value>
-  </data>
   <data name="Show difficulty glow" xml:space="preserve">
     <value>Mostra il bagliore di difficoltà</value>
   </data>
@@ -8551,9 +8545,6 @@
   </data>
   <data name="Show more comments" xml:space="preserve">
     <value>Mostra altri commenti</value>
-  </data>
-  <data name="Show more of {0} scores" xml:space="preserve">
-    <value>Mostra altri dei {0} punteggi</value>
   </data>
   <data name="Show original" xml:space="preserve">
     <value>Mostra originale</value>
