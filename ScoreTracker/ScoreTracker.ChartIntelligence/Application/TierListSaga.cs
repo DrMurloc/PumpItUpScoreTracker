@@ -380,9 +380,11 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var pgSums = charts.ToDictionary(c => c.Id, c => 0.0);
         foreach (var record in pgUsers)
         {
+            if (!stats.TryGetValue(record.UserId, out var playerStats) || !pgSums.ContainsKey(record.ChartId))
+                continue;
             var competitiveLevel = chartType == ChartType.Single
-                ? stats[record.UserId].SinglesCompetitiveLevel
-                : stats[record.UserId].DoublesCompetitiveLevel;
+                ? playerStats.SinglesCompetitiveLevel
+                : playerStats.DoublesCompetitiveLevel;
             if (competitiveLevel < 5)
                 continue;
             pgSums[record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);

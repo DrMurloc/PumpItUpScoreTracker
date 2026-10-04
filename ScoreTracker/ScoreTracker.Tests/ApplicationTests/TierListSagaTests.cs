@@ -347,6 +347,23 @@ public sealed class TierListSagaTests
     }
 
     [Fact]
+    public async Task APgHolderWithNoStatsRowDoesNotStopThePassList()
+    {
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var noStats = Guid.NewGuid();
+        var withStats = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Rise, ChartType.Single, 20,
+            new[] { chart },
+            new[] { (withStats, Score(chart.Id, 900000)) },
+            new[] { LevelStats(withStats, singles: 20.5, doubles: 0) },
+            activePlayers: new[] { withStats },
+            pgHolders: new[] { (noStats, chart.Id) });
+
+        Assert.NotEqual(TierListCategory.Unrecorded, Assert.Single(saved).Category);
+    }
+
+    [Fact]
     public async Task PassTierListLeavesAChartPassedOnlyByPlayersFourLevelsAboveUnrated()
     {
         var passedFromFarAbove = new ChartBuilder().WithLevel(10).WithType(ChartType.Single).Build();
@@ -398,7 +415,8 @@ public sealed class TierListSagaTests
     private static async Task<IReadOnlyList<SongTierListEntry>> RunPassTierList(MixEnum mix, ChartType chartType,
         int level, IEnumerable<Chart> folderCharts,
         IEnumerable<(Guid UserId, RecordedPhoenixScore Record)> folderScores,
-        IEnumerable<PlayerStatsRecord> stats, IEnumerable<Guid> activePlayers)
+        IEnumerable<PlayerStatsRecord> stats, IEnumerable<Guid> activePlayers,
+        IEnumerable<(Guid UserId, Guid ChartId)>? pgHolders = null)
     {
         var charts = EmptyChartsMock();
         charts.Setup(c => c.GetCharts(mix, DifficultyLevel.From(level), chartType,
@@ -407,6 +425,8 @@ public sealed class TierListSagaTests
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetActiveUserIds(mix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(activePlayers.ToHashSet());
+        scores.Setup(s => s.GetPgUsers(mix, chartType, DifficultyLevel.From(level), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((pgHolders ?? Array.Empty<(Guid UserId, Guid ChartId)>()).ToArray());
         scores.Setup(s => s.GetScores(mix, chartType, DifficultyLevel.From(level), It.IsAny<CancellationToken>()))
             .ReturnsAsync(folderScores.ToArray());
         var statsByUser = stats.ToDictionary(s => s.UserId);
