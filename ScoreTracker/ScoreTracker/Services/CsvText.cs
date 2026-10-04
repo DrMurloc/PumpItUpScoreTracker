@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Text;
+using CsvHelper;
+using Microsoft.JSInterop;
 
 namespace ScoreTracker.Web.Services;
 
@@ -13,9 +16,9 @@ public static class CsvText
     /// <summary>
     ///     UTF-8 that writes its byte-order mark. A StreamWriter over this encoding emits the mark
     ///     on its first write to an empty stream; <see cref="Encoding.GetBytes(string)" /> never
-    ///     emits it, which is what <see cref="ToBytes" /> is for.
+    ///     emits it, which is why <see cref="ToBytes" /> prepends it by hand.
     /// </summary>
-    public static readonly Encoding Utf8WithBom = new UTF8Encoding(true);
+    private static readonly Encoding Utf8WithBom = new UTF8Encoding(true);
 
     /// <summary>The content type a CSV file response is served with.</summary>
     public const string ContentType = "text/csv; charset=utf-8";
@@ -28,5 +31,31 @@ public static class CsvText
         preamble.CopyTo(bytes, 0);
         Utf8WithBom.GetBytes(csv, 0, csv.Length, bytes, preamble.Length);
         return bytes;
+    }
+
+    /// <summary>
+    ///     The records as a file: the byte-order mark, a header row of the record type's property
+    ///     names, then one row per record, quoted where a value needs it.
+    /// </summary>
+    public static async Task<byte[]> ToBytesAsync<T>(IEnumerable<T> records)
+    {
+        var stream = new MemoryStream();
+        await using (var writer = new StreamWriter(stream, Utf8WithBom))
+        await using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+        {
+            await csv.WriteRecordsAsync(records);
+        }
+
+        // Disposing the writers flushed them and closed the stream; ToArray still reads a closed MemoryStream.
+        return stream.ToArray();
+    }
+
+    /// <summary>Hands the records to the browser as a CSV download named <paramref name="fileName" />.</summary>
+    public static async Task DownloadAsync<T>(IJSRuntime js, string fileName, IEnumerable<T> records)
+    {
+        using var stream = new MemoryStream(await ToBytesAsync(records));
+        using var streamRef = new DotNetStreamReference(stream);
+        var module = await js.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 }

@@ -7,8 +7,6 @@
 @using ScoreTracker.SharedKernel.Models
 @using MediatR
 @using ScoreTracker.Application.Commands
-@using CsvHelper
-@using System.Globalization
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Exceptions
@@ -294,10 +292,7 @@
 
     private async Task DownloadCSVExample()
     {
-        var stream = new MemoryStream();
-        await using var writer = new StreamWriter(stream, CsvText.Utf8WithBom);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(new XXSpreadsheetScoreDto[]
+        await CsvText.DownloadAsync(JSRuntime, "scoresExample.csv", new XXSpreadsheetScoreDto[]
         {
             new()
             {
@@ -335,33 +330,10 @@
                 LetterGrade = "F"
             }
         });
-        await writer.FlushAsync();
-        await csv.FlushAsync();
-        const string fileName = "scoresExample.csv";
-
-        using var streamRef = new DotNetStreamReference(stream: stream);
-        stream.Seek(0, SeekOrigin.Begin);
-
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
     private async Task DownloadFailures()
     {
-        
-        var stream = new MemoryStream();
-        await using var writer = new StreamWriter(stream, CsvText.Utf8WithBom);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(_failedUploads);
-        await writer.FlushAsync();
-        await csv.FlushAsync();
-        const string fileName = "failedUploads.csv";
-
-        using var streamRef = new DotNetStreamReference(stream: stream);
-        stream.Seek(0, SeekOrigin.Begin);
-
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-
+        await CsvText.DownloadAsync(JSRuntime, "failedUploads.csv", _failedUploads);
     }
 
     private async Task SaveScores()
