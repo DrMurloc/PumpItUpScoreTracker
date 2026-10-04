@@ -214,22 +214,31 @@ public sealed class TierListSagaTests
     public async Task PassTierListGroupsPhoenixPassersByDifficultyTitleNotCompetitiveLevel()
     {
         var passedTwiceFromThreeBelow = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedTwoBelow = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedOneBelow = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var passedOnTheFolder = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var passedThreeAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedTwoAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var passedOneAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var passedOnlyOffTheTitles = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var titleSeventeen = Guid.NewGuid(); // three below the folder, weight 7
         var alsoTitleSeventeen = Guid.NewGuid();
+        var titleEighteen = Guid.NewGuid(); // two below, weight 6
+        var titleNineteen = Guid.NewGuid(); // one below, weight 5
         var titleTwenty = Guid.NewGuid(); // the folder's own title, weight 4
         var titleTwentyThree = Guid.NewGuid(); // three above, weight 3
+        var titleTwentyTwo = Guid.NewGuid(); // two above, weight 2
         var titleTwentyOne = Guid.NewGuid(); // one above, weight 1
         var inNoTitleGroup = Guid.NewGuid();
         var charts = EmptyChartsMock();
+        // Listed from the highest expected sum down, so a weight that drifts into a tie with a
+        // neighbor sorts that pair the opposite way round from the expected order.
         charts.Setup(c => c.GetCharts(MixEnum.Phoenix, DifficultyLevel.From(20), ChartType.Single,
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                passedTwiceFromThreeBelow, passedOnTheFolder, passedThreeAbove, passedOneAbove, passedOnlyOffTheTitles
+                passedTwiceFromThreeBelow, passedTwoBelow, passedOneBelow, passedOnTheFolder, passedThreeAbove,
+                passedTwoAbove, passedOneAbove, passedOnlyOffTheTitles
             });
         var saved = new List<SongTierListEntry>();
         var tierLists = new Mock<ITierListRepository>();
@@ -243,15 +252,21 @@ public sealed class TierListSagaTests
                     It.IsAny<CancellationToken>(), requireActive))
                 .ReturnsAsync(players);
         TitleGroup(17, true, titleSeventeen, alsoTitleSeventeen);
+        TitleGroup(18, true, titleEighteen);
+        TitleGroup(19, true, titleNineteen);
         TitleGroup(20, true, titleTwenty);
         TitleGroup(21, false, titleTwentyOne);
+        TitleGroup(22, false, titleTwentyTwo);
         TitleGroup(23, false, titleTwentyThree);
         var passes = new Dictionary<Guid, RecordedPhoenixScore[]>
         {
             [titleSeventeen] = new[] { Score(passedTwiceFromThreeBelow.Id, 900000) },
             [alsoTitleSeventeen] = new[] { Score(passedTwiceFromThreeBelow.Id, 910000) },
+            [titleEighteen] = new[] { Score(passedTwoBelow.Id, 900000) },
+            [titleNineteen] = new[] { Score(passedOneBelow.Id, 900000) },
             [titleTwenty] = new[] { Score(passedOnTheFolder.Id, 900000) },
             [titleTwentyThree] = new[] { Score(passedThreeAbove.Id, 900000) },
+            [titleTwentyTwo] = new[] { Score(passedTwoAbove.Id, 900000) },
             [titleTwentyOne] = new[]
             {
                 Score(passedOneAbove.Id, 900000),
@@ -281,10 +296,12 @@ public sealed class TierListSagaTests
 
         await saga.Consume(BuildContext(new ProcessPassTierListCommand(MixEnum.Phoenix)));
 
-        // 7 + 7, 4, 3 and 1; the broken attempt and the player in no title group add nothing.
+        // 7 + 7, then one group each at 6, 5, 4, 3, 2 and 1; the broken attempt and the player in
+        // no title group add nothing.
         var sums = new Dictionary<Guid, int>
         {
-            [passedTwiceFromThreeBelow.Id] = 14, [passedOnTheFolder.Id] = 4, [passedThreeAbove.Id] = 3,
+            [passedTwiceFromThreeBelow.Id] = 14, [passedTwoBelow.Id] = 6, [passedOneBelow.Id] = 5,
+            [passedOnTheFolder.Id] = 4, [passedThreeAbove.Id] = 3, [passedTwoAbove.Id] = 2,
             [passedOneAbove.Id] = 1, [passedOnlyOffTheTitles.Id] = 0
         };
         Assert.Equal(
@@ -293,8 +310,8 @@ public sealed class TierListSagaTests
         Assert.Equal(
             new[]
             {
-                passedOnlyOffTheTitles.Id, passedOneAbove.Id, passedThreeAbove.Id, passedOnTheFolder.Id,
-                passedTwiceFromThreeBelow.Id
+                passedOnlyOffTheTitles.Id, passedOneAbove.Id, passedTwoAbove.Id, passedThreeAbove.Id,
+                passedOnTheFolder.Id, passedOneBelow.Id, passedTwoBelow.Id, passedTwiceFromThreeBelow.Id
             },
             saved.OrderBy(e => e.Order).Select(e => e.ChartId).ToArray());
         Assert.Equal(TierListCategory.Unrecorded,
