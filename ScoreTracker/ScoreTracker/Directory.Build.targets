@@ -1,0 +1,32 @@
+<Project>
+  <!--
+    MSBuild imports only the nearest Directory.Build.targets, so this one passes the import on to
+    any further up the tree; with none there, the path is empty and the import is skipped.
+  -->
+  <PropertyGroup>
+    <_ParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))</_ParentDirectoryBuildTargets>
+  </PropertyGroup>
+  <Import Project="$(_ParentDirectoryBuildTargets)" Condition="'$(_ParentDirectoryBuildTargets)' != ''" />
+
+  <!--
+    Replaces DartSassBuilder's own DartSass_Build target (this file is imported after the package's
+    targets, so the later definition wins). The compiler it launches is a net8.0 app with no
+    roll-forward of its own; with DOTNET_ROLL_FORWARD=Major it runs on .NET 8 where that runtime is
+    installed and on the newest installed runtime otherwise, instead of failing to start on a
+    machine that has only a newer one. The variable is set on this one command, not the build.
+
+    The command and its condition are the package's, unchanged. It runs straight after
+    DartSass_BuildArgsFromFileList rather than before BeforeBuild, which keeps it ahead of
+    DartSass_SaveNewHash: the change-tracking hash is written only once a compile has succeeded, so
+    a failed compile is retried on the next build instead of being skipped as up to date.
+  -->
+  <Target Name="DartSass_Build"
+          DependsOnTargets="DartSass_BuildArgsFromFileList"
+          AfterTargets="DartSass_BuildArgsFromFileList"
+          Condition="'$(DartSassBuilderArgs)' != ''  ">
+    <Message Text="Invoking sass preprocessor..." Importance="$(DartSassMessageLevel)" />
+
+    <Exec Command="dotnet &quot;$(SassExe)&quot; $(DartSassBuilderArgs) "
+          EnvironmentVariables="DOTNET_ROLL_FORWARD=Major" />
+  </Target>
+</Project>
