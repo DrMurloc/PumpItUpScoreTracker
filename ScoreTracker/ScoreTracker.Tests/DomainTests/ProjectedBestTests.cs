@@ -113,6 +113,26 @@ public sealed class ProjectedBestTests
             ProjectedBest.PeerPlate(991_632, null));
     }
 
+    [Theory]
+    [InlineData(991_632, true)]
+    [InlineData(985_708, false)]
+    [InlineData(982_000, false)]
+    public void OnlyAScoreAboveThePassHeldRaisesIt(int projected, bool raises)
+    {
+        // At the score held or under it, a play can only change the plate on the card.
+        var held = Held(985_708, PhoenixPlate.MarvelousGame);
+
+        Assert.Equal(raises, ProjectedBest.RaisesScore(projected, held));
+    }
+
+    [Fact]
+    public void AnyScoreRaisesABrokenHoldOrNothingHeld()
+    {
+        // A pass outranks a break whatever the numbers, so even a lower pass puts a new score on the card.
+        Assert.True(ProjectedBest.RaisesScore(982_000, Held(995_000, null, true)));
+        Assert.True(ProjectedBest.RaisesScore(982_000, null));
+    }
+
     private static RecordedPhoenixScore Held(int score, PhoenixPlate? plate, bool isBroken = false)
     {
         return new RecordedPhoenixScore(S22.Id, score, plate, isBroken,

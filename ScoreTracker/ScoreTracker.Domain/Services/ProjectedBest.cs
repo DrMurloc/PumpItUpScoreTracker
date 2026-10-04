@@ -46,8 +46,18 @@ public static class ProjectedBest
     /// </summary>
     public static PhoenixPlate PeerPlate(PhoenixScore projected, RecordedPhoenixScore? held)
     {
-        return held is { Score: { } heldScore, IsBroken: false } && !(projected > heldScore)
-            ? PhoenixPlate.RoughGame
-            : ScoringConfiguration.ExpectedPlateForScore(projected);
+        return RaisesScore(projected, held)
+            ? ScoringConfiguration.ExpectedPlateForScore(projected)
+            : PhoenixPlate.RoughGame;
+    }
+
+    /// <summary>
+    ///     Whether the projected play would put a new score on the card: it beats the pass held, or
+    ///     there is no pass held to beat — nothing at all, or only a broken run. At or below a held
+    ///     pass, all a play can change is the plate.
+    /// </summary>
+    public static bool RaisesScore(PhoenixScore projected, RecordedPhoenixScore? held)
+    {
+        return held is not { Score: { } heldScore, IsBroken: false } || projected > heldScore;
     }
 }
