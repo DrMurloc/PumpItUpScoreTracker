@@ -99,13 +99,18 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToDictionary(t => t.ChartId);
 
             // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need
-            // estimating — the score is on record, and repricing it is arithmetic. Those rows
-            // REPLACE any peer estimate for the same chart, because a number the player has
-            // actually hit beats a quantile of what other people hit.
+            // estimating — the score is on record, and repricing it is arithmetic. A carried row
+            // whose score would raise the one held here REPLACES any peer estimate for the same
+            // chart, because a number the player has actually hit beats a quantile of what other
+            // people hit. One at or below the score held pays only through its plate and says
+            // nothing about the higher score an estimate is for, so there the larger gain stands.
             if (mix == MixEnum.Phoenix2)
                 foreach (var carried in await CarryoverTargets(request.UserId, request.Pool, charts,
                              bar, scoring, projection, mine, cancellationToken))
-                    targets[carried.ChartId] = carried;
+                    if (!targets.TryGetValue(carried.ChartId, out var estimate)
+                        || ProjectedBest.RaisesScore(carried.Projected, mine.GetValueOrDefault(carried.ChartId))
+                        || carried.Gain >= estimate.Gain)
+                        targets[carried.ChartId] = carried;
 
             // One ranked list of likely gains with two sources of evidence behind it, not two
             // lists stapled together. The cut happens AFTER the merge so a chart both sources

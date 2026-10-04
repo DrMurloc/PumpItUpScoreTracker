@@ -221,8 +221,10 @@ public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, doubl
 ///         were. <see cref="Peers" /> is an estimate — a quantile of what comparable players
 ///         scored. <see cref="Phoenix1" /> is the player's own score on that exact chart in the
 ///         previous mix, repriced: not a guess about what they could do, a record of what they
-///         did. It wins wherever both exist, and it is the only signal that works at a mix
-///         launch, when there is no peer data to estimate from.
+///         did. It wins wherever both exist and its score beats the one held here, and it is the
+///         only signal that works at a mix launch, when there is no peer data to estimate from.
+///         At or below the score held, it pays only through its plate, and the row with the
+///         larger gain stands.
 ///     </para>
 /// </summary>
 public enum TargetSource

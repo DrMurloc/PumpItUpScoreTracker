@@ -379,6 +379,74 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task APlateOnlyCarriedRowLeavesALargerPeerEstimateStanding()
+    {
+        // S22: 982,000 Superb Game in Phoenix 1, 988,000 Marvelous Game here, and the peers project
+        // 993,000. Replaying the Phoenix 1 score would add only its plate (SS+ SG, +0.49); the peers'
+        // SSS would add +2.45. The Phoenix 1 record says nothing about that higher score, so it must
+        // not wipe the estimate out.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 982_000,
+            plate: PhoenixPlate.SuperbGame);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 988_000, plate: PhoenixPlate.MarvelousGame);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var held = scoring.GetScore(ChartType.Single, 22, 988_000, PhoenixPlate.MarvelousGame);
+        var peerValue = scoring.GetScore(ChartType.Single, 22, 993_000, PhoenixPlate.MarvelousGame);
+        ctx.WithPeerProjection(chart, 993_000, peerValue - held);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        Assert.Equal(TargetSource.Peers, row.Source);
+        Assert.Equal(993_000, (int)row.Projected);
+        Assert.Equal(2.45, row.Gain, 2);
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(366.52, rail.ProjectedAverage!.Value * 50, 2);
+    }
+
+    [Fact]
+    public async Task APlateOnlyCarriedRowOutweighsASmallerPeerEstimate()
+    {
+        // The same Phoenix 1 plate against peers who barely clear the score held: the plate pays
+        // more, so the carried row stands, and the rail prices the score held with that plate.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 982_000,
+            plate: PhoenixPlate.SuperbGame);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 988_000, plate: PhoenixPlate.MarvelousGame)
+            .WithPeerProjection(chart, 988_500, 0.1);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var merged = scoring.GetScore(ChartType.Single, 22, 988_000, PhoenixPlate.SuperbGame);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        Assert.Equal(TargetSource.Phoenix1, row.Source);
+        Assert.Equal(0.49, row.Gain, 2);
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(merged, rail.ProjectedAverage!.Value * 50, 6);
+    }
+
+    [Fact]
+    public async Task ACarriedScoreAboveTheOneHeldReplacesEvenABiggerEstimate()
+    {
+        // A Phoenix 1 score that beats the hold is a number the player has hit, so it wins whatever
+        // the peers' estimate is worth.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 1, 991_632);
+        var chart = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(chart, 985_708, plate: PhoenixPlate.SuperbGame)
+            .WithPeerProjection(chart, 995_000, 999);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == chart);
+        Assert.Equal(TargetSource.Phoenix1, row.Source);
+        Assert.Equal(991_632, (int)row.Projected);
+    }
+
+    [Fact]
     public async Task ABrokenRunHereDoesNotCountAsHavingScoredTheChart()
     {
         // A stage break rates zero, so it displaces nothing — and a chart you broke on is
@@ -737,7 +805,7 @@ public sealed class PumbilityPageSagaTests
         }
 
         /// <summary>Gives the peer estimator an opinion on a chart, so precedence is testable.</summary>
-        public PageContext WithPeerProjection(Guid chartId, int projected, int gain)
+        public PageContext WithPeerProjection(Guid chartId, int projected, double gain)
         {
             _projected[chartId] = projected;
             _gains[chartId] = gain;
