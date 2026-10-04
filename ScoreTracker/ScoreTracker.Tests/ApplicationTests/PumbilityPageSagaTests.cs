@@ -446,6 +446,44 @@ public sealed class PumbilityPageSagaTests
         Assert.Equal(991_632, (int)row.Projected);
     }
 
+    [Theory]
+    [InlineData(PhoenixPlate.SuperbGame, 367.01)]
+    [InlineData(PhoenixPlate.TalentedGame, 366.52)]
+    public async Task TheProjectedAverageMergesAPeerEstimateWithThePlateHeld(PhoenixPlate heldPlate,
+        double expected)
+    {
+        // The peers project 991,632 over a 985,708 held, and the curve reads Marvelous Game there. The
+        // card keeps the better plate beside the new score: a Superb Game held stays (SSS SG, 367.01),
+        // a Talented Game held gives way to the curve's (SSS MG, 366.52).
+        var ctx = new PageContext().WithPhoenix2Chart(out var chart, ChartType.Single, 22)
+            .WithPhoenix2Score(chart, 985_708, plate: heldPlate);
+        ctx.WithPeerProjection(chart, 991_632, 2);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        Assert.Equal(TargetSource.Peers, page.Targets.Single(t => t.ChartId == chart).Source);
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(expected, rail.ProjectedAverage!.Value * 50, 2);
+    }
+
+    [Fact]
+    public async Task TheProjectedAverageReadsAnUnheldPeerChartAtTheCurvesPlate()
+    {
+        var ctx = new PageContext().WithPhoenix2Chart(out var chart, ChartType.Single, 22);
+        ctx.WithPeerProjection(chart, 991_632, 366);
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var atTheCurve = scoring.GetScore(ChartType.Single, 22, 991_632,
+            ScoringConfiguration.ExpectedPlateForScore(991_632));
+        Assert.NotEqual(scoring.GetScore(ChartType.Single, 22, 991_632, PhoenixPlate.RoughGame), atTheCurve);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(atTheCurve, rail.ProjectedAverage!.Value * 50, 6);
+    }
+
     [Fact]
     public async Task ABrokenRunHereDoesNotCountAsHavingScoredTheChart()
     {
@@ -801,6 +839,13 @@ public sealed class PumbilityPageSagaTests
         {
             _phoenix2Scores[chartId] = new RecordedPhoenixScore(chartId, score, plate,
                 isBroken, Now.AddDays(-10));
+            return this;
+        }
+
+        /// <summary>A Phoenix 2 chart with no Phoenix 1 record behind it, so only the peers can have an opinion on it.</summary>
+        public PageContext WithPhoenix2Chart(out Guid chartId, ChartType type, int level)
+        {
+            chartId = AddChart(type, level).Id;
             return this;
         }
 
