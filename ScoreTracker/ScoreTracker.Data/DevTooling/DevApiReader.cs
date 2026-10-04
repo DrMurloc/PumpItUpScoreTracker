@@ -126,14 +126,14 @@ internal sealed class DevApiReader
         }
 
         reportProgress($"Writing {charts.Count:N0} charts to the local database…");
+        // The mix list drives the loops above and names the progress text; the mix rows themselves
+        // are the migrations' (see DevCatalogWriter), so nothing from it is written.
         await _writer.ReplaceCatalog(new DevCatalogSnapshot(
-            mixes.Where(m => Enum.TryParse<MixEnum>(m.Name, out _))
-                .Select(m => new DevMixRow(Enum.Parse<MixEnum>(m.Name), m.DisplayName, m.SortOrder, m.IsPrimary))
-                .ToArray(),
             songs.Values.ToArray(), charts, tierLists, scoringLevels, versions), cancellationToken);
 
         // Scores are per mix and only the primary ones have any worth pulling — a legacy mix's
-        // records are a handful of hand-entered rows, and asking for all 29 triples the round trips.
+        // records are a handful of hand-entered rows, and asking for every mix's would multiply
+        // the round trips for almost nothing.
         var scores = new List<DevScoreRow>();
         foreach (var wire in mixes.Where(m => m.IsPrimary))
         {
@@ -236,11 +236,12 @@ internal sealed class DevApiReader
     /// <summary>
     ///     A GET that waits the rate limit out instead of failing on it.
     ///     <para>
-    ///         api/v2 allows 60 requests a minute against a personal token in a fixed window, and
-    ///         rebuilding a database is several hundred requests — so a full sync does not merely
-    ///         risk 429, it is guaranteed several. That makes waiting the normal path rather than
-    ///         an error path, and the response says exactly how long to wait, which is the whole
-    ///         reason the API sends <c>Retry-After</c>.
+    ///         api/v2 allows 600 requests a minute against a personal token in a fixed window, and
+    ///         rebuilding a database is several hundred requests — so one sync usually fits in a
+    ///         window, but a sync started straight after another, or sharing the token with anything
+    ///         else, runs into the limit. Waiting is an ordinary path rather than an error path, and
+    ///         the response says exactly how long to wait, which is the whole reason the API sends
+    ///         <c>Retry-After</c>.
     ///     </para>
     ///     <para>
     ///         The wait is announced. A minute of silence on a page whose only other signal is a
@@ -327,7 +328,7 @@ internal sealed class DevApiReader
     // is a consumer of the published API and should break the same way an integrator would.
     private sealed record PageWire<T>(T[]? Data, string? Next);
 
-    private sealed record MixWire(string Name, string DisplayName, int SortOrder, bool IsPrimary);
+    private sealed record MixWire(string Name, string DisplayName, bool IsPrimary);
 
     private sealed record BpmWire(decimal? Min, decimal? Max);
 

@@ -126,14 +126,27 @@ feed were removed 2026-08-02, see below).
 |---|---|
 | `GET /api/v2/players` | **The linchpin.** Every player who has shared with the calling tool, cursor-paginated. Without it a tool has no way to learn who consented |
 | `GET /api/v2/players/{playerId}` | Identity + profile. **404, not 403**, when no share exists — a 403 confirms the player exists |
-| `GET /api/v2/players/{playerId}/scores` | v1's filters plus cursor, `recordedAfter`, and **judgment counts** — `PhoenixRecord` carries `Perfects/Greats/Goods/Bads/Misses`, all nullable, so the block is `null` rather than zeroed for a CSV or hand-entered score (zeros read as a perfect game) |
+| `GET /api/v2/players/{playerId}/scores` | v1's filters plus cursor, `recordedAfter` (a play-time filter, see below), and **judgment counts** — `PhoenixRecord` carries `Perfects/Greats/Goods/Bads/Misses`, all nullable, so the block is `null` rather than zeroed for a CSV or hand-entered score (zeros read as a perfect game) |
 | `GET /api/v2/players/{playerId}/sessions` | `ScoreSession`, landed 2026-07-31 |
 | `GET /api/v2/players/{playerId}/journal` | `ScoreEventJournal` — per-attempt history with judgments. 1,072,377 rows already accumulated |
 
-**One date, not two.** `PhoenixRecord` has exactly one — `RecordedDate`, set from
-`IDateTimeOffsetAccessor.Now` at write time. It already *is* "imported at"; a second field would be
-the same value renamed. What we do not have anywhere is when the play happened, and the maker docs
-must say so, because `recordedAt` invites exactly that misreading.
+**One date, not two — and it is the play's, not the save's.** `PhoenixRecord` has exactly one,
+`RecordedDate`, and it is the date the score's source gave the play. An official import stamps the
+date piugame shows on the score card (on Phoenix 2 a best-list card keeps the date of the chart's
+*first* play, so an upscore can wear an older date — [seasons.md](seasons.md) D15); a play posted to
+`POST me/plays` stamps its `playedAt`; only a typed or CSV score, which carries no date, falls back to
+`IDateTimeOffsetAccessor.Now` at write time. The journal's `OccurredAt` follows the same rule.
+This section first said the opposite — "set at write time, it already *is* imported-at" — which
+stopped being true when imports began carrying piugame's card date, before v2 shipped; the
+`recordedAt` doc comment and the `recordedAfter` parameter doc repeated it until they were corrected.
+
+So `recordedAfter` on scores and `since` on the journal are **play-time filters, not an
+incremental-sync cursor.** The usual pattern is play on Saturday, import on Monday: the score arrives
+dated Saturday, and a tool asking for `recordedAfter=<its last check on Sunday>` never sees it, with
+no error. Nothing stores when a row was saved, so no read can offer that cursor today. The reliable
+ways to see every new score are a **Score push** webhook (§6), which delivers each player's changes
+as they are saved, or a periodic full re-read of the players a tool can see. A save-time cursor
+(`savedAfter`) would need a new column and a migration, and is not built until a maker asks for it.
 
 **No `pumbilityPlus`** on any shape (owner, 2026-08-01). `pumbility` stays.
 
@@ -733,6 +746,20 @@ The routes the harness calls are declared as a list and pinned by a test against
 registered routes, because they once diverged: it asked for
 `api/v2/chart-analysis/chart-scoring-levels`, which never existed, and `/Dev/Populate` failed
 outright for two commits.
+
+**`Mix` stays with the migrations (2026-10-03).** Of the six reference tables above, the harness
+rebuilds five. `scores.Mix` is reference data the migrations seed — every mix's row, with its
+`MixIds` id, its stored short name (`1st`, `NXA`, `Pro 2`; the enum name for the primaries) and its
+picker order — so a migrated database already holds it, and Populate never clears or rewrites it.
+Column parity is waived for this one table rather than met: api/v2 carries a mix's enum name and its
+display name and never the stored short name, and publishing the short name would add a field
+nothing in the app reads. Writing the display name instead is what broke Populate from 2026-08-01
+on: `scores.Mix.Name` is `nvarchar(10)`, thirteen display names are longer (`The 1st Dance Floor`,
+`Rise Arcade`, …), and the first one was in the first row staged, so every run rolled back after
+the whole download. A new mix reaches a local database the way it reaches every other environment —
+by migration — and a catalog row naming a mix the database has no row for fails on a foreign key
+rather than being filled in. A value that does not fit its column now fails naming the table as well as the
+column's complaint, which is the message the Populate page prints.
 
 ---
 

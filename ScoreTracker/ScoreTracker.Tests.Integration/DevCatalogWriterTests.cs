@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
 
@@ -32,9 +33,31 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    /// <summary>
+    ///     The mix rows a migrated database holds, as the migrations seed them: real ids and the
+    ///     stored short names, which are not what api/v2 calls a mix. The harness writes none of
+    ///     these, so a test that needs one seeds it the way a migration would.
+    /// </summary>
+    private static readonly MixEntity[] SeededMixes =
     {
-        return _fixture.ResetAsync();
+        new() { Id = MixIds.Phoenix, Name = "Phoenix", SortOrder = 270, IsPrimary = true },
+        new() { Id = MixIds.Phoenix2, Name = "Phoenix2", SortOrder = 280, IsPrimary = true },
+        new() { Id = MixIds.For(MixEnum.FirstDanceFloor), Name = "1st", SortOrder = 10, IsPrimary = false },
+        new() { Id = MixIds.For(MixEnum.RiseArcade), Name = "RiseArcade", SortOrder = 274, IsPrimary = true }
+    };
+
+    public async Task InitializeAsync()
+    {
+        await _fixture.ResetAsync();
+        await SeedMixes(SeededMixes);
+    }
+
+    private async Task SeedMixes(IEnumerable<MixEntity> mixes)
+    {
+        await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
+        ctx.Mix.AddRange(mixes.Select(m => new MixEntity
+            { Id = m.Id, Name = m.Name, SortOrder = m.SortOrder, IsPrimary = m.IsPrimary }));
+        await ctx.SaveChangesAsync();
     }
 
     public Task DisposeAsync()
@@ -62,11 +85,6 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         return new DevCatalogSnapshot(
             new[]
             {
-                new DevMixRow(MixEnum.Phoenix, "Phoenix", 27, true),
-                new DevMixRow(MixEnum.Phoenix2, "Phoenix2", 28, true)
-            },
-            new[]
-            {
                 new DevSongRow("Bad Apple!!", "Arcade", "Alstroemeria Records", 105,
                     "https://piu.test/badapple.png", 138, 138)
             },
@@ -80,7 +98,6 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
     {
         await BuildSeeder().ReplaceCatalog(Snapshot());
 
-        Assert.Equal(2, await CountOf("Mix"));
         Assert.Equal(1, await CountOf("Song"));
         // One Chart row for the id, one ChartMix row per mix it exists in.
         Assert.Equal(1, await CountOf("Chart"));
@@ -129,6 +146,77 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         Assert.Equal(1, await CountOf("Chart"));
         Assert.Equal(2, await CountOf("ChartMix"));
         Assert.Equal(1, await CountOf("Song"));
+    }
+
+    /// <summary>
+    ///     A catalog reaches from the first mix to Rise. Those mixes' display names do not fit the
+    ///     mix table's name column, and the harness writes no mix rows, so their charts land against
+    ///     the rows the database already holds.
+    /// </summary>
+    [Fact]
+    public async Task ACatalogSpanningLegacyAndRiseMixesLands()
+    {
+        var legacyChart = Guid.NewGuid();
+        var riseChart = Guid.NewGuid();
+        var firstDanceFloor = MixIds.For(MixEnum.FirstDanceFloor);
+        var riseArcade = MixIds.For(MixEnum.RiseArcade);
+        var snapshot = Snapshot(
+            new DevChartRow(legacyChart, MixEnum.FirstDanceFloor, MixEnum.FirstDanceFloor, "Bad Apple!!", "Single",
+                7, null, 1, null, "Crazy"),
+            new DevChartRow(riseChart, MixEnum.RiseArcade, MixEnum.RiseArcade, "Bad Apple!!", "Double",
+                18, 900, 1, "SUNNY", null));
+
+        await BuildSeeder().ReplaceCatalog(snapshot);
+
+        Assert.Equal(firstDanceFloor, await Scalar($"SELECT OriginalMixId FROM scores.Chart WHERE Id='{legacyChart}'"));
+        Assert.Equal("Crazy", await Scalar(
+            $"SELECT LegacySlot FROM scores.ChartMix WHERE ChartId='{legacyChart}' AND MixId='{firstDanceFloor}'"));
+        Assert.Equal(18, Convert.ToInt32(await Scalar(
+            $"SELECT Level FROM scores.ChartMix WHERE ChartId='{riseChart}' AND MixId='{riseArcade}'")));
+    }
+
+    /// <summary>
+    ///     The mix rows are the migrations', down to short names nothing on the wire carries. A sync,
+    ///     and a second one, leaves every row as it was — including a mix the catalog never mentions.
+    /// </summary>
+    [Fact]
+    public async Task PopulatingNeverRewritesTheMixTable()
+    {
+        var unmentioned = new MixEntity
+            { Id = MixIds.For(MixEnum.Prime2), Name = "Prime 2", SortOrder = 250, IsPrimary = false };
+        await SeedMixes(new[] { unmentioned });
+        var seeder = BuildSeeder();
+
+        await seeder.ReplaceCatalog(Snapshot());
+        await seeder.ReplaceCatalog(Snapshot());
+
+        await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
+        var stored = (await ctx.Mix.ToListAsync())
+            .Select(m => (m.Id, m.Name, m.SortOrder, m.IsPrimary))
+            .OrderBy(m => m.SortOrder);
+        var seeded = SeededMixes.Append(unmentioned)
+            .Select(m => (m.Id, m.Name, m.SortOrder, m.IsPrimary))
+            .OrderBy(m => m.SortOrder);
+        Assert.Equal(seeded, stored);
+    }
+
+    /// <summary>
+    ///     A value wider than its column is refused while the row is staged, before any SQL runs.
+    ///     The Populate page prints only the message, so the message carries the table as well as
+    ///     the column's own complaint.
+    /// </summary>
+    [Fact]
+    public async Task AValueTooLongForItsColumnNamesTheTable()
+    {
+        var snapshot = Snapshot() with
+        {
+            MixVersions = new[] { new DevMixVersionRow(MixEnum.Phoenix2, "1.00.0-hotfix-rc1", null, 10) }
+        };
+
+        var thrown = await Assert.ThrowsAsync<InvalidOperationException>(() => BuildSeeder().ReplaceCatalog(snapshot));
+
+        Assert.Contains("[scores].[MixVersion]", thrown.Message);
+        Assert.Contains("MaxLength", thrown.Message);
     }
 
     [Fact]
