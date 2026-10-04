@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using CsvHelper;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,10 +48,10 @@ public sealed class ChartsExportControllerTests
             .ReturnsAsync(new ChartSearchResultPage(new[] { MakeResult() }, 1));
     }
 
-    private static ChartSearchResult MakeResult(Guid? chartId = null)
+    private static ChartSearchResult MakeResult(Guid? chartId = null, string songName = "=SUM(A1), \"Danger\"")
     {
         var chart = new Chart(chartId ?? Guid.NewGuid(), MixEnum.Phoenix,
-            new Song("=SUM(A1), \"Danger\"", SongType.Arcade, new Uri("https://piu.test/a.png"),
+            new Song(songName, SongType.Arcade, new Uri("https://piu.test/a.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
             ChartType.Double, 19, MixEnum.Phoenix, null, 700);
         return new ChartSearchResult(chart, MixEnum.XX,
@@ -67,9 +70,12 @@ public sealed class ChartsExportControllerTests
         return controller;
     }
 
+    /// <summary>The file as a reader would decode it: the byte-order mark is consumed, not kept.</summary>
     private static string Content(IActionResult result)
     {
-        return Encoding.UTF8.GetString(Assert.IsType<FileContentResult>(result).FileContents);
+        var bytes = Assert.IsType<FileContentResult>(result).FileContents;
+        using var reader = new StreamReader(new MemoryStream(bytes), Encoding.UTF8, true);
+        return reader.ReadToEnd();
     }
 
     [Fact]
@@ -92,6 +98,45 @@ public sealed class ChartsExportControllerTests
         // The =-led name gets the apostrophe guard, and the whole field quotes because of
         // its comma and embedded quotes.
         Assert.Equal("\"'=SUM(A1), \"\"Danger\"\"\"", lines[1].TrimEnd());
+    }
+
+    /// <summary>
+    ///     Excel opens a CSV in the system codepage unless the file starts with the UTF-8 mark,
+    ///     and a downloaded file has lost the response headers by the time Excel sees it.
+    /// </summary>
+    [Fact]
+    public async Task TheFileIsUtf8WithAByteOrderMark()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(
+                new[] { MakeResult(songName: "Simon Says, EURODANCE!! (feat. Sara☆M)") }, 1));
+
+        var result = await BuildController("?Columns=Song").Export(CancellationToken.None);
+
+        var file = Assert.IsType<FileContentResult>(result);
+        Assert.Equal("text/csv; charset=utf-8", file.ContentType);
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, file.FileContents.Take(3).ToArray());
+        Assert.Equal("Song", Encoding.UTF8.GetString(file.FileContents, 3, 4));
+        Assert.Contains("Sara☆M", Content(result));
+    }
+
+    [Fact]
+    public async Task ASongNameWithACommaReadsBackAsOneField()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(new[] { MakeResult(songName: "Dizzy Dance, Street Light") }, 1));
+
+        var result = await BuildController("?Columns=Song,Type,Level").Export(CancellationToken.None);
+
+        using var csv = new CsvReader(new StringReader(Content(result)), CultureInfo.InvariantCulture);
+        Assert.True(csv.Read());
+        csv.ReadHeader();
+        Assert.True(csv.Read());
+        Assert.Equal(3, csv.Parser.Count);
+        Assert.Equal("Dizzy Dance, Street Light", csv.GetField("Song"));
+        Assert.Equal("D", csv.GetField("Type"));
+        Assert.Equal("19", csv.GetField("Level"));
+        Assert.False(csv.Read());
     }
 
     [Fact]

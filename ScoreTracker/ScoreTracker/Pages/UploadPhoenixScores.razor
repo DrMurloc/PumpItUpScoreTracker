@@ -925,7 +925,7 @@
     {
 
         var stream = new MemoryStream();
-        await using var writer = new StreamWriter(stream);
+        await using var writer = new StreamWriter(stream, CsvText.Utf8WithBom);
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
         await csv.WriteRecordsAsync(_failedUploads);
         await writer.FlushAsync();

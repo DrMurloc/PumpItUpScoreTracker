@@ -1,4 +1,3 @@
-using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -77,6 +76,6 @@ public class ChartsExportController : Controller
         var csv = ChartExport.Write(page.Results, columns, context, metricNames);
 
         var scopeSlug = ChartSlugs.MixSlug(mix);
-        return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"charts_{scopeSlug}.csv");
+        return File(CsvText.ToBytes(csv), CsvText.ContentType, $"charts_{scopeSlug}.csv");
     }
 }

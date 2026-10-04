@@ -133,6 +133,29 @@ public sealed class PhoenixScoreFileExtractorTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task AQuotedTitleWithACommaReadsAsOneSong()
+    {
+        var (scores, errors) = await Extract(Header + "\"Dizzy Dance, Street Light\",D24,990032,sss,fg,false\r\n");
+
+        Assert.Single(scores);
+        Assert.Empty(errors);
+        _mediator.Verify(m => m.Send(
+            It.Is<GetChartQuery>(q => q.SongName.ToString() == "Dizzy Dance, Street Light" && (int)q.Level == 24),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFileStartingWithAByteOrderMarkStillFindsItsColumns()
+    {
+        // Every CSV download the site and the console script hand out starts with the UTF-8 mark,
+        // and Excel keeps it when a player saves an edited copy.
+        var (scores, errors) = await Extract("﻿" + Header + "\"Arcana Force\",D20,990032,sss,fg,false\r\n");
+
+        Assert.Single(scores);
+        Assert.Empty(errors);
+    }
+
     private Task<(IEnumerable<RecordedPhoenixScore> Scores, IEnumerable<SpreadsheetScoreErrorDto> Errors)> Extract(
         string csv, MixEnum mix = MixEnum.Phoenix2)
     {
