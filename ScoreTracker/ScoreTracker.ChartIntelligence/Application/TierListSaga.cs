@@ -125,17 +125,18 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     public async Task Consume(ConsumeContext<ProcessPassTierListCommand> context)
     {
         var mix = context.Message.Mix;
-        // Levels 10 through 29 — DifficultyLevel.Max. The peer group guards below stop reaching
-        // above 29 for the upper folders rather than the loop stopping short of them.
+        // Levels 10 through 29 — DifficultyLevel.Max.
         // The types this mix has, minus co-op, which the loop below walks by player count.
         // RISE's doubles folder is half-doubles, so that is what gets a folder here.
         var folderTypes = MixProfiles.For(mix).ChartTypes
             .Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray();
+        var activePlayers = await _scores.GetActiveUserIds(mix, _clock.Now - PassPeerWeights.ActivityWindow,
+            context.CancellationToken);
         foreach (var level in Enumerable.Range(10, 20))
         foreach (var chartType in folderTypes)
         {
             await ProcessPgTierList(mix, level, chartType, context.CancellationToken);
-            await ProcessPassTierList(mix, level, chartType, context.CancellationToken);
+            await ProcessPassTierList(mix, level, chartType, activePlayers, context.CancellationToken);
         }
 
         foreach (var playerCount in Enumerable.Range(2, 5))
@@ -396,40 +397,40 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         await _tierLists.SaveEntries(mix, result, cancellationToken);
     }
 
+    /// <summary>
+    ///     The community Pass list for one folder: every unbroken pass in it, weighted by where the
+    ///     passer's competitive level for the chart type sits against the folder
+    ///     (<see cref="PassPeerWeights" />). A chart nobody counted for sums to zero and is saved
+    ///     unrecorded.
+    /// </summary>
     private async Task ProcessPassTierList(MixEnum mix, DifficultyLevel level, ChartType chartType,
-        CancellationToken cancellationToken)
+        IReadOnlySet<Guid> activePlayers, CancellationToken cancellationToken)
     {
         var charts =
             (await _chartRepository.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
             .ToArray();
-        var userWeights = new Dictionary<int, IEnumerable<Guid>>
-        {
-            { 7, await _tierLists.GetUsersOnLevel(mix, level - 3, cancellationToken, true) },
-            { 6, await _tierLists.GetUsersOnLevel(mix, level - 2, cancellationToken, true) },
-            { 5, await _tierLists.GetUsersOnLevel(mix, level - 1, cancellationToken, true) },
-            { 4, await _tierLists.GetUsersOnLevel(mix, level, cancellationToken, true) }
-        };
-        if (level < 27) userWeights[3] = await _tierLists.GetUsersOnLevel(mix, level + 3, cancellationToken);
-        if (level < 28) userWeights[2] = await _tierLists.GetUsersOnLevel(mix, level + 2, cancellationToken);
-        if (level < 29) userWeights[1] = await _tierLists.GetUsersOnLevel(mix, level + 1, cancellationToken);
-        var chartSums = charts.ToDictionary(c => c.Id, c => 0);
-        foreach (var weightValue in userWeights)
-        {
-            var scores =
-                (await _scores.GetScores(mix, weightValue.Value, chartType, level, level,
-                    cancellationToken))
-                .Where(s => !s.IsBroken).ToArray();
+        if (charts.Length == 0) return;
 
-            foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))
-                chartSums[score.ChartId] += weightValue.Key;
+        var passes = (await _scores.GetScores(mix, chartType, level, cancellationToken))
+            .Where(s => !s.Record.IsBroken).ToArray();
+        var competitiveLevels =
+            (await _playerStats.GetStats(mix, passes.Select(p => p.UserId).Distinct().ToArray(),
+                cancellationToken))
+            .ToDictionary(s => s.UserId, s => chartType.Category() is ChartTypeCategory.Single
+                ? s.SinglesCompetitiveLevel
+                : s.DoublesCompetitiveLevel);
+        var chartSums = charts.ToDictionary(c => c.Id, c => 0);
+        foreach (var (userId, record) in passes)
+        {
+            // A passer with no stats row has no level to place them by, so they count nothing.
+            if (!chartSums.ContainsKey(record.ChartId) ||
+                !competitiveLevels.TryGetValue(userId, out var competitiveLevel)) continue;
+            chartSums[record.ChartId] +=
+                PassPeerWeights.For(level, competitiveLevel, activePlayers.Contains(userId));
         }
 
-        if (!chartSums.Any()) return;
-
-
-        var result = new List<SongTierListEntry>();
-        result.AddRange(TierListProcessor.ProcessIntoTierList("Pass Count", chartSums));
-        await _tierLists.SaveEntries(mix, result, cancellationToken);
+        await _tierLists.SaveEntries(mix, TierListProcessor.ProcessIntoTierList("Pass Count", chartSums),
+            cancellationToken);
     }
 
     // --- The PUMBILITY tier lists (docs/design/pumbility-tier-list.md) -----------------------
