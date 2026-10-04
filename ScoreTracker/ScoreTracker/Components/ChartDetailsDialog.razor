@@ -122,7 +122,8 @@
                                         InitialScope="_boardOverride?.Scope ?? BoardScope"
                                         InitialCommunity="_boardOverride?.Community ?? BoardCommunity"
                                         Subject="BoardSubjectInForce"
-                                        @key="(ViewChart.Id, Mix)"></ChartLeaderboardScopes>
+                                        OfficialSupplemented="BoardSupplemented"
+                                        @key="(ViewChart.Id, Mix, BoardSupplemented)"></ChartLeaderboardScopes>
             </div>
             @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
                compares key VALUES only, so two keyed siblings sharing a chart id collide even
@@ -388,6 +389,13 @@
 
     /// <summary>The club the Community scope opens on, when the host names one.</summary>
     [Parameter] public Name? BoardCommunity { get; set; }
+
+    /// <summary>
+    ///     Whether the board's Official scope appends the PIU Scores rows below piugame's own. The
+    ///     Official Leaderboards section passes its Supplemented switch; everywhere else the
+    ///     Official scope is piugame's board alone.
+    /// </summary>
+    [Parameter] public bool BoardSupplemented { get; set; }
 
     /// <summary>
     ///     Whose band the Competitive scope shows. A page scoped to another player — their

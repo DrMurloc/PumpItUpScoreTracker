@@ -68,7 +68,7 @@ public sealed class BunitEventDispatchTests
         // click inside that lambda is already running on the right thread.
         ["LifeCalculatorPageTests.cs"] = 4,
         ["MixChangesPageTests.cs"] = 8,
-        ["OfficialLeaderboardsHubTests.cs"] = 6,
+        ["OfficialLeaderboardsHubTests.cs"] = 5,
         ["QualifiersAdminPageTests.cs"] = 5,
         // QuickRecordWidgetTests burned its 8 — it was the loudest file left once the
         // warmup was in (three of its facts chain a grade tap into a save), so it went

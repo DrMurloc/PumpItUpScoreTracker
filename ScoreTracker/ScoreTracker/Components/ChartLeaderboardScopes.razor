@@ -86,7 +86,7 @@ else
     <div class="cld-body">
         @foreach (var row in _rows)
         {
-            <div class="weekly-lb-row @RowClass(row)">
+            <div class="weekly-lb-row @RowClass(row) @(row.IsSupplemented ? "cld-row-supp" : null)">
                 <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                     #@row.Place
                 </span>
@@ -127,6 +127,15 @@ else
                                     IsBroken="row.Score.IsBroken" OneLine="true" ShowScore="true" Tooltip="false">
                     </ScoreBreakdown>
                 </span>
+            </div>
+        }
+        @* The rail is the one mark on this board that needs a key, so the key appears only
+           when a railed row does. *@
+        @if (_rows.Any(r => r.IsSupplemented))
+        {
+            <div class="cld-supp-legend" data-testid="cld-supp-legend">
+                <span class="cld-supp-legend-rail"></span>
+                <span>@L["Rows with this edge come from the player's PIU Scores account, not the official board."]</span>
             </div>
         }
         @if (RivalFootnote is { Length: > 0 } footnote)
@@ -224,6 +233,14 @@ else
     [Parameter] public Guid? Subject { get; set; }
 
     /// <summary>
+    ///     Whether the Official scope appends the PIU Scores rows below the mirrored board's own —
+    ///     the Official Leaderboards section's Supplemented reading. Those rows carry the rail and
+    ///     its key. The board is fetched once per chart, so a host that changes this on a mounted
+    ///     board re-keys it.
+    /// </summary>
+    [Parameter] public bool OfficialSupplemented { get; set; }
+
+    /// <summary>
     ///     What the last parameter set asked to open on. A host that keeps one board mounted and
     ///     changes its mind — the details dialog, when a popover line asks for another scope on the
     ///     same chart — re-applies without reloading the chart.
@@ -231,7 +248,7 @@ else
     private (LeaderboardScope Scope, Name? Community, Guid? Subject)? _appliedInitial;
 
     private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe,
-        bool IsCommunity, bool IsRival, bool IsOfficial);
+        bool IsCommunity, bool IsRival, bool IsOfficial, bool IsSupplemented);
 
     private Chart? _chart;
     private bool _loading = true;
@@ -266,6 +283,9 @@ else
     private DateTimeOffset? _pumbilityBoardAsOf;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
+
+    /// <summary>The Official board's PIU Scores rows, by tag — the only identity every board row has.</summary>
+    private IReadOnlySet<string> _officialSupplementedTags = new HashSet<string>();
     /// <summary>
     ///     Every board player on screen, by tag, with the face the mirror swept. Board rows have
     ///     no account to be known by, so the tag is the key — and the map is filled by whichever
@@ -427,7 +447,7 @@ else
                 _rows.Add(new Row(tiePlace,
                     total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
                     score, score.UserId == myId, _communityUserIds.Contains(score.UserId),
-                    IsRivalRow(score), IsOfficialRow(score)));
+                    IsRivalRow(score), IsOfficialRow(score), IsSupplementedRow(score)));
                 place++;
             }
         }
@@ -533,21 +553,33 @@ else
             {
                 // Fetched on first selection and kept for the rest of this chart's life, so
                 // switching away and back is free.
-                _officialBoard ??= await Mediator.Send(new GetOfficialChartBoardQuery(Mix, ChartId));
+                _officialBoard ??= await Mediator.Send(new GetOfficialChartBoardQuery(Mix, ChartId,
+                    OfficialSupplemented));
                 if (_officialBoard is not { Entries.Count: > 0 }) return Array.Empty<UserPhoenixScore>();
                 // The glows still apply through a link — this is the one scope where a rival can
                 // show up who has never shared a site with you.
                 _communityUserIds = _clubmates;
 
+                // A board-only rival has no account, so their tag is how a row is theirs. Ghosts
+                // only: matching a site rival by tag would light a row their account may keep
+                // private, the same disclosure the link rule below exists to prevent.
+                _rivalGhostNames = _rivals.Where(r => r.IsGhost && r.Tag != null).Select(r => r.Tag!)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _officialSupplementedTags = _officialBoard.Entries.Where(e => e.IsSupplemented)
+                    .Select(e => e.Player.Username).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
                 // A private account's link is mirrored data they never published, so it is not
                 // surfaced: their row keeps the board tag and nothing else, which is exactly what
                 // the official site shows. Dropping the id also drops every glow, because a glow
-                // would say "this tag is someone you know" just as loudly as a name would.
+                // would say "this tag is someone you know" just as loudly as a name would. Your
+                // own link is the exception — it is yours to see, and it is what puts you on the
+                // standing line.
                 var linked = _officialBoard.Entries.Where(e => e.Player.UserId != null)
                     .Select(e => e.Player.UserId!.Value).Distinct().ToArray();
                 _officialPublicLinks = linked.Length == 0
                     ? new HashSet<Guid>()
                     : (await Users.GetUsers(linked)).Where(u => u.IsPublic).Select(u => u.Id).ToHashSet();
+                var viewer = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
 
                 // The mirror has an avatar for every board player, and it is the same source a
                 // site avatar comes from — keyed by tag, since unlinked rows share Guid.Empty.
@@ -556,7 +588,9 @@ else
 
                 return _officialBoard.Entries
                     .Select(e => new UserPhoenixScore(
-                        e.Player.UserId is { } id && _officialPublicLinks.Contains(id) ? id : Guid.Empty,
+                        e.Player.UserId is { } id && (id == viewer || _officialPublicLinks.Contains(id))
+                            ? id
+                            : Guid.Empty,
                         ChartId, e.Player.Username, e.Score, null, false))
                     .ToArray();
             }
@@ -674,9 +708,15 @@ else
     private const string DefaultAvatar =
         "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
 
+    // A row with an account is matched by it and nothing else; only an accountless row can be a
+    // ghost, so a tag left over from another scope never lights a site player whose name reads alike.
     private bool IsRivalRow(UserPhoenixScore score) =>
-        (score.UserId != Guid.Empty && _rivalUserIds.Contains(score.UserId))
-        || _rivalGhostNames.Contains(score.UserName.ToString());
+        score.UserId != Guid.Empty
+            ? _rivalUserIds.Contains(score.UserId)
+            : _rivalGhostNames.Contains(score.UserName.ToString());
+
+    private bool IsSupplementedRow(UserPhoenixScore score) =>
+        _scope == LeaderboardScope.Official && _officialSupplementedTags.Contains(score.UserName.ToString());
 
     // A board row has no account, which is what separates it from a site peer whose username
     // happens to read like somebody's board tag — that peer used to collect the mirror's asterisk

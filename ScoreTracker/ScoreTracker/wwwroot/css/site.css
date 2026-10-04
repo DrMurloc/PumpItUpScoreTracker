@@ -6384,33 +6384,6 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 800;
 }
 
-/* The legend chips, still worn by the official chart-board dialog. The page's own
-   leaderboard table is gone — chart details renders ChartLeaderboardScopes now, which
-   brings the .weekly-lb-row vocabulary with it. */
-.chart-lb-legend {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .74rem;
-    color: var(--mix-ink-muted);
-}
-
-.chart-lb-dot {
-    display: inline-block;
-    width: 9px;
-    height: 9px;
-    border-radius: 3px;
-}
-
-.chart-lb-dot-community {
-    background: var(--daily-community);
-}
-
-.chart-lb-dot-me {
-    background: var(--daily-you);
-    margin-left: 10px;
-}
-
 .chart-shelf-empty {
     color: var(--mix-ink-muted);
 }
@@ -9080,7 +9053,7 @@ button.chart-card-art {
 /* Rankings and chart boards render as compact card rows, never tables — a phone
    reads rank, player, and rating with zero side-scrolling (UX rule: tabular
    collections lean compact). */
-.olb-rank-card, .olb-board-row {
+.olb-rank-card {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -9469,7 +9442,7 @@ button.chart-card-art {
 
     .olb-short-form { display: inline; }
 
-    .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
+    .olb-rank-card { gap: 5px; padding: 3px 4px; }
 
     .olb-rank-rankbox { min-width: 42px; }
 
@@ -14085,6 +14058,31 @@ button.chart-card-art {
     margin: 8px 0 0;
     padding-top: 7px;
     border-top: 1px solid rgba(255, 255, 255, .06);
+}
+
+/* A row PIU Scores added below the Official board's own: the Official Leaderboards section's
+   dashed rail on the same token, so the two read as one mark. A rail rather than a tint, because
+   the you and community glows own the row's background. */
+.weekly-lb-row.cld-row-supp {
+    border-left: 2px dashed var(--mix-secondary);
+    padding-left: 6px;
+}
+
+/* The rail's key, drawn with the rail itself so the two cannot drift apart. */
+.cld-supp-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+}
+
+.cld-supp-legend-rail {
+    flex: 0 0 auto;
+    width: 0;
+    height: 14px;
+    border-left: 2px dashed var(--mix-secondary);
 }
 
 /* ── Rivals (docs/design/rivals.md) ───────────────────────────────────────────────────── */

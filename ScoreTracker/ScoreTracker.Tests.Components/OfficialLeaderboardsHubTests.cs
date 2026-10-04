@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -19,6 +21,7 @@ using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Pages.OfficialLeaderboards;
 using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
@@ -42,10 +45,14 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
+        // Every view mounts ChartDetailsDialog, and opening it reads the chart's video.
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.Catalog.Contracts.Queries.GetChartVideosQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartVideoInformation>());
         Services.AddSingleton(_mediator.Object);
-        // The popularity view mounts ChartDetailsDialog (closed) — it injects this.
+        // Every view mounts ChartDetailsDialog (closed) — it injects this.
         Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
-        // Rankings, This Week, and the chart-board dialog glow you/community rows.
+        // Rankings and This Week glow you/community rows.
         Services.AddScoped<CommunityGlowReader>();
         // Last: it reads the renderer, locking the service collection. The hub views run in
         // an interactive circuit; SongImage/DifficultyBubble gate tooltips on RendererInfo.
@@ -444,93 +451,132 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             Times.Never);
     }
 
-    private IRenderedFragment RenderBoardDialog(Chart chart)
-    {
-        // Inline MudDialogs render through the provider, so the fragment hosts both.
-        return Render(builder =>
-        {
-            builder.OpenComponent<MudDialogProvider>(0);
-            builder.CloseComponent();
-            builder.OpenComponent<OfficialChartBoardDialog>(1);
-            builder.AddAttribute(2, nameof(OfficialChartBoardDialog.Chart), chart);
-            builder.AddAttribute(3, nameof(OfficialChartBoardDialog.Visible), true);
-            builder.AddAttribute(4, nameof(OfficialChartBoardDialog.Mix), MixEnum.Phoenix2);
-            builder.CloseComponent();
-        });
-    }
+    // ── Chart details ────────────────────────────────────────────────────────
 
-    [Fact]
-    public void ChartBoardDialogListsTheBoardAndGlowsYourRow()
-    {
-        var me = Guid.NewGuid();
-        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
-        CurrentUser.SetupGet(c => c.User)
-            .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
-        // These boards read rivals now too — by tag as well as by id, since a board-only rival
-        // is a row here rather than an absence. An unstubbed query hands back a null to enumerate.
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<RivalSubject>());
-        var chart = MakeChart("1948", ChartType.Double, 29);
-        _mediator.Setup(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OfficialChartBoardRecord(Week2, new[]
+    /// <summary>
+    ///     The dialog is read off the component tree: with no dialog provider in the tree its
+    ///     content never mounts, so these facts pin what the section asks for rather than what the
+    ///     board inside it draws — that is ChartLeaderboardScopesTests' job.
+    /// </summary>
+    private static ChartDetailsDialog Details(IRenderedFragment cut) =>
+        cut.FindComponent<ChartDetailsDialog>().Instance;
+
+    private static WeeklyHighlightsRecord WorldFirstOn(Chart chart, WeeklyPulseRecord? pulse = null) =>
+        new(Week2, Week1,
+            Array.Empty<OfficialMoverRecord>(),
+            Array.Empty<OfficialBoardsClimbedRecord>(),
+            new[]
             {
-                new OfficialChartBoardEntryRecord(1,
-                    new OfficialPlayerRecord(3, "FEFEMZ#1489", null, null), 962777),
-                new OfficialChartBoardEntryRecord(2,
-                    new OfficialPlayerRecord(9, "DRMURLOC#7222", null, me), 951210)
-            }));
+                new OfficialGradeFirstRecord(Player(3, "FEFEMZ#1489"), chart.Id, "Double", 29, "AAA+", 962777,
+                    false)
+            },
+            Array.Empty<OfficialNewNumberOneRecord>(), pulse,
+            Array.Empty<OfficialGainerRecord>(), Array.Empty<OfficialDebutRecord>(),
+            Array.Empty<OfficialFloorMarkRecord>());
 
-        var cut = RenderBoardDialog(chart);
+    [Fact]
+    public async Task ThisWeekWorldFirstOpensChartDetailsOnTheOfficialBoard()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(WorldFirstOn(chart));
 
-        cut.WaitForAssertion(() => Assert.Contains("FEFEMZ", cut.Markup));
-        Assert.Contains("962,777", cut.Markup);
-        var mine = Assert.Single(cut.FindAll(".olb-board-row.olb-row-me"));
-        Assert.Contains("DRMURLOC", mine.TextContent);
-        Assert.DoesNotContain("#7222", mine.TextContent);
+        var cut = RenderComponent<HubThisWeek>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Supplemented, true)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart }));
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("a"), a => a.TextContent.Contains("1948")));
+
+        await cut.FindAll("a").First(a => a.TextContent.Contains("1948")).ClickAsync(new MouseEventArgs());
+
+        var dialog = Details(cut);
+        Assert.True(dialog.Visible);
+        Assert.Equal(chart.Id, dialog.Chart!.Id);
+        Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.Official, dialog.BoardScope);
+        // The section's Supplemented reading carries into the board it opens.
+        Assert.True(dialog.BoardSupplemented);
     }
 
     [Fact]
-    public void ThisWeekWorldFirstSongOpensItsChartBoard()
+    public async Task ThisWeekHeroFirstOpensChartDetails()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(WorldFirstOn(chart, new WeeklyPulseRecord(612, 1235, 428, 41)));
+
+        var cut = RenderComponent<HubThisWeek>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart }));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".olb-hero-card.first a")));
+
+        await cut.Find(".olb-hero-card.first a").ClickAsync(new MouseEventArgs());
+
+        Assert.True(Details(cut).Visible);
+        Assert.Equal(chart.Id, Details(cut).Chart!.Id);
+        Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.Official, Details(cut).BoardScope);
+    }
+
+    /// <summary>The jacket is the tap target on a phone, where the song name is the first thing to go.</summary>
+    [Fact]
+    public async Task ThisWeekNewNumberOneJacketOpensChartDetails()
     {
         var chart = MakeChart("1948", ChartType.Double, 29);
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WeeklyHighlightsRecord(Week2, Week1,
                 Array.Empty<OfficialMoverRecord>(),
                 Array.Empty<OfficialBoardsClimbedRecord>(),
-                new[]
-                {
-                    new OfficialGradeFirstRecord(Player(3, "FEFEMZ#1489"), chart.Id, "Double", 29,
-                        "AAA+", 962777, false)
-                },
-                Array.Empty<OfficialNewNumberOneRecord>(), null,
-                Array.Empty<OfficialGainerRecord>(), Array.Empty<OfficialDebutRecord>(),
-                Array.Empty<OfficialFloorMarkRecord>()));
-        _mediator.Setup(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OfficialChartBoardRecord(Week2, new[]
-            {
-                new OfficialChartBoardEntryRecord(1, Player(3, "FEFEMZ#1489"), 962777)
-            }));
+                Array.Empty<OfficialGradeFirstRecord>(),
+                new[] { new OfficialNewNumberOneRecord(Player(3, "HALCYON"), chart.Id, 997_342, null) }));
 
-        var cut = Render(builder =>
-        {
-            builder.OpenComponent<MudDialogProvider>(0);
-            builder.CloseComponent();
-            builder.OpenComponent<HubThisWeek>(1);
-            builder.AddAttribute(2, nameof(HubThisWeek.Mix), MixEnum.Phoenix2);
-            builder.AddAttribute(3, nameof(HubThisWeek.Charts),
-                (IDictionary<Guid, Chart>)new Dictionary<Guid, Chart> { [chart.Id] = chart });
-            builder.CloseComponent();
-        });
+        var cut = RenderComponent<HubThisWeek>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart }));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("a.olb-chartlink")));
 
-        cut.WaitForAssertion(() => cut.FindAll("a").First(a => a.TextContent.Contains("1948")).Click());
+        await cut.Find("a.olb-chartlink").ClickAsync(new MouseEventArgs());
 
-        cut.WaitForAssertion(() => Assert.Contains("#1", cut.Markup));
-        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
-            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(Details(cut).Visible);
+        Assert.Equal(chart.Id, Details(cut).Chart!.Id);
+    }
+
+    // ── Players: the placement sheet ────────────────────────────────────────
+
+    private static OfficialPlayerChartRecord Placement(Chart chart, double rating, int place = 3) =>
+        new(chart.Id, place, null, 990_000, rating);
+
+    private static OfficialPlayerProfileRecord ProfileWith(IReadOnlyList<OfficialPlayerChartRecord> placements,
+        params OfficialPlayerPoolRecord[] pools) =>
+        new(Player(9, "NIMBUS9"), null, 17903.40m, 8, null, placements.Count, 0, 1, 0,
+            new[] { new OfficialPlayerHistoryPoint(Week2, 17903.40m, 8, placements.Count) }, placements,
+            Pools: pools);
+
+    private async Task<IRenderedComponent<HubPlayers>> RenderPlayer(MixEnum mix, OfficialPlayerProfileRecord profile,
+        IDictionary<Guid, Chart> charts)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPlayerNamesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { "NIMBUS9" });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPlayerProfileQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        var cut = RenderComponent<HubPlayers>(p => p.Add(x => x.Mix, mix).Add(x => x.Charts, charts));
+        await cut.InvokeAsync(() => cut.Instance.SelectPlayer("NIMBUS9"));
+        return cut;
+    }
+
+    [Fact]
+    public async Task APlayersPlacementOpensChartDetailsOnTheOfficialBoard()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        var cut = await RenderPlayer(MixEnum.Phoenix2,
+            ProfileWith(new[] { Placement(chart, 400) }, new OfficialPlayerPoolRecord("All", 400m, true)),
+            new Dictionary<Guid, Chart> { [chart.Id] = chart });
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".olb-board-table a")));
+
+        await cut.FindAll(".olb-board-table a").First(a => a.TextContent.Contains("1948"))
+            .ClickAsync(new MouseEventArgs());
+
+        Assert.True(Details(cut).Visible);
+        Assert.Equal(chart.Id, Details(cut).Chart!.Id);
+        Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.Official, Details(cut).BoardScope);
     }
 
     // ── Popularity ───────────────────────────────────────────────────────────
@@ -558,6 +604,27 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Contains("▲2", cut.Markup);
         Assert.Contains("olb-spark", cut.Markup);
         Assert.Contains("＊", cut.Markup); // new-this-week marker
+    }
+
+    /// <summary>
+    ///     Most of the popularity board sits below level 20, where piugame keeps no chart board, so
+    ///     its charts open on the site's own board rather than an empty official one.
+    /// </summary>
+    [Fact]
+    public async Task APopularityCardOpensChartDetailsOnTheWorldBoard()
+    {
+        var hottest = MakeChart("Papasito", ChartType.Single, 14);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPopularityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new OfficialPopularityRecord(hottest.Id, 1, 1, new[] { 1, 1 }) });
+        var cut = RenderComponent<HubPopularity>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [hottest.Id] = hottest }));
+
+        await cut.FindAll(".olb-pop-card").First().ClickAsync(new MouseEventArgs());
+
+        Assert.True(Details(cut).Visible);
+        Assert.Equal(hottest.Id, Details(cut).Chart!.Id);
+        Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.World, Details(cut).BoardScope);
     }
 
     [Fact]

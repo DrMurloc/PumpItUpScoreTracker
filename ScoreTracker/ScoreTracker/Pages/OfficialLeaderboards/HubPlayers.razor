@@ -190,14 +190,12 @@ else
                 <MudTd>
                     @if (Charts.TryGetValue(context.ChartId, out var chart))
                     {
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer;gap:4px"
+                                 Underline="Underline.None" OnClick="() => OpenChart(chart.Id)">
                             <DifficultyBubble Chart="chart" Small="true"/>
                             <SongImage Song="chart.Song" Small="true"/>
-                            <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
-                                     OnClick="() => OpenBoard(chart)">
-                                <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
-                            </MudLink>
-                        </MudStack>
+                            <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
+                        </MudLink>
                     }
                 </MudTd>
                 <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
@@ -210,8 +208,9 @@ else
     </MudPaper>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
-                          Supplemented="Supplemented"/>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"
+                    BoardScope="ChartLeaderboardScopes.LeaderboardScope.Official"
+                    BoardSupplemented="Supplemented"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -226,8 +225,8 @@ else
     private string _selected = string.Empty;
     private string[] _names = Array.Empty<string>();
     private bool _loadingProfile;
-    private bool _boardOpen;
-    private Chart? _boardChart;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
     private OfficialPlayerProfileRecord? _profile;
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
@@ -270,10 +269,11 @@ else
         }
     }
 
-    private void OpenBoard(Chart chart)
+    private void OpenChart(Guid chartId)
     {
-        _boardChart = chart;
-        _boardOpen = true;
+        if (!Charts.TryGetValue(chartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     private bool? _loadedSupplemented;

@@ -33,6 +33,7 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+        cursor: pointer;
     }
 
     .olb-pop-jacket {
@@ -83,6 +84,14 @@
         padding: 4px 12px 4px 6px;
         font-size: 12.5px;
         max-width: 100%;
+    }
+
+    button.olb-pop-mover {
+        border: 0;
+        color: inherit;
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
     }
 
     .olb-pop-mover b {
@@ -166,7 +175,7 @@ else
                 <div class="olb-pop-trio">
                     @foreach (var (record, chart) in _known.Take(3))
                     {
-                        <div class="olb-pop-card">
+                        <div class="olb-pop-card" role="button" tabindex="0" @onclick="() => OpenDetails(chart)">
                             <div class="olb-pop-jacket" style="background-image:url('@chart.Song.ImagePath')">
                                 <span class="olb-pop-bubble"><DifficultyBubble Chart="chart" Small="true"/></span>
                             </div>
@@ -186,7 +195,7 @@ else
                 <div class="olb-pop-trio">
                     @foreach (var (record, chart) in _known.TakeLast(3))
                     {
-                        <div class="olb-pop-card">
+                        <div class="olb-pop-card" role="button" tabindex="0" @onclick="() => OpenDetails(chart)">
                             <div class="olb-pop-jacket" style="background-image:url('@chart.Song.ImagePath')">
                                 <span class="olb-pop-bubble"><DifficultyBubble Chart="chart" Small="true"/></span>
                             </div>
@@ -210,7 +219,8 @@ else
                 <div class="olb-pop-movers">
                     @foreach (var (record, chart) in _movers)
                     {
-                        <span class="olb-pop-mover">
+                        <button type="button" class="olb-pop-mover" title="@L["Chart Details"]"
+                                @onclick="() => OpenDetails(chart)">
                             <DifficultyBubble Chart="chart" Small="true"/>
                             <b>@chart.Song.Name</b>
                             @if (record.PreviousPlace == null)
@@ -225,7 +235,7 @@ else
                             {
                                 <span class="olb-delta-down num">▼@((record.Place - record.PreviousPlace.Value).ToString("N0"))</span>
                             }
-                        </span>
+                        </button>
                     }
                 </div>
             </MudPaper>
@@ -329,11 +339,12 @@ else
                         <MudText Typo="Typo.h6">@context.Rec.Place</MudText>
                     </MudTd>
                     <MudTd>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <SongImage Song="context.Chart.Song" Small="true"/>
+                        <MudLink title="@L["Chart Details"]" Class="olb-chartlink" Style="cursor:pointer"
+                                 Underline="Underline.None" OnClick="() => OpenDetails(context.Chart)">
                             <DifficultyBubble Chart="context.Chart" Small="true"/>
+                            <SongImage Song="context.Chart.Song" Small="true"/>
                             <MudText Typo="Typo.body1" Class="olb-song-text"><b>@context.Chart.Song.Name</b></MudText>
-                        </MudStack>
+                        </MudLink>
                     </MudTd>
                     <MudTd Class="olb-pop-artist">
                         <div class="olb-pop-artist-text">@context.Chart.Song.Artist</div>

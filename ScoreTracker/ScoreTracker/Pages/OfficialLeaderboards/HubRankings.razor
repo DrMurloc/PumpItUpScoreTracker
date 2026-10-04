@@ -98,7 +98,9 @@ else
     }
 }
 
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"
+                    BoardScope="ChartLeaderboardScopes.LeaderboardScope.Official"
+                    BoardSupplemented="Supplemented"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
