@@ -144,6 +144,44 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
     }
 
     [Fact]
+    public void FirstPlaceOnASmallBoardIsTheTopOfTheRamp()
+    {
+        var cut = RenderDialog([Entry(990_000), Entry(980_000), Entry(970_000)]);
+
+        cut.WaitForAssertion(() =>
+        {
+            var places = cut.FindAll(".weekly-lb-place");
+            Assert.Equal(3, places.Count);
+            Assert.Contains("--rarity-prism", places[0].GetAttribute("style"));
+            Assert.Contains("--rarity-silver", places[2].GetAttribute("style"));
+        });
+    }
+
+    [Fact]
+    public void TiedScoresShareAPlaceAndItsColorAndTheNextPlaceSkipsThem()
+    {
+        var cut = RenderDialog([Entry(1_000_000), Entry(1_000_000), Entry(990_000)]);
+
+        cut.WaitForAssertion(() =>
+        {
+            var places = cut.FindAll(".weekly-lb-place");
+            Assert.Equal(new[] { "#1", "#1", "#3" }, places.Select(p => p.TextContent.Trim()).ToArray());
+            Assert.Contains("--rarity-prism", places[0].GetAttribute("style"));
+            Assert.Contains("--rarity-prism", places[1].GetAttribute("style"));
+        });
+    }
+
+    [Fact]
+    public void APassAndABrokenRunOnTheSameScoreDoNotTie()
+    {
+        var cut = RenderDialog([Entry(950_000), Entry(950_000, isBroken: true)]);
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal(new[] { "#1", "#2" },
+                cut.FindAll(".weekly-lb-place").Select(p => p.TextContent.Trim()).ToArray()));
+    }
+
+    [Fact]
     public void RelevantSwitchFiltersOutOfBandRowsAndRenumbers()
     {
         // Top score from out of band; two in-band rows behind it. The switch drops the

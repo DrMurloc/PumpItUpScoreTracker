@@ -33,9 +33,12 @@
 
     @if (_firstLoad)
     {
-        @* Skeletons match the shape they become — never a lone spinner on a data page. *@
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="320px" Class="mb-3"></MudSkeleton>
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px"></MudSkeleton>
+        @* One card stands in for the hero and the history while the first build is in flight; it
+           goes the moment that build returns. A capture still running after that is the hero's
+           own card, not this one. *@
+        <div data-testid="sessions-loading">
+            <PatienceCard Explanation="@L["Reading the session and where each score stands among peers."]"></PatienceCard>
+        </div>
     }
     else if (_model.Hero == null)
     {
@@ -128,6 +131,8 @@
         var isOwner = CurrentUser.IsLoggedIn && CurrentUser.User.Id == UserIdParam;
         if (_user == null || (!_user.IsPublic && !isOwner))
         {
+            // Cleared so the render that follows paints nothing of theirs on the way out.
+            _user = null;
             NavManager.NavigateTo("/");
             return;
         }
@@ -135,6 +140,8 @@
         var query = System.Web.HttpUtility.ParseQueryString(NavManager.ToAbsoluteUri(NavManager.Uri).Query);
         if (Guid.TryParse(query.Get("session"), out var session)) _selectedSessionId = session;
 
+        // The header and the patience card paint now; the build below can take a while.
+        StateHasChanged();
         ListenForCapture();
         await LoadAsync();
     }
@@ -211,8 +218,8 @@
     private DateTimeOffset? Before => _before?.ToUniversalTime();
 
     /// <summary>
-    ///     Runs a targeted rebuild without tearing the page down. Skeletons belong to the first
-    ///     load only — swapping the whole page for them on a filter change is what made these
+    ///     Runs a targeted rebuild without tearing the page down. The patience card belongs to the
+    ///     first load only — swapping the whole page for it on a filter change is what made these
     ///     interactions feel like navigation on a page that never navigates.
     /// </summary>
     private async Task Refresh(Func<Task<SessionsPageModel>> rebuild)

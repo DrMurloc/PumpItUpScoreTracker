@@ -397,7 +397,10 @@ points first, never a chart the red cut took and never one nobody holds — stor
 `scores.MostHeldChart`, same season shape, rewritten in the same save. Both ends start at 14 (D29). The
 green is **mint**, `--easy-mark` (owner, 2026-09-16), mix-invariant like `--hard-mark`, and deliberately
 not Phoenix 2's own acid green: every glow renders on Phoenix 2, where the buttons, the links and the
-emerald rarity step are already green. The bubble's tooltip says which end it is.
+emerald rarity step are already green. A glowing bubble's native hover `title` says which end it is —
+the second channel UX rule 8 requires, since red against mint is the pair a colorblind player cannot
+separate. (Amended 2026-10-03: the bubble's MudTooltip was removed at the owner's request, see
+UX-GUIDELINES rule 3; the glow line survives as a plain `title`, set only when the bubble glows.)
 
 **D33 — Hardmode title progress rides the Discord card, the way PUMBILITY's does.** For a player with
 Hardmode on, the card mirrors PUMBILITY's three kinds of progress line, all derived from the Hardmode

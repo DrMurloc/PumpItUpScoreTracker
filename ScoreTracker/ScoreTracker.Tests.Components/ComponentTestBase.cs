@@ -18,7 +18,7 @@ namespace ScoreTracker.Tests.Components;
 /// <summary>
 ///     Shared bUnit context: Mud services, loose JS interop, a pass-through localizer
 ///     (keys are English UI text verbatim, so the key IS the display string), and the
-///     one mediator query DifficultyBubble's scoring-level cache issues.
+///     one mediator query the scoring-level cache (SimilarChartsShelf's) issues.
 /// </summary>
 public abstract class ComponentTestBase : TestContext
 {

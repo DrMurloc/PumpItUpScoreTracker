@@ -15,18 +15,12 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
     {
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
-        private readonly IScoreReader _scores;
-        private readonly ITitleRepository _titles;
 
         public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IMemoryCache cache,
-            IScoreReader scores,
-            ITitleRepository titles)
+            IMemoryCache cache)
         {
             _cache = cache;
             _factory = factory;
-            _scores = scores;
-            _titles = titles;
         }
 
         private static string TierListKey(MixEnum mix, Name tierListName)
@@ -63,22 +57,6 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(TierListKey(mix, entry.TierListName));
         }
-
-        public async Task<IEnumerable<Guid>> GetUsersOnLevel(MixEnum mix, DifficultyLevel level,
-            CancellationToken cancellationToken, bool requireActive = false)
-        {
-            // Title peerGroups come from PlayerProgress's ITitleRepository and activity from
-            // the Ledger's IScoreReader — reads through published contracts, not joins onto
-            // other verticals' tables (UserHighestTitle went PlayerProgress-internal at C50).
-            var onLevel = await _titles.GetUserIdsOnHighestLevel(mix, level, cancellationToken);
-            if (!requireActive)
-                return onLevel;
-
-            var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(120);
-            var active = await _scores.GetActiveUserIds(mix, cutoff, cancellationToken);
-            return onLevel.Where(active.Contains).ToArray();
-        }
-
 
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(MixEnum mix, Name tierListName,
             CancellationToken cancellationToken)

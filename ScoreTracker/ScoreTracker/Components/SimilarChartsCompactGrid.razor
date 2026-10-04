@@ -21,8 +21,7 @@ else if (_matches.Count == 0)
 else
 {
     @* Jacket and bubble, nothing else. The song name is what SongImage's own tooltip is for,
-       and spelling it out under a 70px tile only ever showed "Darkside of ..." anyway. The
-       bubble's tooltip is off because two of them fired on one tile. *@
+       and spelling it out under a 70px tile only ever showed "Darkside of ..." anyway. *@
     <div class="chart-similar-grid">
         @foreach (var match in _matches)
         {
@@ -31,7 +30,7 @@ else
                     @onclick="() => OnChartSelected.InvokeAsync(chart)">
                 <span class="chart-similar-jacket"><SongImage Song="chart.Song"></SongImage></span>
                 <span class="chart-similar-bubble">
-                    <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                 </span>
             </button>
         }

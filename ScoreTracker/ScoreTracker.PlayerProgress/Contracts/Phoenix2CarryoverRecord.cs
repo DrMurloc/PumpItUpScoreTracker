@@ -64,6 +64,11 @@ public sealed record ProjectedTitle(PumbilityPool Pool, double Value, string? Ti
 ///     One Phoenix 1 score repriced for Phoenix 2, with what it would be worth and whether the
 ///     player has since scored the chart here.
 /// </summary>
+/// <param name="Phoenix1Plate">
+///     The plate on the Phoenix 1 record, null when none was recorded. A projection merges it with
+///     the plate held here, since the game keeps the better of the two whatever the scores.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record CarryoverEntry(int Place, Guid ChartId, PhoenixScore Phoenix1Score,
-    PhoenixLetterGrade Phoenix1Grade, double Phoenix2Value, PhoenixScore? Phoenix2Score, bool AvailableInPhoenix2);
+    PhoenixLetterGrade Phoenix1Grade, double Phoenix2Value, PhoenixScore? Phoenix2Score, bool AvailableInPhoenix2,
+    PhoenixPlate? Phoenix1Plate = null);

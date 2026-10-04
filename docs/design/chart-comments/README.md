@@ -79,8 +79,9 @@ chart-change callback out to nineteen hosts.
 **Six columns, dropping to three below 500 px.** Fixed columns rather than `auto-fill`: the jackets
 are landscape, so their intrinsic width was deciding the track count and a 572 px dialog fitted
 five. At six columns on a phone a 22 px bubble sat on a ~25 px-tall jacket and the tile was all
-bubble. The bubble's own tooltip is suppressed (`DifficultyBubble.Tooltip="false"`, the opt-out
-`ScoreBreakdown` already carried) because two fired on one tile.
+bubble. The bubble's own tooltip was suppressed here because two fired on one tile; since
+2026-10-03 the bubble has no tooltip anywhere (UX-GUIDELINES rule 3), so the `Tooltip="false"` opt-out
+is gone and SongImage's tooltip is the tile's only one.
 
 The graph is populated — `recalculate-chart-similarity` is on a daily cron and has been running
 since the chart-page overhaul deployed. Build the empty state anyway; it is what a chart the

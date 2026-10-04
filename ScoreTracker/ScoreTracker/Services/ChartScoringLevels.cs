@@ -5,8 +5,9 @@ using ScoreTracker.Application.Queries;
 
 namespace ScoreTracker.Web.Services;
 
-// Circuit-scoped lazy cache of the Chart Intelligence scoring-level projection so
-// per-chart UI elements (difficulty bubbles) don't issue a query each.
+// Circuit-scoped lazy cache of the Chart Intelligence scoring-level projection so a
+// per-chart lookup (the similar-charts shelf's difficulty sort and chart facts) doesn't
+// issue a query each.
 public sealed class ChartScoringLevels
 {
     private readonly IMediator _mediator;

@@ -142,6 +142,8 @@ One flag set, resolved per `ListMix`:
 
 XX and older mixes get the whole-page **"Tier lists for XX and older coming soon"** state (round 5) — the per-capability XX column is moot for this page.
 
+Community Pass groups players by their competitive level for the folder's chart type on every mix since 2026-10-03 — the difficulty-title groups it used before left Phoenix 2 and both RISE mixes all Not Rated ([pumbility-tier-list.md §10a](pumbility-tier-list.md)).
+
 Skill automation is out of scope for the overhaul itself; Phoenix 1 skills stay read-only ("leave something behind"). Research findings for the follow-on project:
 
 ### 8a. Skill automation: piucenter.com integration (2026-07-11)

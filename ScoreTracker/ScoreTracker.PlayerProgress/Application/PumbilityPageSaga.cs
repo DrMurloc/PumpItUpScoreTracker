@@ -99,13 +99,18 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToDictionary(t => t.ChartId);
 
             // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need
-            // estimating — the score is on record, and repricing it is arithmetic. Those rows
-            // REPLACE any peer estimate for the same chart, because a number the player has
-            // actually hit beats a quantile of what other people hit.
+            // estimating — the score is on record, and repricing it is arithmetic. A carried row
+            // whose score would raise the one held here REPLACES any peer estimate for the same
+            // chart, because a number the player has actually hit beats a quantile of what other
+            // people hit. One at or below the score held pays only through its plate and says
+            // nothing about the higher score an estimate is for, so there the larger gain stands.
             if (mix == MixEnum.Phoenix2)
                 foreach (var carried in await CarryoverTargets(request.UserId, request.Pool, charts,
                              bar, scoring, projection, mine, cancellationToken))
-                    targets[carried.ChartId] = carried;
+                    if (!targets.TryGetValue(carried.ChartId, out var estimate)
+                        || ProjectedBest.RaisesScore(carried.Projected, mine.GetValueOrDefault(carried.ChartId))
+                        || carried.Gain >= estimate.Gain)
+                        targets[carried.ChartId] = carried;
 
             // One ranked list of likely gains with two sources of evidence behind it, not two
             // lists stapled together. The cut happens AFTER the merge so a chart both sources
@@ -118,7 +123,8 @@ namespace ScoreTracker.PlayerProgress.Application
             // What each chart would be worth at its best available reading — held score, or the
             // projection if that beats it. MERGED rather than summed: a chart already in the pool
             // keeps the better of the two, so nothing counts twice and no gain has to be added to
-            // another one, which §8.3 forbids.
+            // another one, which §8.3 forbids. Each projection is priced exactly as its gain was:
+            // merged with what is held, at the carried row's own plate or the curve's.
             var reachable = new Dictionary<Guid, double>();
             foreach (var (chartId, score) in mine)
                 if (charts.ContainsKey(chartId))
@@ -126,10 +132,9 @@ namespace ScoreTracker.PlayerProgress.Application
                         score.Plate ?? PhoenixPlate.RoughGame, score.IsBroken);
             foreach (var target in targets.Values)
             {
-                var plate = mine.TryGetValue(target.ChartId, out var held)
-                    ? held.Plate ?? PhoenixPlate.RoughGame
-                    : PhoenixPlate.RoughGame;
-                var projected = scoring.GetScore(charts[target.ChartId], target.Projected, plate, false);
+                var held = mine.GetValueOrDefault(target.ChartId);
+                var plate = target.ProjectedPlate ?? ProjectedBest.PeerPlate(target.Projected, held);
+                var projected = ProjectedBest.Value(scoring, charts[target.ChartId], target.Projected, plate, held);
                 if (projected > reachable.GetValueOrDefault(target.ChartId))
                     reachable[target.ChartId] = projected;
             }
@@ -363,6 +368,12 @@ namespace ScoreTracker.PlayerProgress.Application
         ///         whichever is higher — and both sources of evidence end up on one ranked list
         ///         priced identically.
         ///     </para>
+        ///     <para>
+        ///         What gets priced is the best the player would hold after replaying the Phoenix 1
+        ///         score here: the higher of the two scores with the better of the two plates, the
+        ///         way the game keeps a best. A Phoenix 1 score under the one held here can still pay
+        ///         through its plate.
+        ///     </para>
         /// </summary>
         private async Task<IReadOnlyList<PumbilityTarget>> CarryoverTargets(Guid userId, ChartType? poolScope,
             IReadOnlyDictionary<Guid, Chart> charts, double? bar, ScoringConfiguration scoring,
@@ -383,10 +394,14 @@ namespace ScoreTracker.PlayerProgress.Application
 
             return carryover.Entries.Concat(carryover.Candidates)
                 .Where(e => e.AvailableInPhoenix2 && charts.ContainsKey(e.ChartId))
-                .Select(e => new
+                .Select(e => (Entry: e, Plate: e.Phoenix1Plate ?? PhoenixPlate.RoughGame))
+                .Select(x => new
                 {
-                    Entry = e,
-                    Gain = e.Phoenix2Value - Math.Max(Standing(e.ChartId), bottom)
+                    x.Entry,
+                    x.Plate,
+                    Gain = ProjectedBest.Value(scoring, charts[x.Entry.ChartId], x.Entry.Phoenix1Score, x.Plate,
+                               mine.GetValueOrDefault(x.Entry.ChartId))
+                           - Math.Max(Standing(x.Entry.ChartId), bottom)
                 })
                 .Where(x => x.Gain > 0)
                 .Select(x => new PumbilityTarget(x.Entry.ChartId,
@@ -396,7 +411,8 @@ namespace ScoreTracker.PlayerProgress.Application
                     mine.TryGetValue(x.Entry.ChartId, out var held) ? held.Score : null,
                     mine.TryGetValue(x.Entry.ChartId, out var broken) && broken.IsBroken,
                     projection.ChartDifficulty.TryGetValue(x.Entry.ChartId, out var d) ? d : null,
-                    TargetSource.Phoenix1))
+                    TargetSource.Phoenix1,
+                    x.Plate))
                 .OrderByDescending(t => t.Gain)
                 .Take(MaxTargets)
                 .ToArray();
@@ -477,7 +493,8 @@ namespace ScoreTracker.PlayerProgress.Application
                     x.Score.Score!.Value.LetterGradeFor(MixEnum.Phoenix),
                     x.Value,
                     phoenix2Scores.TryGetValue(x.Score.ChartId, out var here) ? here : null,
-                    phoenix2Charts.ContainsKey(x.Score.ChartId));
+                    phoenix2Charts.ContainsKey(x.Score.ChartId),
+                    x.Score.Plate);
             }
 
             var entries = repriced.Select(Entry).ToArray();

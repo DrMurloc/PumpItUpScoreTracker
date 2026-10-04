@@ -425,7 +425,7 @@ else
             foreach (var score in tie.OrderBy(s => s.RecordedAt ?? DateTimeOffset.MaxValue))
             {
                 _rows.Add(new Row(tiePlace,
-                    total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
+                    ThemeScales.PlaceFraction(tiePlace, total),
                     score, score.UserId == myId, _communityUserIds.Contains(score.UserId),
                     IsRivalRow(score), IsOfficialRow(score)));
                 place++;
@@ -695,7 +695,7 @@ else
             "weekly-lb-me", "weekly-lb-community");
 
     private double? MyPercentile =>
-        _myPlace == null || _rows.Count == 0 ? null : (_rows.Count - _myPlace.Value + 1) / (double)_rows.Count;
+        _myPlace is { } place ? ThemeScales.PlaceFraction(place, _rows.Count) : null;
 
     private string ScopeLabel(LeaderboardScope scope) => scope switch
     {

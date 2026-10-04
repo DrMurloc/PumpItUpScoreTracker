@@ -190,23 +190,264 @@ public sealed class TierListSagaTests
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetActiveUserIds(MixEnum.Phoenix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<Guid>());
         scores.Setup(s => s.GetPgUsers(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid UserId, Guid ChartId)>());
-        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
-                It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
-        var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(t => t.GetUsersOnLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync(Array.Empty<Guid>());
-        var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists);
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid UserId, RecordedPhoenixScore Record)>());
+        var saga = BuildSaga(charts: charts, scores: scores);
 
         await saga.Consume(BuildContext(new ProcessPassTierListCommand()));
 
         var times = expected ? Times.AtLeastOnce() : Times.Never();
         charts.Verify(c => c.GetCharts(MixEnum.Phoenix, DifficultyLevel.From(level), ChartType.Single,
             It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), times);
+    }
+
+    [Fact]
+    public async Task PassTierListRanksAPhoenix2FolderFromItsPlayersCompetitiveLevels()
+    {
+        var mostPassed = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var oncePassed = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var neverPassed = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var threeBelow = Guid.NewGuid(); // 17.4 → offset −3, weight 7
+        var oneBelow = Guid.NewGuid(); // 19.2 → offset −1, weight 5
+        var onTheFolder = Guid.NewGuid(); // 20.8 → offset 0, weight 4
+        var threeAbove = Guid.NewGuid(); // 23.0 → offset +3, weight 3
+
+        var saved = await RunPassTierList(MixEnum.Phoenix2, ChartType.Single, 20,
+            new[] { mostPassed, oncePassed, neverPassed },
+            new[]
+            {
+                (threeBelow, Score(mostPassed.Id, 900000)),
+                (oneBelow, Score(mostPassed.Id, 900000)),
+                (onTheFolder, Score(mostPassed.Id, 900000)),
+                (threeAbove, Score(mostPassed.Id, 900000)),
+                (onTheFolder, Score(oncePassed.Id, 850000))
+            },
+            new[]
+            {
+                LevelStats(threeBelow, singles: 17.4, doubles: 0),
+                LevelStats(oneBelow, singles: 19.2, doubles: 0),
+                LevelStats(onTheFolder, singles: 20.8, doubles: 0),
+                LevelStats(threeAbove, singles: 23.0, doubles: 0)
+            },
+            activePlayers: new[] { threeBelow, oneBelow, onTheFolder, threeAbove });
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.Equal(3, byChart.Count);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[mostPassed.Id].Category);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[oncePassed.Id].Category);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[neverPassed.Id].Category);
+        // 7 + 5 + 4 + 3 = 19 against 4: the chart more players passed reads easier.
+        Assert.True(byChart[mostPassed.Id].Category < byChart[oncePassed.Id].Category);
+        Assert.True(byChart[mostPassed.Id].Order > byChart[oncePassed.Id].Order);
+    }
+
+    [Fact]
+    public async Task PassTierListIgnoresBrokenAttempts()
+    {
+        var passed = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var broken = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var player = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Phoenix2, ChartType.Single, 20, new[] { passed, broken },
+            new[]
+            {
+                (player, Score(passed.Id, 900000)),
+                (player, new RecordedPhoenixScore(broken.Id, PhoenixScore.From(700000), null, true,
+                    DateTimeOffset.MinValue))
+            },
+            new[] { LevelStats(player, singles: 20.5, doubles: 0) },
+            activePlayers: new[] { player });
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[passed.Id].Category);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[broken.Id].Category);
+    }
+
+    [Fact]
+    public async Task PassTierListReadsTheDoublesLevelForAHalfDoubleFolder()
+    {
+        var doublesPlayersChart = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var singlesPlayersChart = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var doublesPlayer = Guid.NewGuid();
+        var singlesPlayer = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Rise, ChartType.HalfDouble, 20,
+            new[] { doublesPlayersChart, singlesPlayersChart },
+            new[]
+            {
+                (doublesPlayer, Score(doublesPlayersChart.Id, 900000)),
+                (singlesPlayer, Score(singlesPlayersChart.Id, 900000))
+            },
+            new[]
+            {
+                LevelStats(doublesPlayer, singles: 12.0, doubles: 20.5),
+                LevelStats(singlesPlayer, singles: 20.5, doubles: 12.0)
+            },
+            activePlayers: new[] { doublesPlayer, singlesPlayer });
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[doublesPlayersChart.Id].Category);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[singlesPlayersChart.Id].Category);
+    }
+
+    [Fact]
+    public async Task PassTierListCountsInactivePlayersOnlyAboveTheFolder()
+    {
+        var passedBelow = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedAbove = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var inactiveBelow = Guid.NewGuid();
+        var inactiveAbove = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Phoenix2, ChartType.Single, 20,
+            new[] { passedBelow, passedAbove },
+            new[]
+            {
+                (inactiveBelow, Score(passedBelow.Id, 900000)),
+                (inactiveAbove, Score(passedAbove.Id, 900000))
+            },
+            new[]
+            {
+                LevelStats(inactiveBelow, singles: 19.5, doubles: 0),
+                LevelStats(inactiveAbove, singles: 22.5, doubles: 0)
+            },
+            activePlayers: Array.Empty<Guid>());
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[passedBelow.Id].Category);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[passedAbove.Id].Category);
+    }
+
+    [Fact]
+    public async Task PassTierListSkipsAPasserWithNoStatsRow()
+    {
+        var passedWithoutStats = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var passedWithStats = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var noStats = Guid.NewGuid();
+        var withStats = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Rise, ChartType.Single, 20,
+            new[] { passedWithoutStats, passedWithStats },
+            new[]
+            {
+                (noStats, Score(passedWithoutStats.Id, 900000)),
+                (withStats, Score(passedWithStats.Id, 900000))
+            },
+            new[] { LevelStats(withStats, singles: 20.5, doubles: 0) },
+            activePlayers: new[] { noStats, withStats });
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[passedWithoutStats.Id].Category);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[passedWithStats.Id].Category);
+    }
+
+    [Fact]
+    public async Task APgHolderWithNoStatsRowDoesNotStopThePassList()
+    {
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var noStats = Guid.NewGuid();
+        var withStats = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Rise, ChartType.Single, 20,
+            new[] { chart },
+            new[] { (withStats, Score(chart.Id, 900000)) },
+            new[] { LevelStats(withStats, singles: 20.5, doubles: 0) },
+            activePlayers: new[] { withStats },
+            pgHolders: new[] { (noStats, chart.Id) });
+
+        Assert.NotEqual(TierListCategory.Unrecorded, Assert.Single(saved).Category);
+    }
+
+    [Fact]
+    public async Task PassTierListLeavesAChartPassedOnlyByPlayersFourLevelsAboveUnrated()
+    {
+        var passedFromFarAbove = new ChartBuilder().WithLevel(10).WithType(ChartType.Single).Build();
+        var passedOnTheFolder = new ChartBuilder().WithLevel(10).WithType(ChartType.Single).Build();
+        var farAbove = Guid.NewGuid();
+        var onTheFolder = Guid.NewGuid();
+
+        var saved = await RunPassTierList(MixEnum.Phoenix2, ChartType.Single, 10,
+            new[] { passedFromFarAbove, passedOnTheFolder },
+            new[]
+            {
+                (farAbove, Score(passedFromFarAbove.Id, 990000)),
+                (onTheFolder, Score(passedOnTheFolder.Id, 900000))
+            },
+            new[]
+            {
+                LevelStats(farAbove, singles: 14.5, doubles: 0),
+                LevelStats(onTheFolder, singles: 10.5, doubles: 0)
+            },
+            activePlayers: new[] { farAbove, onTheFolder });
+
+        var byChart = saved.ToDictionary(e => e.ChartId);
+        Assert.Equal(TierListCategory.Unrecorded, byChart[passedFromFarAbove.Id].Category);
+        Assert.NotEqual(TierListCategory.Unrecorded, byChart[passedOnTheFolder.Id].Category);
+    }
+
+    [Fact]
+    public async Task PassTierListReadsActivityOnceAcrossTheLast120DaysOfTheClock()
+    {
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetActiveUserIds(MixEnum.Phoenix2, It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<Guid>());
+        var saga = BuildSaga(scores: scores);
+
+        await saga.Consume(BuildContext(new ProcessPassTierListCommand(MixEnum.Phoenix2)));
+
+        // BuildSaga's clock reads 2026-08-16; 120 days earlier is 2026-04-18.
+        scores.Verify(s => s.GetActiveUserIds(MixEnum.Phoenix2,
+            new DateTimeOffset(2026, 4, 18, 0, 0, 0, TimeSpan.Zero), It.IsAny<CancellationToken>()), Times.Once);
+        scores.Verify(s => s.GetActiveUserIds(It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Runs the Pass job for one mix with a single populated folder and returns the
+    ///     "Pass Count" entries it saved. Every other folder is empty.
+    /// </summary>
+    private static async Task<IReadOnlyList<SongTierListEntry>> RunPassTierList(MixEnum mix, ChartType chartType,
+        int level, IEnumerable<Chart> folderCharts,
+        IEnumerable<(Guid UserId, RecordedPhoenixScore Record)> folderScores,
+        IEnumerable<PlayerStatsRecord> stats, IEnumerable<Guid> activePlayers,
+        IEnumerable<(Guid UserId, Guid ChartId)>? pgHolders = null)
+    {
+        var charts = EmptyChartsMock();
+        charts.Setup(c => c.GetCharts(mix, DifficultyLevel.From(level), chartType,
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(folderCharts.ToArray());
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetActiveUserIds(mix, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activePlayers.ToHashSet());
+        scores.Setup(s => s.GetPgUsers(mix, chartType, DifficultyLevel.From(level), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((pgHolders ?? Array.Empty<(Guid UserId, Guid ChartId)>()).ToArray());
+        scores.Setup(s => s.GetScores(mix, chartType, DifficultyLevel.From(level), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(folderScores.ToArray());
+        var statsByUser = stats.ToDictionary(s => s.UserId);
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(mix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, CancellationToken _) =>
+                ids.Where(statsByUser.ContainsKey).Select(id => statsByUser[id]).ToArray());
+        var saved = new List<SongTierListEntry>();
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(t => t.SaveEntries(mix, It.IsAny<IEnumerable<SongTierListEntry>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, IEnumerable<SongTierListEntry>, CancellationToken>((_, entries, _) =>
+                saved.AddRange(entries.Where(e => (string)e.TierListName == "Pass Count")))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists, playerStats: playerStats);
+
+        await saga.Consume(BuildContext(new ProcessPassTierListCommand(mix)));
+
+        tierLists.Verify(t => t.SaveEntries(It.Is<MixEnum>(m => m != mix),
+            It.IsAny<IEnumerable<SongTierListEntry>>(), It.IsAny<CancellationToken>()), Times.Never);
+        return saved;
     }
 
     private static TierListSaga BuildSaga(
@@ -471,5 +712,10 @@ public sealed class TierListSagaTests
             SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
             DoublesLevel: 0, CompetitiveLevel: singlesCompetitive, SinglesCompetitiveLevel: singlesCompetitive,
             DoublesCompetitiveLevel: singlesCompetitive);
+    }
+
+    private static PlayerStatsRecord LevelStats(Guid userId, double singles, double doubles)
+    {
+        return Stats(userId, singles) with { SinglesCompetitiveLevel = singles, DoublesCompetitiveLevel = doubles };
     }
 }
