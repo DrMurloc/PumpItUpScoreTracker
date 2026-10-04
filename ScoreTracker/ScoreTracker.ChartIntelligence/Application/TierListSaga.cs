@@ -135,15 +135,16 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         // A mix with difficulty titles groups passers by their highest one, reading activity per
         // title level; a mix without them groups passers by competitive level against the mix's
         // active players, read once here.
-        var activePlayers = TitleLists.HasDifficultyTitles(mix)
-            ? null
+        var byDifficultyTitle = TitleLists.HasDifficultyTitles(mix);
+        var activePlayers = byDifficultyTitle
+            ? new HashSet<Guid>()
             : await _scores.GetActiveUserIds(mix, _clock.Now - PassPeerWeights.ActivityWindow,
                 context.CancellationToken);
         foreach (var level in Enumerable.Range(10, 20))
         foreach (var chartType in folderTypes)
         {
             await ProcessPgTierList(mix, level, chartType, context.CancellationToken);
-            if (activePlayers is null)
+            if (byDifficultyTitle)
                 await ProcessPassTierListByDifficultyTitle(mix, level, chartType, context.CancellationToken);
             else
                 await ProcessPassTierListByCompetitiveLevel(mix, level, chartType, activePlayers,
