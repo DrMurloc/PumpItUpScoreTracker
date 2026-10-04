@@ -379,7 +379,11 @@ else
     }
 }
 
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
+@* Opens on the World board: most of this board sits below level 20, where piugame keeps no
+   chart board. The Official chip still reads the section's Supplemented switch, like every
+   other page's. *@
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"
+                    BoardSupplemented="Supplemented"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }

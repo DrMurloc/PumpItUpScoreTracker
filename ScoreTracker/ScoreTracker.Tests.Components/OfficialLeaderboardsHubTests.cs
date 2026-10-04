@@ -750,7 +750,8 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
     /// <summary>
     ///     Most of the popularity board sits below level 20, where piugame keeps no chart board, so
-    ///     its charts open on the site's own board rather than an empty official one.
+    ///     its charts open on the site's own board rather than an empty official one. The Official
+    ///     chip still reads the section's Supplemented switch, as it does from every other page.
     /// </summary>
     [Fact]
     public async Task APopularityCardOpensChartDetailsOnTheWorldBoard()
@@ -760,6 +761,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .ReturnsAsync(new[] { new OfficialPopularityRecord(hottest.Id, 1, 1, new[] { 1, 1 }) });
         var cut = RenderComponent<HubPopularity>(p => p
             .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Supplemented, true)
             .Add(x => x.Charts, new Dictionary<Guid, Chart> { [hottest.Id] = hottest }));
 
         await cut.FindAll(".olb-pop-card").First().ClickAsync(new MouseEventArgs());
@@ -767,6 +769,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.True(Details(cut).Visible);
         Assert.Equal(hottest.Id, Details(cut).Chart!.Id);
         Assert.Equal(ChartLeaderboardScopes.LeaderboardScope.World, Details(cut).BoardScope);
+        Assert.True(Details(cut).BoardSupplemented);
     }
 
     [Fact]
