@@ -49,6 +49,14 @@ the console's Code section.
 Cursor-paginated, `mix` required, RFC 9457 problem documents on failure. Catalog reads carry ETags —
 send `If-None-Match` and expect `304`.
 
+A parameter that takes several values reads a comma list as a **union** — a row matches any of the
+values named — and takes the parameter repeated the same way. Names match case-insensitively and a
+number is never a name; an unknown name is a `400`, and an empty value is no filter. **Changed
+2026-10-04 (owner call):** `type` on `charts` and `charts/skills`, `chartTypes` and `songTypes` on
+`charts/random`, and `chartType` on `players/{id}/scores` now read lists this way. They used to merge a
+comma list into one wrong value — `Single,Double` read as `Double`, `ShortCut,FullSong` as `Remix` —
+and accept numbers, and `chartTypes` skipped a name it did not know where it now answers `400`.
+
 | Area | Route | What's there |
 |---|---|---|
 | Mixes | `api/v2/mixes` | Every mix, with its `scoringModel` (`phoenix` or `legacy`). Read this first — half the mixes score differently. **Additive 2026-09-22:** `Rise` and `RiseArcade` (Pump It Up RISE, the PC game, and its Arcade Station) list as `phoenix`-scored mixes; every v2 read takes them ([rise.md](design/rise.md)) |

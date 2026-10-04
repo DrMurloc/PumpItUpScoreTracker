@@ -101,6 +101,10 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 - **A memory-cache key that names a mix is built by `CacheKeys`** (`ScoreTracker.SharedKernel.Caching`), never spelled at the call site (arch-test enforced, `CacheKeyTests`: a shrink-only allowlist for hand-spelled keys, and a `Mix` key whose parts name a player fails outright — it is a `Viewer` key by the builder's own contract). Two entry points say what the cached object is: `CacheKeys.Mix(owner, mix, parts…)` for a community projection or a catalog fact that must never vary by who is looking (tier lists, cohorts, verdicts, baselines, boards), and `CacheKeys.Viewer(owner, mix, season, parts…)` for an object that depends on the viewer's own scores or on chart levels (a player's best scores, a `PlayerStats` row, the per-mix chart dictionary, a PUMBILITY projection). `Viewer` carries the season as a required parameter (`SeasonId.AllTime` = 0 until a seasonal reader exists — [docs/design/seasons.md](docs/design/seasons.md) §4.5, §12.1), so the classification is the decision, made once at the key, and no caller can forget the view. A vertical may keep a local builder for its eviction pairs (`LedgerCacheKeys`, `OfficialCacheKeys`) as long as it builds through `CacheKeys`. The reason this is a ratchet and not a convention: a key that forgets the view serves one viewer's numbers to the next with no error anywhere.
 
+### API list parameters
+
+- **A v2 parameter that takes several values reads them through `Picks`** (`Controllers/Api/V2/Picks.cs`): a comma list or the parameter repeated, read as a **union** — a row matches any value named — with names matched case-insensitively, a number never a name, an unknown name a 400 problem document, and an empty value no filter. Never `Enum.TryParse` a request value: it merges a comma list into one bitwise value (`Single,Double` reads as `Double`, `ShortCut,FullSong` as `Remix`) and accepts any number, so the caller gets a quietly wrong answer instead of an error. v1 (`api/*`) is frozen and keeps its old parsing.
+
 ### Domain models
 
 - `sealed record` is the default for entities and value-shaped types.
