@@ -224,7 +224,7 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   §8 is the one deliberate exception and says so in the dialog. The file is UTF-8 with a
   byte-order mark so Excel opens non-ASCII titles; a parser reads the first header cleanly
   with a BOM-aware decoder (`utf-8-sig` in Python, pandas, .NET's `StreamReader`), while a
-  plain `utf-8` decode sees `﻿` ahead of the first header name.
+  plain `utf-8` decode sees `U+FEFF` (the byte-order mark) ahead of the first header name.
 - **`/TierLists` XX divergence**: the SRP will show XX tiers vote-sourced while the tier
   page still runs XX through score-derived lenses. Owner decides separately whether to
   align the page.
