@@ -751,6 +751,24 @@ public sealed class V2CatalogApiShapeTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // A numbered bucket is a level. 4 is also CoOp's place in the chart type enum, and 22 is no
+    // chart type at all.
+    [Fact]
+    public async Task NumberedBucketsAreLevelMinimumsAndAnEmptyOneIsSkipped()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", buckets: new string[] { "22:3", "4:1", null! });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.LevelMinimums[22] == 3
+                && q.Settings.LevelMinimums[4] == 1
+                && q.Settings.ChartTypeMinimums.Values.All(v => v == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task AnUnknownVersionIsAProblemPointingAtTheVersionsList()
     {
@@ -1036,6 +1054,19 @@ public sealed class V2CatalogApiShapeTests
 
         Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(commaList));
         Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(repeated));
+    }
+
+    // MVC binds ?songType= and a bare ?songType as one null element rather than an empty array.
+    [Fact]
+    public async Task AnEmptyFilterValueIsNoFilter()
+    {
+        SeedOneChartPerCut();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix",
+            addedIn: new string[] { null! }, debutedIn: new string[] { null! },
+            channels: new string[] { null! }, songTypes: new string[] { null! });
+
+        Assert.Equal(new[] { ArcadeChart, ShortCutChart, FullSongChart, RemixChart }, Ids(result));
     }
 
     // "Short Cut" is how the site prints it, "1" is ShortCut's place in the enum, and "Single" is

@@ -461,17 +461,19 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         foreach (var bucket in buckets ?? Array.Empty<string>())
         {
+            if (string.IsNullOrWhiteSpace(bucket)) continue;
             var split = bucket.Split(":");
             if (split.Length != 2 || !int.TryParse(split[1], out var weight) || weight < 1)
                 return BucketProblem(bucket);
 
-            if (Enum.TryParse<ChartType>(split[0], true, out var bucketType))
-            {
-                settings.ChartTypeMinimums[bucketType] = weight;
-            }
-            else if (DifficultyLevel.TryParse(split[0], out var bucketLevel))
+            // A number is a level; Enum.TryParse would also read it as a chart type.
+            if (DifficultyLevel.TryParse(split[0], out var bucketLevel))
             {
                 settings.LevelMinimums[bucketLevel] = weight;
+            }
+            else if (Enum.TryParse<ChartType>(split[0], true, out var bucketType) && Enum.IsDefined(bucketType))
+            {
+                settings.ChartTypeMinimums[bucketType] = weight;
             }
             else
             {
@@ -550,8 +552,9 @@ public sealed class ChartsController : ApiV2ControllerBase
 
     private static string[]? SplitPicks(string[]? picks)
     {
+        // An empty query value binds as a null element, which picks nothing.
         return picks?
-            .SelectMany(v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .SelectMany(v => (v ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .ToArray();
     }
 

@@ -16,8 +16,9 @@ internal static class SongTypePicks
     public static (IReadOnlySet<SongType>? Picked, ObjectResult? Problem) Resolve(string[]? songTypes,
         Func<string, string, string?, ObjectResult> problem)
     {
+        // An empty query value binds as a null element, which picks nothing.
         var tokens = songTypes?
-            .SelectMany(v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .SelectMany(v => (v ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .ToArray();
         if (tokens is null || tokens.Length == 0) return (null, null);
 
