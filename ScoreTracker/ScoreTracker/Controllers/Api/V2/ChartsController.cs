@@ -62,6 +62,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
     ///     never matches, and a channel the mix does not offer is a 400.
     /// </param>
+    /// <param name="songTypes">
+    ///     Only charts whose song is one of these cuts: <c>Arcade</c>, <c>ShortCut</c>,
+    ///     <c>FullSong</c>, <c>Remix</c> — the row's <c>songType</c>. Several: a comma list, or repeat
+    ///     the parameter. Any other value is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
@@ -79,6 +84,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
         [FromQuery(Name = "channel")] string[]? channels = null,
+        [FromQuery(Name = "songType")] string[]? songTypes = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -101,10 +107,12 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (versionProblem is not null) return versionProblem;
         var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
         if (channelProblem is not null) return channelProblem;
+        var (songTypePicks, songTypeProblem) = SongTypePicks.Resolve(songTypes, (type, title, detail) => Problem(type, title, detail: detail));
+        if (songTypeProblem is not null) return songTypeProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels));
+            ChannelPicks.Fingerprint(channels), SongTypePicks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -116,6 +124,7 @@ public sealed class ChartsController : ApiV2ControllerBase
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
+            .Where(c => SongTypePicks.Matches(c, songTypePicks))
             .OrderBy(c => c.Id)
             .ToArray();
 
@@ -191,6 +200,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
     ///     never matches, and a channel the mix does not offer is a 400.
     /// </param>
+    /// <param name="songTypes">
+    ///     Only charts whose song is one of these cuts: <c>Arcade</c>, <c>ShortCut</c>,
+    ///     <c>FullSong</c>, <c>Remix</c> — the row's <c>songType</c>. Several: a comma list, or repeat
+    ///     the parameter. Any other value is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
@@ -212,6 +226,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
         [FromQuery(Name = "channel")] string[]? channels = null,
+        [FromQuery(Name = "songType")] string[]? songTypes = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -234,10 +249,12 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (versionProblem is not null) return versionProblem;
         var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
         if (channelProblem is not null) return channelProblem;
+        var (songTypePicks, songTypeProblem) = SongTypePicks.Resolve(songTypes, (type, title, detail) => Problem(type, title, detail: detail));
+        if (songTypeProblem is not null) return songTypeProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
             VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
-            ChannelPicks.Fingerprint(channels));
+            ChannelPicks.Fingerprint(channels), SongTypePicks.Fingerprint(songTypes));
         var offset = 0;
         if (cursor is not null)
         {
@@ -249,6 +266,7 @@ public sealed class ChartsController : ApiV2ControllerBase
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
             .Where(c => ChannelPicks.Matches(c, channelPicks))
+            .Where(c => SongTypePicks.Matches(c, songTypePicks))
             .Select(c => c.Id).ToArray();
 
         var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))

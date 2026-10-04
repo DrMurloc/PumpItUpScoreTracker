@@ -990,4 +990,130 @@ public sealed class V2CatalogApiShapeTests
                 q.Settings.Debut == debut && q.Settings.Channels.SetEquals(new[] { Channel.KPop })),
             It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    // ── Song type: the song's cut ───────────────────────────────────────────────────────────
+
+    private static readonly Guid ArcadeChart = Guid.Parse("cccccccc-0000-0000-0000-000000000001");
+    private static readonly Guid ShortCutChart = Guid.Parse("cccccccc-0000-0000-0000-000000000002");
+    private static readonly Guid FullSongChart = Guid.Parse("cccccccc-0000-0000-0000-000000000003");
+    private static readonly Guid RemixChart = Guid.Parse("cccccccc-0000-0000-0000-000000000004");
+
+    private static Chart OfCut(Guid id, SongType cut)
+    {
+        return ApiTestData.Chart1 with { Id = id, Song = ApiTestData.Chart1.Song with { Type = cut } };
+    }
+
+    /// <summary>One chart of each cut, so a filter's answer reads as the cuts it kept.</summary>
+    private void SeedOneChartPerCut()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                OfCut(ArcadeChart, SongType.Arcade),
+                OfCut(ShortCutChart, SongType.ShortCut),
+                OfCut(FullSongChart, SongType.FullSong),
+                OfCut(RemixChart, SongType.Remix)
+            });
+    }
+
+    /// <summary>The cursor inside a catalog page's next link.</summary>
+    private static string NextCursor(IActionResult result)
+    {
+        var next = System.Text.Json.JsonDocument.Parse(Assert.IsType<ContentResult>(result).Content!)
+            .RootElement.GetProperty("next").GetString();
+        Assert.NotNull(next);
+        return Uri.UnescapeDataString(next.Split("cursor=")[1]);
+    }
+
+    [Fact]
+    public async Task SongTypeFilterKeepsThePickedCutsAndTakesACommaListOrARepeatedParameter()
+    {
+        SeedOneChartPerCut();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix", songTypes: new[] { "ShortCut,FullSong" });
+        var repeated = await controller.Get("Phoenix", songTypes: new[] { "shortcut", "FULLSONG" });
+
+        Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(commaList));
+        Assert.Equal(new[] { ShortCutChart, FullSongChart }, Ids(repeated));
+    }
+
+    // "Short Cut" is how the site prints it, "1" is ShortCut's place in the enum, and "Single" is
+    // the chart's type — none of them is a cut's token.
+    [Theory]
+    [InlineData("Short Cut")]
+    [InlineData("1")]
+    [InlineData("Single")]
+    public async Task AnythingButACutsTokenIsAProblemListingTheCuts(string songType)
+    {
+        SeedOneChartPerCut();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", songTypes: new[] { songType });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-song-type", problem.Type);
+        Assert.Contains("ShortCut", problem.Detail);
+    }
+
+    // Unlike a channel, a cut is never one the mix does not offer: every mix shares the four, so a
+    // mix with no remixes answers Remix with an empty page.
+    [Fact]
+    public async Task ACutTheMixHasNoChartsOfIsAnEmptyPageRatherThanAProblem()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", songTypes: new[] { "Remix" });
+
+        Assert.Equal(0, Total(result));
+    }
+
+    [Fact]
+    public async Task ACursorMintedForOneCutDoesNotPageAnother()
+    {
+        SeedOneChartPerCut();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var cursor = NextCursor(await controller.Get("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, limit: 1));
+        var sameCuts = await controller.Get("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, cursor: cursor, limit: 1);
+        var otherCut = await controller.Get("Phoenix", songTypes: new[] { "Remix" }, cursor: cursor, limit: 1);
+
+        Assert.Equal(new[] { ShortCutChart }, Ids(sameCuts));
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(otherCut).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
+    }
+
+    [Fact]
+    public async Task ChartSkillsTakeTheSongTypeFilter()
+    {
+        SeedOneChartPerCut();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillProfile>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetSkills("Phoenix", songTypes: new[] { "Remix" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetChartSkillProfilesQuery>(q =>
+            q.ChartIds!.SequenceEqual(new[] { RemixChart })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AChartSkillsCursorMintedForOneCutDoesNotPageAnother()
+    {
+        SeedOneChartPerCut();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartSkillProfile(ArcadeChart, 50726, 8.4, 18.4, 122, 140, true,
+                    Array.Empty<ChartSkillCoverage>(), Array.Empty<ChartRarePattern>()),
+                new ChartSkillProfile(ShortCutChart, 50726, 7.1, 15.2, 61, 70, false,
+                    Array.Empty<ChartSkillCoverage>(), Array.Empty<ChartRarePattern>())
+            });
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var cursor = NextCursor(await controller.GetSkills("Phoenix", songTypes: new[] { "Arcade,ShortCut" }, limit: 1));
+        var otherCut = await controller.GetSkills("Phoenix", songTypes: new[] { "Remix" }, cursor: cursor, limit: 1);
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(otherCut).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
+    }
 }
