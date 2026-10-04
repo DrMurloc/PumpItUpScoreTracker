@@ -120,62 +120,147 @@
     private string Snippet() => (_group, _language) switch
     {
         ("api", "cs") => $$"""
+            using System.Net;
+            using System.Net.Http.Json;
+
             var http = new HttpClient { BaseAddress = new("{{Base}}") };
             http.DefaultRequestHeaders.Authorization = new("Bearer", "{{KeyText}}");
 
-            var page = await http.GetFromJsonAsync<ScorePage>(
-                "api/v2/players/me/scores?mix={{Mix}}");
+            // The players who shared with this tool, then each one's best scores by id.
+            // A tool key has no "me" — that is a personal token's own scores.
+            await foreach (var player in Rows<Player>("api/v2/players?limit=500"))
+                await foreach (var score in Rows<BestScore>(
+                    $"api/v2/players/{player.UserId}/scores?mix={{Mix}}&limit=500"))
+                    Console.WriteLine($"{player.Username}: {score.ChartId} {score.Score} {score.LetterGrade}");
 
-            // 100 per page. Follow `next` until it is null.
-            while (page!.Next is not null)
-                page = await http.GetFromJsonAsync<ScorePage>(page.Next);
+            // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
+            async IAsyncEnumerable<T> Rows<T>(string? url)
+            {
+                while (url is not null)
+                {
+                    using var response = await http.GetAsync(url);
+                    if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        await Task.Delay(response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(1));
+                        continue;
+                    }
+                    response.EnsureSuccessStatusCode();
+
+                    var page = await response.Content.ReadFromJsonAsync<Page<T>>();
+                    foreach (var row in page!.Data) yield return row;
+                    url = page.Next;
+                }
+            }
+
+            record Page<T>(T[] Data, string? Next);
+            record Player(Guid UserId, string Username);
+            record BestScore(Guid ChartId, int? Score, string? LetterGrade, string? Plate, double? Pumbility);
             """,
 
         ("api", "java") => $$"""
-            var http = HttpClient.newHttpClient();
-            var mapper = new ObjectMapper();
-            String base = "{{Base}}";
-            String auth = "Bearer {{KeyText}}";
+            static final HttpClient HTTP = HttpClient.newHttpClient();
+            static final ObjectMapper MAPPER = new ObjectMapper();
+            static final String AUTH = "Bearer {{KeyText}}";
 
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(base + "api/v2/players/me/scores?mix={{Mix}}"))
-                    .header("Authorization", auth)
-                    .build();
+            public static void main(String[] args) throws Exception {
+                // The players who shared with this tool, then each one's best scores by id.
+                // A tool key has no "me" — that is a personal token's own scores.
+                for (JsonNode player : rows("{{Base}}api/v2/players?limit=500")) {
+                    String id = player.path("userId").asText();
+                    for (JsonNode score : rows("{{Base}}api/v2/players/" + id + "/scores?mix={{Mix}}&limit=500"))
+                        System.out.println(player.path("username").asText() + ": " + score);
+                }
+            }
 
-            JsonNode page = mapper.readTree(http.send(request, BodyHandlers.ofString()).body());
+            // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
+            static List<JsonNode> rows(String url) throws Exception {
+                List<JsonNode> found = new ArrayList<>();
+                while (url != null) {
+                    HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                            .header("Authorization", AUTH)
+                            .build();
+                    HttpResponse<String> response = HTTP.send(request, BodyHandlers.ofString());
+                    if (response.statusCode() == 429) {
+                        String wait = response.headers().firstValue("Retry-After").orElse("60");
+                        Thread.sleep(1000L * Long.parseLong(wait));
+                        continue;
+                    }
+                    if (response.statusCode() != 200)
+                        throw new IllegalStateException(response.statusCode() + " " + url + " " + response.body());
 
-            // 100 per page. Follow `next` until it is null.
-            while (!page.path("next").isNull()) {
-                var more = HttpRequest.newBuilder()
-                        .uri(URI.create(base + page.get("next").asText()))
-                        .header("Authorization", auth)
-                        .build();
-                page = mapper.readTree(http.send(more, BodyHandlers.ofString()).body());
+                    JsonNode page = MAPPER.readTree(response.body());
+                    page.path("data").forEach(found::add);
+                    url = page.path("next").isTextual() ? page.path("next").asText() : null;
+                }
+                return found;
             }
             """,
 
         ("api", "py") => $$"""
+            import time
+            import requests
+
             s = requests.Session()
             s.headers["Authorization"] = "Bearer {{KeyText}}"
-            base = "{{Base}}"
 
-            page = s.get(base + "api/v2/players/me/scores", params={"mix": "{{Mix}}"}).json()
+            # Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
+            # until it is None. 600 requests a minute per key: a 429 is waited out for its
+            # Retry-After and asked again, and any other failure raises, so a sweep is never cut
+            # short in silence.
+            def rows(url):
+                while url:
+                    r = s.get(url)
+                    if r.status_code == 429:
+                        time.sleep(int(r.headers.get("Retry-After", "60")))
+                        continue
+                    r.raise_for_status()
 
-            # 100 per page. Follow `next` until it is None.
-            while page["next"]:
-                page = s.get(base + page["next"]).json()
+                    page = r.json()
+                    yield from page["data"]
+                    url = page["next"]
+
+            # The players who shared with this tool, then each one's best scores by id.
+            # A tool key has no "me" — that is a personal token's own scores.
+            for player in rows("{{Base}}api/v2/players?limit=500"):
+                for score in rows(f"{{Base}}api/v2/players/{player['userId']}/scores?mix={{Mix}}&limit=500"):
+                    print(player["username"], score["chartId"], score["score"], score["letterGrade"])
             """,
 
         ("api", "ts") => $$"""
-            const base = "{{Base}}";
             const headers = { Authorization: "Bearer {{KeyText}}" };
 
-            let page = await (await fetch(
-              `${base}api/v2/players/me/scores?mix={{Mix}}`, { headers })).json();
+            // Up to 500 rows a page. `next` is the full URL of the next page: follow it as it is
+            // until it is null. 600 requests a minute per key: a 429 is waited out for its
+            // Retry-After and asked again, and any other failure throws, so a sweep is never cut
+            // short in silence.
+            async function* rows(url: string | null): AsyncGenerator<any> {
+              while (url) {
+                const res = await fetch(url, { headers });
+                if (res.status === 429) {
+                  const wait = Number(res.headers.get("Retry-After") ?? 60);
+                  await new Promise(resolve => setTimeout(resolve, 1000 * wait));
+                  continue;
+                }
+                if (!res.ok) throw new Error(`${res.status} ${url}: ${await res.text()}`);
 
-            // 100 per page. Follow `next` until it is null.
-            while (page.next)
-              page = await (await fetch(base + page.next, { headers })).json();
+                const page = await res.json();
+                yield* page.data;
+                url = page.next;
+              }
+            }
+
+            // The players who shared with this tool, then each one's best scores by id.
+            // A tool key has no "me" — that is a personal token's own scores.
+            for await (const player of rows("{{Base}}api/v2/players?limit=500"))
+              for await (const score of rows(
+                `{{Base}}api/v2/players/${player.userId}/scores?mix={{Mix}}&limit=500`))
+                console.log(player.username, score.chartId, score.score, score.letterGrade);
             """,
 
         ("webhook", "cs") => $$"""

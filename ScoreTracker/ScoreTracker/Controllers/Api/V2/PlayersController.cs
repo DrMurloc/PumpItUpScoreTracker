@@ -612,8 +612,10 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="chartTypeValue">Only charts of this type: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
     /// <param name="isBroken">Only failed bests (true) or only passes (false).</param>
     /// <param name="recordedAfter">
-    ///     Only records written after this instant. The incremental-sync parameter — with it a tool
-    ///     stays current without webhooks and without re-reading a player's whole history.
+    ///     Only scores whose <c>recordedAt</c> is after this instant — the date the play happened, not
+    ///     when PIU Scores saved it. Not a sync cursor: an import saved today can carry plays from
+    ///     days earlier, which a <c>recordedAfter</c> of the last check never returns. A Score push
+    ///     webhook, or a periodic re-read, sees every new score.
     /// </param>
     /// <param name="chartIdsValue">
     ///     Only these charts: a comma-separated list of chart ids, at most 50. The point read for
@@ -782,7 +784,11 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// </summary>
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
-    /// <param name="since">Only plays on or after this instant.</param>
+    /// <param name="since">
+    ///     Only plays whose <c>occurredAt</c> is on or after this instant — the date the play
+    ///     happened, not when PIU Scores saved it — so, like <c>recordedAfter</c> on scores, not a
+    ///     sync cursor.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/journal")]

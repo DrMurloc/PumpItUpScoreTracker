@@ -3,7 +3,8 @@
 High-level map of the HTTP surface. **Swagger is the source of truth for request/response shapes**: browse `/swagger` on the live site (or locally while running the app) — the OpenAPI document lives at `/swagger/v1/swagger.json`.
 
 **Building a tool? Start with the Code section of your tool's console** (`/Developers/{tool}/code`),
-not this page. That carries runnable snippets with your own key, URL and mixes already filled in —
+not this page. That carries runnable snippets with your URL and mixes filled in and your key's tail
+showing where the key goes (a key is shown once, so the page never holds it) —
 which is the maker's
 manual — what the data means, what trips people up, how sharing and webhooks work. This page is the
 map.
@@ -103,4 +104,5 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 - CORS: partner endpoints allow cross-origin calls via the `API` policy.
 - Rate limits on v2: 600 requests a minute, for a tool key and a personal token alike, counted per credential. A `429` carries `Retry-After` — wait it out rather than retrying straight away. A full catalog pull (every chart, song and tier list across all 31 mixes) is roughly 500 requests, so it fits inside one window.
 - Building a PIU tool? You don't need to build your own importer — register the tool and let the webhooks push to you. See the Code section of your tool's console, then `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN).
+- **A score's date is when it was played, not when it reached PIU Scores.** `recordedAt` on a score, `occurredAt` on a journal entry, and the `recordedAfter` (scores) and `since` (journal) filters over them carry the date piugame shows on an imported score — on Phoenix 2 a best can keep the date of the chart's first play — or the `playedAt` of a play posted to `me/plays`; only a score typed in or uploaded from a CSV is dated when it was saved. So they are **not an incremental-sync cursor**: a Saturday play imported on Monday arrives dated Saturday, and `recordedAfter=<your Sunday check>` never returns it, with no error. To see every new score, use a **Score push** webhook, or re-read your players on a schedule. With a tool key, read them by id from `api/v2/players` — `me` is a personal token's alone, and a tool key asking for it gets `400 tool-has-no-self` ([api-v2-community-tools.md §3](design/api-v2-community-tools.md))
 - **Webhook deliveries are at-least-once.** An import's scores are delivered once, when the run finishes saving. If PIU Scores restarts partway through an import, what it saved is delivered once the app comes back, and a restart in the moment between that delivery and the end of the run can send it a second time ([import-restart-recovery.md](design/import-restart-recovery.md)). Key your handler on the chart plus the score's recorded time rather than assuming each delivery is unique. PIUGame **session** deliveries are the exception — they are never re-sent, because the session is gone by the time the replay runs.

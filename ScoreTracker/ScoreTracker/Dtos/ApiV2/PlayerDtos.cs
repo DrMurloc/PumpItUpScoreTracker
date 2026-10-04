@@ -95,8 +95,12 @@ public sealed class PlayerScoreDto
     public Guid ChartId { get; set; }
 
     /// <summary>
-    ///     When PIU Scores wrote the record — not when the play happened, which we do not know.
-    ///     There is exactly one date on a score, and this is it.
+    ///     When the play happened, as the score's source dated it — not when PIU Scores saved it.
+    ///     An official import carries the date piugame shows on the score (on Phoenix 2 a best can
+    ///     keep the date of the chart's first play), a play posted to <c>/api/v2/players/me/plays</c>
+    ///     carries its <c>playedAt</c>, and only a score typed in or uploaded from a CSV is dated when
+    ///     it was saved. A score imported today can be dated days earlier, so this is not a sync
+    ///     cursor: a Score push webhook, or a periodic re-read, is how a tool sees every new score.
     /// </summary>
     public DateTimeOffset RecordedAt { get; set; }
 
@@ -174,7 +178,10 @@ public sealed class ChartScoreDto
     /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
-    /// <summary>When PIU Scores wrote the record — not when the play happened, which is not known.</summary>
+    /// <summary>
+    ///     When the play happened, as the score's source dated it — not when PIU Scores saved it. The
+    ///     per-player score row's <c>recordedAt</c>, with the same meaning.
+    /// </summary>
     public DateTimeOffset RecordedAt { get; set; }
 
     /// <summary>Where the record came from: <c>officialImport</c>, <c>csv</c>, <c>manual</c>, or null for a record older than source capture.</summary>
@@ -261,7 +268,12 @@ public sealed class JournalEntryDto
         Judgments = PlayerScoreDto.MapJudgments(entry.Judgements);
     }
 
-    /// <summary>When the play reached PIU Scores — the import that carried it, not the moment it was played.</summary>
+    /// <summary>
+    ///     When the play happened, as its source dated it — not when PIU Scores saved it: the date
+    ///     piugame shows for an imported play, the <c>playedAt</c> of one posted to the plays API, the
+    ///     moment of saving only for one typed in or uploaded from a CSV. A best whose date another
+    ///     play already holds is dated when the import found it instead.
+    /// </summary>
     public DateTimeOffset OccurredAt { get; set; }
 
     /// <summary>Where the play came from: <c>officialImport</c>, <c>csv</c> or <c>manual</c>.</summary>

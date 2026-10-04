@@ -19,6 +19,12 @@ namespace ScoreTracker.Data.DevTooling;
 ///         Bulk copy under one transaction, because a half-written catalog is a database whose
 ///         chart ids do not resolve — worse than an empty one.
 ///     </para>
+///     <para>
+///         <c>scores.Mix</c> is never cleared or written here. It is reference data the migrations
+///         seed — each mix's <see cref="MixIds" /> id, its stored short name and its picker order —
+///         and api/v2 carries a mix's enum name and display name but never that stored name, so the
+///         download has no value to write into it. Every row below refers to those seeded rows.
+///     </para>
 /// </summary>
 internal sealed class DevCatalogWriter : IDevCatalogWriter
 {
@@ -31,7 +37,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
     /// </summary>
     private static readonly string[] ClearOrder =
     {
-        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "SongMix", "Song", "MixVersion", "Mix"
+        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "SongMix", "Song", "MixVersion"
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -54,14 +60,6 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
         // Song ids are local surrogate keys — the wire keys songs by name, which is what the rest of
         // the catalog references them by too. Minted here and used for the Chart rows below.
         var songIds = snapshot.Songs.ToDictionary(s => s.Name, _ => Guid.NewGuid(), StringComparer.Ordinal);
-
-        await Insert(connection, transaction, "Mix", snapshot.Mixes, (row, m) =>
-        {
-            row["Id"] = MixIds.For(m.Mix);
-            row["Name"] = m.DisplayName;
-            row["SortOrder"] = m.SortOrder;
-            row["IsPrimary"] = m.IsPrimary;
-        }, cancellationToken);
 
         // Version ids are local surrogates too; the wire names a patch by (mix, name), which is
         // what the chart rows below carry.
@@ -228,6 +226,11 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
     /// <summary>
     ///     The local schema shapes the DataTable, so a column this mapping does not set arrives as
     ///     the database's own default rather than as a guess.
+    ///     <para>
+    ///         The DataTable also takes each column's width, nullability and key from the schema, so
+    ///         a row that breaks one is refused while it is staged, before any SQL runs. That refusal
+    ///         names the column but not the table, so it is rethrown with the table in front of it.
+    ///     </para>
     /// </summary>
     private static async Task Insert<T>(SqlConnection connection, SqlTransaction transaction, string table,
         IEnumerable<T> rows, Action<DataRow, T> map, CancellationToken cancellationToken)
@@ -245,8 +248,17 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
         {
             var dataRow = schemaTable.NewRow();
             foreach (DataColumn column in schemaTable.Columns) dataRow[column] = DBNull.Value;
-            map(dataRow, item);
-            schemaTable.Rows.Add(dataRow);
+            try
+            {
+                map(dataRow, item);
+                schemaTable.Rows.Add(dataRow);
+            }
+            catch (Exception e) when (e is ArgumentException or DataException)
+            {
+                throw new InvalidOperationException(
+                    $"Could not stage a row for [{Schema}].[{table}]: {e.Message}", e);
+            }
+
             count++;
         }
 
