@@ -2095,6 +2095,11 @@ html.sheet-open .more-sheet-scrim {
     padding-left: 8px;
 }
 
+/* A section that does not fold: its header is a heading, not a control. */
+.tier-section-header-static {
+    cursor: default;
+}
+
 .tier-section-name {
     color: var(--tier-section-color, var(--mud-palette-text-secondary));
 }
