@@ -7519,6 +7519,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>Lendo a sessão e o quadro em que ela está.</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>Lendo a sessão e onde cada pontuação fica entre os pares.</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>Lendo o padrão</value>
   </data>

@@ -7558,6 +7558,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>セッションとそのボードを読み込み中。</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>セッションと、ピアの中での各スコアの位置を読み込み中。</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>譜面を読んでいます</value>
   </data>

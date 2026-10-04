@@ -7519,6 +7519,9 @@
   <data name="Reading the session and the board it sits on." xml:space="preserve">
     <value>세션과 해당 보드를 불러오고 있습니다.</value>
   </data>
+  <data name="Reading the session and where each score stands among peers." xml:space="preserve">
+    <value>세션과 동료들 사이에서 각 점수의 위치를 불러오고 있습니다.</value>
+  </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>채보 읽는 중</value>
   </data>
