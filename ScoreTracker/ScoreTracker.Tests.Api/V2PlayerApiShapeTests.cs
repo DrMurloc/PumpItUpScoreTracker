@@ -121,8 +121,8 @@ public sealed class V2PlayerApiShapeTests
         Assert.Null(Assert.Single(page.Data).Pumbility);
     }
 
-    // The incremental-sync parameter: a tool stays current without webhooks and without re-reading
-    // a player's whole history.
+    // A filter on the score's own date, which is when the play happened rather than when it was
+    // saved: only rows dated after the instant come back.
     [Fact]
     public async Task RecordedAfterExcludesOlderRecords()
     {
