@@ -9985,8 +9985,8 @@
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>Top 8% · Safira</value>
   </data>
-  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
-    <value>Melhores charts por rating calculado - os totais do placar são oficiais; a contribuição por chart é calculada com pontuação e nota.</value>
+  <data name="Top charts by computed rating - board totals are official; each chart's value is estimated from its score, with the plate inferred." xml:space="preserve">
+    <value>Melhores charts por rating calculado - os totais do placar são oficiais; o valor de cada chart é estimado pela pontuação, com a plate inferida.</value>
   </data>
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Melhores charts de CO-OP por rating estimado - placas inferidas pela pontuação.</value>
