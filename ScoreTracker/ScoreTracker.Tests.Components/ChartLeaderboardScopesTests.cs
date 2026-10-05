@@ -313,35 +313,61 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     A site rival whose account is private is matched by their account or not at all: lighting
-    ///     their tag would say which board player they are, which their privacy keeps off this board.
+    ///     A rival edge onto a private player is their consent, so their row glows on the official
+    ///     board like anywhere else — named by the board's tag, never their site name.
     /// </summary>
     [Fact]
-    public void TheOfficialBoardDoesNotGlowAPrivateSiteRivalsTag()
+    public void TheOfficialBoardGlowsAPrivateRivalsLinkedRow()
     {
         var hidden = Guid.NewGuid();
         SignIn(Guid.NewGuid());
         _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new RivalSubject(Guid.NewGuid(), hidden, "HIDDEN#2", "HIDDEN", null, true,
+                new RivalSubject(Guid.NewGuid(), hidden, null, "SITENAME", null, false,
                     RivalCapabilities.LiveScores, When)
             });
         _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new User(hidden, Name.From("HIDDEN"), false, null, new Uri("https://example.invalid/h.png"), null)
+                new User(hidden, Name.From("SITENAME"), false, null, new Uri("https://example.invalid/h.png"), null)
             });
-        GivenTheOfficialBoard(BoardEntry(1, "HIDDEN#2", 999_000, hidden));
+        GivenTheOfficialBoard(BoardEntry(1, "BOARD#1", 999_000), BoardEntry(2, "HIDDEN#2", 998_000, hidden));
 
         var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
 
         cut.WaitForAssertion(() =>
         {
-            var row = Assert.Single(cut.FindAll(".weekly-lb-row"));
-            Assert.Contains("HIDDEN#2", row.TextContent);
-            Assert.DoesNotContain("is-rival", row.ClassName);
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.DoesNotContain("is-rival", rows[0].ClassName);
+            Assert.Contains("is-rival", rows[1].ClassName);
+            Assert.Contains("HIDDEN#2", rows[1].TextContent);
+            Assert.DoesNotContain("SITENAME", rows[1].TextContent);
         });
+    }
+
+    /// <summary>
+    ///     A rival added by tag whose tag has since linked to a private account keeps the tag, and a
+    ///     snapshot taken before the link carries no account on the row — the tag still lights it.
+    /// </summary>
+    [Fact]
+    public void TheOfficialBoardGlowsALinkedRivalByTagWhenTheRowCarriesNoLink()
+    {
+        var hidden = Guid.NewGuid();
+        SignIn(Guid.NewGuid());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RivalSubject(Guid.NewGuid(), hidden, "HIDDEN#2", "HIDDEN#2", null, true,
+                    RivalCapabilities.LiveScores | RivalCapabilities.OfficialStandings, When)
+            });
+        GivenTheOfficialBoard(BoardEntry(1, "hidden#2", 999_000));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() =>
+            Assert.Contains("is-rival", Assert.Single(cut.FindAll(".weekly-lb-row")).ClassName));
     }
 
     /// <summary>Your own link is yours to see, private or not, and it is what puts you on the standing line.</summary>
@@ -459,19 +485,19 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     The mirror knows which board tags link to site accounts, but a PRIVATE account never
-    ///     published that link. Their row stays a bare board tag: no site username, and no glow,
-    ///     because a glow says "this tag is someone you know" as loudly as a name does.
+    ///     Joining a community shares a player with it, so a private clubmate's row glows on the
+    ///     official board like a public one's. A private stranger's link stays unpublished: their row
+    ///     is a bare board tag. Every row is named by its tag, never a site username.
     /// </summary>
     [Fact]
-    public void APrivateAccountsLinkIsNotSurfacedOnTheOfficialBoard()
+    public void APrivateClubmateGlowsOnTheOfficialBoardAndAPrivateStrangerStaysABareTag()
     {
         var publicUser = Guid.NewGuid();
         var privateUser = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
             new Uri("https://example.invalid/me.png"), null));
-        // Both are clubmates, so both would glow if the link were honoured for either.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false, Guid.NewGuid()) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
@@ -480,7 +506,8 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             .ReturnsAsync(new[]
             {
                 new User(publicUser, Name.From("OPENBOOK"), true, null, new Uri("https://example.invalid/a.png"), null),
-                new User(privateUser, Name.From("HIDDEN"), false, null, new Uri("https://example.invalid/b.png"), null)
+                new User(privateUser, Name.From("SECRETCREW"), false, null, new Uri("https://example.invalid/b.png"), null),
+                new User(stranger, Name.From("SECRETSTRANGER"), false, null, new Uri("https://example.invalid/c.png"), null)
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialChartBoardQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialChartBoardRecord(When, new[]
@@ -488,7 +515,9 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
                 new OfficialChartBoardEntryRecord(1,
                     new OfficialPlayerRecord(1, "OPENBOOK#1", new Uri("https://example.invalid/o.png"), publicUser), 999_000),
                 new OfficialChartBoardEntryRecord(2,
-                    new OfficialPlayerRecord(2, "HIDDEN#2", new Uri("https://example.invalid/h.png"), privateUser), 998_000)
+                    new OfficialPlayerRecord(2, "HIDDEN#2", new Uri("https://example.invalid/h.png"), privateUser), 998_000),
+                new OfficialChartBoardEntryRecord(3,
+                    new OfficialPlayerRecord(3, "STRANGER#3", new Uri("https://example.invalid/s.png"), stranger), 997_000)
             }));
 
         var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
@@ -496,14 +525,15 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         cut.WaitForAssertion(() =>
         {
             var rows = cut.FindAll(".weekly-lb-row");
-            Assert.Equal(2, rows.Count);
-            // Both are named by their board tag, never their site username.
+            Assert.Equal(3, rows.Count);
             Assert.Contains("OPENBOOK#1", rows[0].TextContent);
             Assert.Contains("HIDDEN#2", rows[1].TextContent);
-            Assert.DoesNotContain("HIDDEN", rows[1].ClassName);
-            // The public link still glows; the private one is treated as an unlinked tag.
+            Assert.DoesNotContain("SECRETCREW", rows[1].TextContent);
+            Assert.Contains("STRANGER#3", rows[2].TextContent);
+            Assert.DoesNotContain("SECRETSTRANGER", rows[2].TextContent);
             Assert.Contains("weekly-lb-community", rows[0].ClassName);
-            Assert.DoesNotContain("weekly-lb-community", rows[1].ClassName);
+            Assert.Contains("weekly-lb-community", rows[1].ClassName);
+            Assert.DoesNotContain("weekly-lb-community", rows[2].ClassName);
         });
     }
 
