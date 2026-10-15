@@ -149,8 +149,34 @@ foreach ($v in $videos) {
             foreach ($s in ($siteSongs | Sort-Object { $_.Norm.Length } -Descending)) {
                 if ($normStripped -eq ($s.Norm -replace '[()]', '')) {
                     $match = $s
-                    if ($hangulParen.Success) { $krFromParen = $hangulParen.Groups[1].Value.Trim() }
+                    if ($hangulParen.Success) {
+                        # the site's Korean title swaps only the annotated part and keeps the English
+                        # tail, spelled as the canonical name spells it: "Burning SuperNova (X) feat.
+                        # neur6sia" serves "X feat. neur6sia", "Pull me up (X) Feat. Monya" serves
+                        # "X (Feat. Monya)" - the bare group alone silently breaks Korean imports
+                        $krFromParen = $hangulParen.Groups[1].Value.Trim()
+                        $head = $titleField.Substring(0, $hangulParen.Index).Trim()
+                        if ($head -ne '' -and $s.Name.StartsWith($head, [StringComparison]::OrdinalIgnoreCase)) {
+                            $krFromParen = ($krFromParen + $s.Name.Substring($head.Length)).Trim()
+                        }
+                    }
                     if (-not $songData.ContainsKey($s.Name)) { Note "FLAG [$($s.Name)] matched via mid-title Korean annotation: [$titleField]" }
+                    break
+                }
+            }
+        }
+    }
+    if ($null -eq $match) {
+        # Korean-first titles ("KOREAN (English)", the Steam-link RISE songs of v1.02.0): the
+        # English name is the trailing paren group, the Korean name everything before it
+        $krFirst = [regex]::Match($titleField, "^(?<kr>[^()]*$hg[^()]*?)\s*\((?<en>[^()]+)\)\s*$")
+        if ($krFirst.Success) {
+            $normEn = Normalize $krFirst.Groups['en'].Value
+            foreach ($s in $siteSongs) {
+                if ($normEn -eq $s.Norm) {
+                    $match = $s
+                    $krFromParen = $krFirst.Groups['kr'].Value.Trim()
+                    if (-not $songData.ContainsKey($s.Name)) { Note "FLAG [$($s.Name)] matched a Korean-first title: [$titleField]" }
                     break
                 }
             }
@@ -241,6 +267,7 @@ function Consensus($list, [string]$label, [string]$song) {
 $included = @()
 $deferred = @()
 $problems = @()
+$previouslyShipped = @()
 
 foreach ($name in ($songData.Keys | Sort-Object)) {
     $agg = $songData[$name]
@@ -256,6 +283,12 @@ foreach ($name in ($songData.Keys | Sort-Object)) {
 
     $missing = @($site.Site20 | Where-Object { -not $chartMap.Contains($_) })
     if ($missing.Count -gt 0) {
+        # a shipped song can go out with another channel's video where Andamiro never uploaded one
+        # (Until Defined CO-OP x2, v1.02.0) - it is shipped, not waiting on YouTube
+        if ($shippedCharts.ContainsKey((Normalize $name))) {
+            $previouslyShipped += "$name (shipped without an official video for $($missing -join ', '))"
+            continue
+        }
         $deferred += "$name -- site charts not yet on YouTube: $($missing -join ', ') (have $($chartMap.Count) videos-charts)"
         continue
     }
@@ -322,7 +355,6 @@ foreach ($name in ($songData.Keys | Sort-Object)) {
 # ---- exclude songs already shipped in a previous batch ----
 # (chart-set drift on a shipped song = a new video since shipping - the tool skips
 # already-in-P2 songs on Confirm, so a drifted song needs MANUAL chart addition; flag loudly)
-$previouslyShipped = @()
 $kept = @()
 foreach ($s in $included) {
     $norm = Normalize $s.name
