@@ -35,6 +35,7 @@ is only a baseline, so seed `oracle.json` from whatever new-song list the owner 
 & scripts\walk-and-fetch.ps1      # YouTube: walk newest -> watermark, cache watch pages
 & scripts\fetch-channels.ps1 -Version v1.02.0   # the patch's playlists -> channels.json (each video's channel)
 & scripts\build-batch.ps1         # emit Downloads\phoenix2-batch-<date>.json + -report.txt
+& scripts\check-korean-names.ps1 -BatchJson "$env:USERPROFILE\Downloads\phoenix2-batch-<date>.json"   # koreanName vs piugame's Korean session
 ```
 
 Run `rebuild-oracle.ps1` **first** when: the report shows `NO BLOB MATCH` entries (a song not
@@ -49,6 +50,19 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   Phoenix, back in P2 — e.g. KUGUTSU) already exists in the tracker and must go the
   ChartMix-seed path, not BulkAddCharts. Verify each candidate against the tracker (site
   `/Charts` search across mixes, or ask the owner) and remove returners from `oracle.json`.
+- **RISE songs reach the arcade too, and the tracker already has them.** v1.02.0 brought 17:
+  15 whose chart videos say `Steam Link Exclusive Track` plus two teaser songs that were RISE
+  songs first. BulkAddCharts checks only Phoenix and Phoenix 2 names, so it would create a second
+  copy of each. Their arcade charts go in by SQL on the existing songs, the RISE catalog way
+  (docs/design/rise.md D7/D8): an arcade single joins the RISE single it was ported from, matched
+  in order; a double, co-op or single RISE lacks is a new chart debuting in Phoenix 2. The
+  v1.02.0 script (`Downloads\phoenix2-1.02.0-rise-songs-2026-10-15.sql`) is the pattern. Keep
+  these songs in `oracle.json` and record them in `shipped.json` with the SQL as their batch, so
+  the drift check keeps watching them.
+- **A site chart Andamiro never filmed** (Until Defined CO-OP x2, v1.02.0) takes a roster channel's
+  video (docs/design/chart-video-sourcing.md) with that channel's canonical `channelName`. Add the
+  song to the blob by hand and to `shipped.json` with every chart; the builder then lists it as
+  shipped instead of deferring it forever.
 - **Read the report top to bottom.** `FLAG` lines are decisions the script made for you
   (title-vs-description disagreements — title wins, Andamiro typos descriptions; consensus
   picks; no-BGA duration fallbacks — slight overshoot, display-only). Confirm they're sane.
@@ -79,11 +93,26 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   are the only truth. The continuation POST needs the page's own `INNERTUBE_CONTEXT_CLIENT_VERSION`.
 - Title format drift is real: subtitled songs get the Korean annotation **mid-title**
   (`INFiNiTE ENERZY (인피니트 에너지) -Overdoze-`); the matcher's fallback strips the Hangul
-  paren group and compares paren-insensitively, taking the Korean name from the group.
-- `koreanName` is **import-critical, not cosmetic** (a missing ko-KR row silently drops the
-  song from Korean users' imports). YouTube-title Korean names are the accepted source; the
-  site-truth reconcile (session language via POST `/ajax/language_update.php`, `lang=kr`,
-  **always restore `en`**) is a separate owner-planned pass.
+  paren group and compares paren-insensitively. The site's Korean title keeps the English
+  tail, spelled as the canonical name spells it (`인피니트 에너지 -Overdoze-`,
+  `풀 미 업 (Feat. Monya)`, `버닝 슈퍼노바 feat. neur6sia`), and so does the builder. v1.02.0
+  added **Korean-first** titles (`더 라스트 스탠드 (The Last Stand)`): English in the trailing
+  paren group, Korean before it.
+- `koreanName` is **import-critical, not cosmetic** (a ko-KR row that differs from what a
+  Korean piugame session serves silently drops the song from those players' imports, and both
+  name lookups are dictionaries, so a duplicate on either side breaks every import). Check every
+  new song against the site before shipping with `check-korean-names.ps1`: it switches the
+  session with POST `/ajax/language_update.php` (`lang=kr`), reads each song's
+  `over_ranking_view.php?no=` title (the `no=` ids in `catalog.csv` are stable across
+  languages), and **always restores `en`**. Without `-BatchJson` it reads every unshipped oracle
+  song. v1.02.0: 21 of 21 matched once the tail rule was in.
+- The per-version playlists can lag the release: v1.02.0 had none on release day, so its songs
+  shipped without a channel. Once the playlists appear, `fetch-channels.ps1` maps the videos, but
+  a shipped song never re-enters a batch: its Phoenix 2 `scores.SongMix` row (SongId, MixId,
+  Channel) goes in by hand.
+- The sweep's stepball regex `([sdc])_bg\.png` would read a half-double's `hd_bg.png` as a
+  double. No half-double has reached the boards yet (the RISE songs' arcade doubles draw
+  `d_bg.png`); if one does, it needs its own type, not `d`.
 - Site boards: `lv=` filters are `20`..`26`, `27over`, `coop` (empty lv = capped top-80 "All"
   view); out-of-range pages serve **repeated** content (stop on no-new-rows); page-1-empty
   means bounced login, not an empty filter. P2 boards are login-gated for anonymous traffic.

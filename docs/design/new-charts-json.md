@@ -137,4 +137,8 @@ tool and the workflow:
    silently resolved.
 3. **Emit the JSON** exactly in the schema above and upload it to `/Admin/BulkAddCharts` —
    the preview stays the human checkpoint before anything is written, and its
-   already-in-catalog warnings are the dedup net when the watermark is stale.
+   already-in-catalog warnings are the dedup net when the watermark is stale. Those warnings
+   only know Phoenix and Phoenix 2 names, so a song PIU Scores already has from another mix — a
+   RISE song reaching the arcade, as 17 did in Phoenix 2 v1.02.0 — never goes in the blob: the
+   tool would create a second copy of it. Its arcade charts go onto the existing song by SQL,
+   the RISE catalog's way ([rise.md](rise.md) D7/D8).
