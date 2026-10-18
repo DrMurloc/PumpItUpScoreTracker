@@ -17,10 +17,12 @@ internal interface IDiscordRoleService
 
     /// <summary>
     ///     Settles a whole community: every member, plus everyone it still holds a grant for.
-    ///     Returns how many people actually changed. <paramref name="progress" /> is reported once
-    ///     the work list is known and again after each member, so a caller can draw a real bar.
+    ///     Returns how many people actually changed and how many could not be settled — counted
+    ///     apart, so a pass Discord refused never reads as one with nothing to do.
+    ///     <paramref name="progress" /> is reported once the work list is known and again after each
+    ///     member, so a caller can draw a real bar.
     /// </summary>
-    Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
+    Task<DiscordRolePassResult> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
         IProgress<DiscordRoleProgress>? progress = null);
 
     /// <summary>Settles somebody who just walked into a server, in every community that uses it.</summary>

@@ -347,10 +347,81 @@ public sealed class DiscordRoleSagaTests
         _bot.Setup(b => b.AddRole(Guild, Snowflake, BronzeRole, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Missing Permissions"));
 
-        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+        var result = await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
 
         _bot.Verify(b => b.AddRole(Guild, secondSnowflake, BronzeRole, It.IsAny<CancellationToken>()),
             Times.Once);
+        Assert.Equal(new DiscordRolePassResult(1, 1), result);
+    }
+
+    /// <summary>
+    ///     Pump United (2026-10-18): Discord refused every write in the server, and the pass counted
+    ///     only what changed — zero — so Check now said everyone already had the right roles (D27). A
+    ///     refusal the whole server shares also says the same thing for every member, so the pass
+    ///     stops at the first one instead of asking once per member (D28).
+    /// </summary>
+    [Fact]
+    public async Task ARefusalTheWholeServerSharesIsReportedAndStopsThePass()
+    {
+        TwoEligibleMembers();
+        _bot.Setup(b => b.AddRole(Guild, It.IsAny<ulong>(), BronzeRole, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DiscordRoleRefusedException(BotRoleRefusal.NoAccess, 50001));
+
+        var result = await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        Assert.Equal(new DiscordRolePassResult(0, 1, BotRoleRefusal.NoAccess, 50001), result);
+        _bot.Verify(b => b.AddRole(Guild, It.IsAny<ulong>(), BronzeRole, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
+    ///     A refusal about one member — they left between the read and the write — says nothing about
+    ///     the next one, so it is counted and the pass carries on.
+    /// </summary>
+    [Fact]
+    public async Task ARefusalAboutOneMemberIsCountedAndThePassGoesOn()
+    {
+        TwoEligibleMembers();
+        _bot.Setup(b => b.AddRole(Guild, Snowflake, BronzeRole, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DiscordRoleRefusedException(BotRoleRefusal.MemberGone, 10007));
+
+        var result = await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        Assert.Equal(new DiscordRolePassResult(1, 1), result);
+        _bot.Verify(b => b.AddRole(Guild, SecondSnowflake, BronzeRole, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private const ulong SecondSnowflake = 43;
+
+    /// <summary>The first member, plus a second who qualifies the same way.</summary>
+    private void TwoEligibleMembers()
+    {
+        var second = Guid.Parse("99999999-9999-9999-9999-999999999999");
+        _communities.Setup(c => c.GetMemberRoles(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityMemberRoleRecord(UserId, CommunityRole.Member),
+                new CommunityMemberRoleRecord(second, CommunityRole.Member)
+            });
+        _users.Setup(u => u.GetExternalLogins(It.IsAny<IEnumerable<Guid>>(), "Discord",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, string>
+            {
+                [UserId] = Snowflake.ToString(), [second] = SecondSnowflake.ToString()
+            });
+        _titles.Setup(t => t.GetUsersWithTitles(MixEnum.Phoenix2, It.IsAny<IEnumerable<Name>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new TitleAchievedRecord(UserId, Name.From("[P.B] BRONZE"), ParagonLevel.None),
+                new TitleAchievedRecord(second, Name.From("[P.B] BRONZE"), ParagonLevel.None)
+            });
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>>
+            {
+                [Snowflake] = Array.Empty<ulong>(), [SecondSnowflake] = Array.Empty<ulong>()
+            });
     }
 
     /// <summary>
@@ -474,19 +545,31 @@ public sealed class DiscordRoleSagaTests
     }
 
     /// <summary>
-    ///     A guild the bot was removed from reports no roles. Nothing is managed, so a reconcile is
-    ///     a no-op rather than a mass revocation nobody asked for.
+    ///     A guild the bot was removed from — or cannot see mid-reconnect — reports no roles. Nothing
+    ///     can be decided without it, so a pass stops with the outage. Reading on used to make every
+    ///     member "not in the server": it stripped nobody, but it deleted every grant row, the only
+    ///     record of whom to take roles back from once somebody leaves or unlinks (D30).
     /// </summary>
     [Fact]
-    public async Task AGuildTheBotCannotSeeStripsNobody()
+    public async Task AGuildTheBotCannotSeeStripsNobodyAndForgetsNobody()
     {
         _bot.Setup(b => b.GetGuildRoles(Guild, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<BotGuildRole>());
-        AlreadyHolds(BronzeRole);
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>?)null);
+        _bot.Setup(b => b.GetMemberRoles(Guild, Snowflake, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<ulong>?)null);
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now) });
 
-        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+        await Assert.ThrowsAsync<DiscordUnreachableException>(() =>
+            Saga().ReconcileCommunity(CommunityId, CancellationToken.None));
+        await Assert.ThrowsAsync<DiscordUnreachableException>(() =>
+            Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None));
 
         VerifyNothingWritten();
+        _roles.Verify(r => r.DeleteGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>A mapping pointing at a deleted role must not be asked for — it no longer exists.</summary>

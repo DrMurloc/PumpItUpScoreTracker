@@ -26,6 +26,24 @@ public sealed record DiscordRoleProgress(int Done, int Total)
     public int Percent => Total == 0 ? 100 : (int)(100L * Done / Total);
 }
 
+/// <summary>
+///     What one pass over a community did. <see cref="Failed" /> is counted apart from
+///     <see cref="Changed" /> because the two used to share one number: a pass Discord refused for
+///     every member changed nobody, and the page read that zero as "everyone already has the right
+///     roles" (docs/design/discord-role-management.md D27).
+/// </summary>
+/// <param name="Refusal">
+///     Set when Discord refused something the whole server shares and the pass stopped there (D28).
+///     Null when every failure was about one member.
+/// </param>
+/// <param name="DiscordCode">Discord's own number for that refusal, printed beside the sentence.</param>
+[ExcludeFromCodeCoverage]
+public sealed record DiscordRolePassResult(int Changed, int Failed, BotRoleRefusal? Refusal = null,
+    int? DiscordCode = null)
+{
+    public static readonly DiscordRolePassResult Nothing = new(0, 0);
+}
+
 /// <summary>A member we have granted roles for, and the Discord account we granted against.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record CommunityDiscordGrantRecord(Guid CommunityId, Guid UserId, ulong DiscordUserId,

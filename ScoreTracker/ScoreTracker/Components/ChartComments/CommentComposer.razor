@@ -22,9 +22,14 @@
         </div>
     }
     <div class="cmt-compose-main">
+        @* @bind, never value= plus @oninput. Only @bind tells the renderer the browser already
+           holds the typed text, so a keystroke's render writes nothing back into the field. The
+           hand-rolled pair wrote each keystroke's text back one round trip late, over whatever
+           had been typed since: on a real connection keys vanished, and what survived split
+           between two copies of the text. Localhost never shows it. *@
         <textarea class="cmt-line @(_open ? "cmt-line-open" : null)" rows="@(_open ? 2 : 1)"
                   placeholder="@Placeholder" data-testid="@TestId" maxlength="@MaxLength"
-                  value="@_text" @oninput="OnInput" @onfocus="() => _open = true"></textarea>
+                  @bind="_text" @bind:event="oninput" @onfocus="() => _open = true"></textarea>
         @if (_open)
         {
             <div class="cmt-compose-foot">
@@ -105,11 +110,6 @@
     {
         _open = StartOpen;
         _text = InitialText ?? string.Empty;
-    }
-
-    private void OnInput(ChangeEventArgs args)
-    {
-        _text = args.Value?.ToString() ?? string.Empty;
     }
 
     private async Task Submit()

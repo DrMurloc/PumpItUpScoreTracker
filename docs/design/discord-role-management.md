@@ -1,7 +1,9 @@
 # Discord role management — design
 
 > **Status: BUILT.** Workshopped and built 2026-09-09, one PR, 14 commits. The player's own
-> opt-out (D22–D25, §2, §3.4, §5.4) was workshopped and built 2026-09-14 in a second PR.
+> opt-out (D22–D25, §2, §3.4, §5.4) was workshopped and built 2026-09-14 in a second PR. Refusals
+> (D27–D30, §2.3, §9.7) were fixed 2026-10-18, after a community's server refused every write while
+> the page reported success.
 >
 > Mock (owner-approved): <https://claude.ai/code/artifact/c143bfe5-cff8-4b9a-b878-665a1aac8197>
 
@@ -63,6 +65,10 @@ Owner calls from the 2026-09-09 workshop.
 | D23 | **The opt-out is a fifth fact in the rule, not an action the command takes** (2026-09-14). `Reconcile` reads it alongside membership and the linked account, so the join event, the nightly sweep, a title earned next week, an admin's Check now and the dry run all honor it, and nothing can hand the role back by accident. The command writes the fact and then runs the same reconcile inline, the way D18 hands a role out on the spot. It also made the two existing revoke loops honest: a revoke pass used to stop at the first role Discord refused, so somebody wearing one role above the bot kept the assignable one too. Every revoke is attempted now in both `ReconcileMember` and `Revoke`, the grant row stays while anything failed, and the failure surfaces after the loop. The second loop matters most on the purge, which deletes the grant row — the last handle on the snowflake — whether or not the revoke succeeded, so a role skipped there is a role nothing can ever take back. |
 | D26 | **A repointed server leaving an opt-out unliftable is accepted, not fixed** (owner, 2026-09-14, on the bug check). Lifting is only reachable by running the command in the designated server, so a player who opted out, whose admin then repoints the community elsewhere, cannot undo it from a Discord they are not in. That needs three things to line up at once and has never happened. It is also not purely a loss: the row persisting means that if they ever do join the new server, **their choice is remembered** rather than quietly reversed — which is the right direction for a privacy preference. No site-side switch is being built for it. |
 | D25 | **A player who is not in the community can still turn its roles off**, and a player with nothing to take off gets the same answer — the record simply waits (2026-09-14). Admins never see who opted out: the page gains the fact as a line under "When a role is given", not a list of names. The reply names the account the invocation resolved to, for the same reason D21 does. |
+| D27 | **A refused write is reported as refused, never as "already right"** (owner, 2026-10-18). A pass counts the members it changed and the members it could not settle separately. It used to return one number, changes, so a pass Discord refused for every member reported zero and Check now said "Everyone already has the right roles." Pump United's server refused all 213 writes from the day it was designated while the page said exactly that. The page now names the refusal in the server's health list, as a closed vocabulary with Discord's own error number beside it, never Discord's text. |
+| D28 | **A refusal the whole server shares stops the pass** (owner, 2026-10-18). Missing Access (50001), Missing Permissions (50013) and the server's moderator-2FA rule (60003) answer the same for every member, so the pass stops at the first instead of asking once per member. A refusal about one member — they left mid-pass, the role was deleted mid-pass — is counted and the pass carries on. |
+| D29 | **A write that cannot happen throws** (2026-10-18). `AddRole` returned quietly when the member could not be fetched, and the reconcile then recorded a grant and counted a change for a role nobody received. It throws now: an unseen server as `DiscordUnreachableException`, a member who is gone as a refusal. `RemoveRole` keeps its no-op for somebody no longer in the server, the one case where finding nobody is success. |
+| D30 | **An unseen server aborts a pass instead of emptying it** (2026-10-18). With the bot unable to see the server, every member read as "not in the server", and a bulk pass deleted every grant row — the only record of whom to take roles back from once somebody leaves or unlinks. `BuildContext` throws `DiscordUnreachableException` for an unseen server now, so a pass either runs against the real server or reports that Discord could not be reached. |
 
 ---
 
@@ -123,6 +129,13 @@ reaches them, the role simply never arrives.
 So assignability is computed, surfaced twice (server health list and the mapping row), and a role
 that fails it is **skipped rather than retried** — a reconcile does not spend a write it knows will
 be rejected.
+
+Assignability is the bot's **own view**, and Discord checks more than the bot can see: a timeout on
+the bot, a server that requires two-factor authentication for moderator actions, a cache that has
+drifted. Those surface only as the answer to a write. The bot adapter translates that answer into
+`BotRoleRefusal` (`DiscordRoleRefusedException`), the pass reports it rather than counting it as
+nothing to do (D27), and a refusal the whole server shares stops the pass (D28). The page then shows
+the refusal above everything the bot's own view says, because the view is what was wrong.
 
 ---
 
@@ -252,8 +265,9 @@ bus dropped.
 Four sections, in the mock's order.
 
 1. **Discord server** — the designated server, who set it, and a health list: bot present, bot can
-   manage roles, and any mapped role ranked above the bot. Three states: designated, not set up,
-   and *your own Discord isn't linked* (D10).
+   manage roles, and any mapped role ranked above the bot — and, above all of those, the refusal
+   when a pass the page ran was stopped by Discord (D27). Three states: designated, not set up, and
+   *your own Discord isn't linked* (D10).
 2. **Titles and roles** — rows grouped by exclusivity group, with a `Highest only` chip on the
    pumbility groups. Add opens a searchable picker over the shipped title list; roles the bot
    cannot assign are disabled in the role dropdown with the reason on them.
@@ -489,6 +503,21 @@ Four fixes and one ratchet, all on the same PR.
   written and said nothing. The insert treats its own unique violation as success — pressing once
   and having the client retry is not an error — and the write is inside the same try the reconcile
   has.
+
+### 9.7 Refused writes reported as success (2026-10-18)
+
+Pump United designated its server on 2026-10-11 and mapped seven `[P.B]` titles. Every role write
+since came back `403 / 50001 Missing Access` — 213 of them, none successful, read from App Insights'
+`dependencies` table, where Discord's REST calls are recorded with their route and status. A second
+community's server, randymall's, did the same. The bot's own view said it held Manage Roles and ranked
+above every mapped role, so the page said "The bot can hand out every role below", the dry run listed
+the grants, and Check now said "Everyone already has the right roles." The admin deleted and recreated
+every role, which could not help.
+
+What Discord refused on was not visible from here — the token on the development machine belongs to
+the testing bot, which is in neither server. The fix is that the site stops claiming success: D27
+through D30, and the page names the refusal with a hint covering both what the bot's view can see
+(Manage Roles, role order) and what it cannot (a timeout, the moderator-2FA rule).
 
 ### 9.5 Testing
 

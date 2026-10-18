@@ -97,14 +97,14 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///         community is left alone — that person is not ours to manage.
     ///     </para>
     /// </summary>
-    public async Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
-        IProgress<DiscordRoleProgress>? progress = null)
+    public async Task<DiscordRolePassResult> ReconcileCommunity(Guid communityId,
+        CancellationToken cancellationToken, IProgress<DiscordRoleProgress>? progress = null)
     {
         var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context == null)
         {
             progress?.Report(new DiscordRoleProgress(0, 0));
-            return 0;
+            return DiscordRolePassResult.Nothing;
         }
 
         var granted = (await _roles.GetGrants(communityId, cancellationToken))
@@ -117,6 +117,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         progress?.Report(new DiscordRoleProgress(done, candidates.Length));
 
         var changed = 0;
+        var failed = 0;
         foreach (var userId in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -130,11 +131,23 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             {
                 if (await ReconcileMember(context, userId, snowflake, cancellationToken)) changed++;
             }
-            catch (Exception e) when (e is not OperationCanceledException)
+            catch (DiscordRoleRefusedException e) when (e.ServerWide)
+            {
+                // Nothing about the next member changes a missing permission or the server's 2FA
+                // rule, so asking again is the same refusal once per member (D28). The rest wait
+                // for a pass Discord will allow, and the caller hears why this one stopped.
+                _logger.LogWarning(e,
+                    "Discord refused role changes in community {CommunityId} ({Refusal}, Discord code {DiscordCode})",
+                    communityId, e.Reason, e.DiscordCode);
+                return new DiscordRolePassResult(changed, failed + 1, e.Reason, e.DiscordCode);
+            }
+            catch (Exception e) when (e is not OperationCanceledException and not DiscordUnreachableException)
             {
                 // One member Discord refuses is one member, not the rest of the community. The
                 // candidate order is stable, so without this the SAME people are stranded on every
-                // pass, forever, behind whoever failed first.
+                // pass, forever, behind whoever failed first. Counted, never folded into "nothing
+                // to do" (D27). Losing the server mid-pass is not one member, so it stops the pass.
+                failed++;
                 _logger.LogError(e, "Could not settle {UserId} in community {CommunityId}",
                     userId, communityId);
             }
@@ -142,7 +155,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             progress?.Report(new DiscordRoleProgress(++done, candidates.Length));
         }
 
-        return changed;
+        return new DiscordRolePassResult(changed, failed);
     }
 
     /// <summary>
@@ -537,12 +550,12 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         if (mappings.Count == 0) return null;
 
         var roles = await _bot.GetGuildRoles(server.GuildId, cancellationToken);
-        // A guild the bot cannot see reports no roles. Nothing is assignable and nothing is
-        // managed, so a reconcile becomes a no-op rather than a mass revocation — which is the
-        // right way to fail, but worth saying out loud.
-        if (roles.Count == 0)
-            _logger.LogWarning("Community {CommunityId} designates guild {GuildId}, which the bot cannot see",
-                communityId, server.GuildId);
+        // A server the bot cannot see reports no roles — every server has @everyone, so empty means
+        // unseen, not unconfigured. Reading on from there made every member "not in the server",
+        // and a bulk pass then deleted every grant row: the only record of whom to take roles back
+        // from once somebody leaves or unlinks (D30). Nothing here can be decided without the
+        // server, so nothing is.
+        if (roles.Count == 0) throw new DiscordUnreachableException();
 
         var assignable = roles.Where(r => r.CanAssign).Select(r => r.Id).ToHashSet();
         var live = roles.Select(r => r.Id).ToHashSet();

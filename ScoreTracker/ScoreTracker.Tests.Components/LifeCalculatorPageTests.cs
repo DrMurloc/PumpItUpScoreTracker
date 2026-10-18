@@ -19,6 +19,8 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class LifeCalculatorPageTests : ComponentTestBase
 {
+    private readonly BunitJSModuleInterop _module;
+
     public LifeCalculatorPageTests()
     {
         var settings = new Mock<IUiSettingsAccessor>();
@@ -27,7 +29,9 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
         settings.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
             .ReturnsAsync((string?)null);
         Services.AddSingleton(settings.Object);
-        JSInterop.SetupModule("./js/life-calculator.js").SetupVoid("countTo", _ => true);
+        _module = JSInterop.SetupModule("./js/life-calculator.js");
+        _module.SetupVoid("countTo", _ => true);
+        _module.SetupVoid("followLevel", _ => true);
         this.RenderInteractive();
     }
 
@@ -137,13 +141,29 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
         var before = Life(page);
         var multiplier = Tele(page, 1);
 
-        // oninput, not onchange: the slider updates live as you drag, which is exactly the
-        // path that used to bleed life on every tick.
+        // A release per level, the way arrow keys step it — each one carries the run across the
+        // rescale, which is the path that used to bleed life on every step.
         foreach (var level in new[] { 24, 25, 26, 25, 24, 23, 22, 21 })
-            await page.InvokeAsync(() => page.Find("#lc-level").Input(level.ToString()));
+            await page.InvokeAsync(() => page.Find("#lc-level").Change(level.ToString()));
 
         Assert.Equal(before, Life(page));
         Assert.Equal(multiplier, Tele(page, 1));
+    }
+
+    /// <summary>
+    ///     The drag belongs to the browser (UX rule 12). Heard on every <c>input</c>, the server
+    ///     wrote a one-round-trip-old level back onto the thumb and pulled it backwards under the
+    ///     finger; now the circuit hears the release, and the script paints the number in between.
+    /// </summary>
+    [Fact]
+    public void TheLevelSliderIsHeardOnlyOnRelease()
+    {
+        var page = RenderComponent<LifeCalculator>();
+
+        var slider = page.Find("#lc-level");
+        Assert.NotNull(slider.GetAttribute("blazor:onchange"));
+        Assert.Null(slider.GetAttribute("blazor:oninput"));
+        _module.VerifyInvoke("followLevel");
     }
 
     [Fact]

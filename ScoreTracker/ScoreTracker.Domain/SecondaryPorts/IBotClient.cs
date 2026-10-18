@@ -118,14 +118,21 @@ namespace ScoreTracker.Domain.SecondaryPorts
             ulong guildId, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///     Grants a role. A no-op if they already hold it. Throws if the bot cannot assign it —
-        ///     callers check <see cref="BotGuildRole.CanAssign" /> first rather than discovering
-        ///     it here.
+        ///     Grants a role. A no-op if they already hold it. Callers check
+        ///     <see cref="BotGuildRole.CanAssign" /> first, but that is the bot's own view, and every
+        ///     way the role can still fail to land is an exception, never a quiet return:
+        ///     <see cref="ScoreTracker.Domain.Exceptions.DiscordRoleRefusedException" /> when Discord says no or the member
+        ///     is no longer in the server, <see cref="ScoreTracker.Domain.Exceptions.DiscordUnreachableException" /> when
+        ///     the server cannot be seen at all.
         /// </summary>
         public Task AddRole(ulong guildId, ulong userId, ulong roleId,
             CancellationToken cancellationToken = default);
 
-        /// <summary>Removes a role. A no-op if they do not hold it.</summary>
+        /// <summary>
+        ///     Removes a role. A no-op if they do not hold it, or are no longer in the server — the one
+        ///     case where finding nobody is success. Discord saying no throws
+        ///     <see cref="ScoreTracker.Domain.Exceptions.DiscordRoleRefusedException" />.
+        /// </summary>
         public Task RemoveRole(ulong guildId, ulong userId, ulong roleId,
             CancellationToken cancellationToken = default);
 

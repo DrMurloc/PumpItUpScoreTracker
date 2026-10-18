@@ -65,7 +65,25 @@ else
                              IconColor="@(_view.BotIsInServer ? Color.Success : Color.Error)">
                     @(_view.BotIsInServer ? L["The bot is in this server."] : L["The bot is no longer in this server."])
                 </MudListItem>
-                @if (!_view.BotCanManageRoles)
+                @if (_refused is { Refusal: { } refusal } refused)
+                {
+                    @* Discord's answer outranks the bot's own view: everything below is computed from
+                       what the bot can see, and this is Discord saying no to a write the view allowed
+                       (docs/design/discord-role-management.md D27). *@
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Error" IconColor="Color.Error">
+                        <MudText Typo="Typo.body2" data-testid="discord-refusal">
+                            @L["Discord refused to change roles in this server."]
+                        </MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @RefusalHint(refusal)
+                            @if (refused.DiscordCode is { } code)
+                            {
+                                <span> (@L["Discord error {0}", code])</span>
+                            }
+                        </MudText>
+                    </MudListItem>
+                }
+                else if (!_view.BotCanManageRoles)
                 {
                     @* Not a hierarchy problem, and the hierarchy advice below would send an admin
                        to move roles around forever. A bot invited before this feature existed
@@ -442,6 +460,12 @@ else
     private CancellationTokenSource? _checking;
     private bool _previewLoading;
 
+    /// <summary>
+    ///     The last pass this page ran, when Discord stopped it. Kept until a pass gets through, so
+    ///     the reason stays on screen while the admin goes and fixes it.
+    /// </summary>
+    private DiscordRolePassResult? _refused;
+
     private bool CanSaveNew =>
         !string.IsNullOrWhiteSpace(_newTitle) && _newRole is { CanAssign: true };
 
@@ -555,9 +579,15 @@ else
     {
         if (_view == null || !CanSaveNew) return;
         _showAdd = false;
-        await RunWithProgress(L["Handing out the role"].Value,
+        DiscordRolePassResult? result = null;
+        var ran = await RunWithProgress(L["Handing out the role"].Value,
             report => new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRole!.Id, report),
-            "Could not add that role.");
+            "Could not add that role.",
+            async (command, token) => result = await Mediator.Send(command, token));
+
+        // Adding a role has always finished quietly. It still does when the role landed; it only
+        // speaks up when something did not (D27).
+        if (ran && result != null) ReportPass(result, quietWhenClean: true);
     }
 
     private void AskRemove(CommunityTitleRoleView mapping)
@@ -597,17 +627,39 @@ else
     private async Task CheckNow()
     {
         if (_view == null) return;
-        var changed = 0;
+        DiscordRolePassResult? result = null;
         var ran = await RunWithProgress(L["Checking roles"].Value,
             report => new ReconcileCommunityDiscordRolesCommand(_view.CommunityName, report),
             "Could not reach Discord just now.",
-            async (command, token) => changed = await Mediator.Send(command, token));
+            async (command, token) => result = await Mediator.Send(command, token));
 
-        if (ran)
-            Snackbar.Add(changed == 0
-                    ? L["Everyone already has the right roles."].Value
-                    : L["Updated {0} members.", changed].Value,
-                changed == 0 ? Severity.Info : Severity.Success);
+        if (ran && result != null) ReportPass(result, quietWhenClean: false);
+    }
+
+    /// <summary>
+    ///     Says what a pass did. "Everyone already has the right roles" is only ever said about a pass
+    ///     that changed nobody AND failed nobody: it used to cover every pass that changed nobody, so a
+    ///     server refusing every write read as one with nothing to do (D27).
+    /// </summary>
+    private void ReportPass(DiscordRolePassResult result, bool quietWhenClean)
+    {
+        if (result.Refusal != null)
+        {
+            _refused = result;
+            Snackbar.Add(L["Discord refused to change roles in this server."].Value, Severity.Error);
+            return;
+        }
+
+        _refused = null;
+        if (result.Failed > 0)
+            Snackbar.Add(L["Updated {0} members. {1} couldn't be updated; the next check tries again.",
+                result.Changed, result.Failed].Value, Severity.Warning);
+        else if (quietWhenClean)
+            return;
+        else if (result.Changed == 0)
+            Snackbar.Add(L["Everyone already has the right roles."].Value, Severity.Info);
+        else
+            Snackbar.Add(L["Updated {0} members.", result.Changed].Value, Severity.Success);
     }
 
     /// <summary>
@@ -672,6 +724,18 @@ else
         "PUMBILITY Singles" => L["PUMBILITY — singles"].Value,
         "PUMBILITY Doubles" => L["PUMBILITY — doubles"].Value,
         _ => group
+    };
+
+    /// <summary>
+    ///     What an admin can check for each refusal that stops a pass. The bot's own view already
+    ///     said it holds Manage Roles and ranks above these roles, so the hint names what that view
+    ///     cannot see as well as what it can.
+    /// </summary>
+    private string RefusalHint(BotRoleRefusal refusal) => refusal switch
+    {
+        BotRoleRefusal.TwoFactorRequired =>
+            L["This server requires two-factor authentication for moderator actions (Server Settings → Safety Setup), and that blocks the bot."].Value,
+        _ => L["Check the bot in Server Settings: its role needs Manage Roles and has to sit above these roles, and the bot can't be timed out."].Value
     };
 
     private string BlockedText(BotRoleBlockedReason reason) => reason switch

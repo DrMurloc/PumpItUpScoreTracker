@@ -1,9 +1,11 @@
 ﻿using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -321,23 +323,56 @@ public sealed class DiscordBotClient : IBotClient
     public async Task AddRole(ulong guildId, ulong userId, ulong roleId,
         CancellationToken cancellationToken = default)
     {
-        var member = await Member(guildId, userId);
-        if (member != null) await member.AddRoleAsync(roleId);
+        // Every way the role can fail to land throws (docs/design/discord-role-management.md D29).
+        // A member who could not be fetched used to be a quiet return, and the reconcile then
+        // recorded a grant and counted a change for a role nobody received.
+        var member = await Member(guildId, userId)
+                     ?? throw new DiscordRoleRefusedException(BotRoleRefusal.MemberGone, null);
+        await Refusable(() => member.AddRoleAsync(roleId));
     }
 
     public async Task RemoveRole(ulong guildId, ulong userId, ulong roleId,
         CancellationToken cancellationToken = default)
     {
+        // Somebody no longer in the server holds nothing, so there is nothing to take back — the
+        // one case where finding nobody is success.
         var member = await Member(guildId, userId);
-        if (member != null) await member.RemoveRoleAsync(roleId);
+        if (member != null) await Refusable(() => member.RemoveRoleAsync(roleId));
     }
 
     private async Task<IGuildUser?> Member(ulong guildId, ulong userId)
     {
-        var guild = Client.GetGuild(guildId);
-        if (guild == null) return null;
+        var guild = Client.GetGuild(guildId) ?? throw new DiscordUnreachableException();
         return guild.GetUser(userId) ?? (IGuildUser?)await Client.Rest.GetGuildUserAsync(guildId, userId);
     }
+
+    /// <summary>
+    ///     A write, with Discord's answer translated into the vocabulary the reconcile reasons about.
+    ///     Only an answer Discord numbered is a refusal; a timeout or a 5xx stays what it is, because
+    ///     it says nothing about whether the bot is allowed.
+    /// </summary>
+    private static async Task Refusable(Func<Task> write)
+    {
+        try
+        {
+            await write();
+        }
+        catch (HttpException e) when (e.DiscordCode != null)
+        {
+            var code = (int)e.DiscordCode.Value;
+            throw new DiscordRoleRefusedException(RefusalFor(code), code, e);
+        }
+    }
+
+    private static BotRoleRefusal RefusalFor(int discordCode) => discordCode switch
+    {
+        50001 => BotRoleRefusal.NoAccess,
+        50013 => BotRoleRefusal.NoPermission,
+        60003 => BotRoleRefusal.TwoFactorRequired,
+        10007 => BotRoleRefusal.MemberGone,
+        10011 => BotRoleRefusal.RoleGone,
+        _ => BotRoleRefusal.Other
+    };
 
     /// <summary>
     ///     Stored on the adapter rather than on a client instance, so — like the command

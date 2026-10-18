@@ -227,6 +227,15 @@ backwards yank by another name — and two thumbs parked on the same value could
 all, the second input in the DOM winning every overlap and having nowhere to go. The rule
 generalizes to anything that follows a finger: a scrub bar, a reorder drag, a resize handle.
 
+Typing is the same fight one key at a time. A raw `<input>` or `<textarea>` that renders
+`value="@x"` beside its own `@oninput` writes every keystroke's text back one round trip late, over
+whatever was typed since: on the live site the chart comment box lost keys, and what survived split
+between two copies of the text that the field flipped between (2026-10-18). A text field binds with
+`@bind="x" @bind:event="oninput"` instead. Only `@bind` tells the renderer the browser already holds
+the typed text, so a keystroke's render writes nothing back; the counter and the Submit button still
+follow along from the server, a round trip late, which is harmless. MudBlazor's fields guard against
+this on their own and need nothing. `LiveValueWriteBackTests` fails a page that hand-rolls the pair.
+
 **13. A reference page is real HTML, and its interactions are a script, not a circuit.** A page
 whose job is to be found and quoted — the PUMBILITY calculator is the worked example
 ([pumbility-calculator.md](design/pumbility-calculator.md)) — renders static SSR with *everything a
