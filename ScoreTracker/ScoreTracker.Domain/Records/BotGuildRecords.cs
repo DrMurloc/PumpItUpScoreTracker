@@ -37,6 +37,37 @@ public enum BotRoleBlockedReason
 }
 
 /// <summary>
+///     Why Discord turned down a role write that the bot's own view said would work. The bot can
+///     see its permissions and the role order, but not everything Discord checks — a timeout on the
+///     bot, a server that requires two-factor authentication for moderator actions — so some
+///     refusals only show up as the answer to a write. A closed vocabulary for the same reason as
+///     <see cref="BotRoleBlockedReason" />: the page renders a sentence, never Discord's own text.
+/// </summary>
+public enum BotRoleRefusal
+{
+    /// <summary>
+    ///     50001 Missing Access. What a bot without Manage Roles gets back, and what Discord also
+    ///     answers when the cause is one the bot cannot see from its side.
+    /// </summary>
+    NoAccess,
+
+    /// <summary>50013 Missing Permissions.</summary>
+    NoPermission,
+
+    /// <summary>60003: the server requires two-factor authentication for moderator actions.</summary>
+    TwoFactorRequired,
+
+    /// <summary>The member left between the read and the write.</summary>
+    MemberGone,
+
+    /// <summary>The role was deleted between the read and the write.</summary>
+    RoleGone,
+
+    /// <summary>Anything else Discord said no to.</summary>
+    Other
+}
+
+/// <summary>
 ///     A role in a Discord server, as the role picker and the reconcile both need it.
 ///     <para>
 ///         <see cref="BlockedReason" /> is the whole reason this record exists. Discord refuses a

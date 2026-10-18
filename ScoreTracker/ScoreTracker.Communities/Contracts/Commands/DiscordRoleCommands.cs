@@ -6,11 +6,12 @@ namespace ScoreTracker.Communities.Contracts.Commands;
 /// <summary>
 ///     Maps a Phoenix 2 title to a role, or repoints one that already exists, and hands the role
 ///     out straight away — an admin who has just said "this title gets this role" should not have
-///     to press anything else for it to happen.
+///     to press anything else for it to happen. Returns what that first pass did, so a refusal is
+///     reported on the spot rather than discovered later.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record SetCommunityTitleRoleCommand(Name CommunityName, string TitleName, ulong RoleId,
-    IProgress<DiscordRoleProgress>? Progress = null) : IRequest;
+    IProgress<DiscordRoleProgress>? Progress = null) : IRequest<DiscordRolePassResult>;
 
 /// <summary>
 ///     Drops a mapping. <paramref name="TakeRoleBack" /> also strips the role from everyone
@@ -32,7 +33,8 @@ public sealed record UnlinkCommunityDiscordServerCommand(Name CommunityName,
 
 /// <summary>
 ///     The page's Check now button — the same pass the nightly sweep runs, for one community, on
-///     demand. Returns how many members actually changed.
+///     demand. Returns how many members actually changed, how many could not be settled, and the
+///     refusal that stopped it, if one did.
 ///     <para>
 ///         <paramref name="Progress" /> is reported as it walks, so the page can draw a real bar
 ///         instead of a spinner: a big server is a minute of watching nothing otherwise. A MediatR
@@ -41,4 +43,4 @@ public sealed record UnlinkCommunityDiscordServerCommand(Name CommunityName,
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ReconcileCommunityDiscordRolesCommand(Name CommunityName,
-    IProgress<DiscordRoleProgress>? Progress = null) : IRequest<int>;
+    IProgress<DiscordRoleProgress>? Progress = null) : IRequest<DiscordRolePassResult>;

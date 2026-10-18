@@ -25,10 +25,10 @@ internal sealed class DiscordRoleAdminSaga :
     IRequestHandler<GetCommunityDiscordQuery, CommunityDiscordView>,
     IRequestHandler<GetCommunityDiscordRolesQuery, IReadOnlyList<BotGuildRole>>,
     IRequestHandler<GetCommunityDiscordPreviewQuery, IReadOnlyList<DiscordRoleChangeRecord>>,
-    IRequestHandler<SetCommunityTitleRoleCommand>,
+    IRequestHandler<SetCommunityTitleRoleCommand, DiscordRolePassResult>,
     IRequestHandler<RemoveCommunityTitleRoleCommand>,
     IRequestHandler<UnlinkCommunityDiscordServerCommand>,
-    IRequestHandler<ReconcileCommunityDiscordRolesCommand, int>
+    IRequestHandler<ReconcileCommunityDiscordRolesCommand, DiscordRolePassResult>
 {
     /// <summary>The shipped Phoenix 2 titles by name — the mapping picker's whole vocabulary.</summary>
     private static readonly IReadOnlyDictionary<string, Title> TitlesByName =
@@ -134,7 +134,8 @@ internal sealed class DiscordRoleAdminSaga :
             .ToArray();
     }
 
-    public async Task Handle(SetCommunityTitleRoleCommand request, CancellationToken cancellationToken)
+    public async Task<DiscordRolePassResult> Handle(SetCommunityTitleRoleCommand request,
+        CancellationToken cancellationToken)
     {
         var (_, communityId) = await Load(request.CommunityName, cancellationToken);
         await EnsureCanManage(request.CommunityName, cancellationToken);
@@ -171,8 +172,9 @@ internal sealed class DiscordRoleAdminSaga :
         }
 
         // Inline, not published: saying "this title gets this role" and then being told to press
-        // Check now reads as though nothing happened. The caller watches it work.
-        await _discordRoles.ReconcileCommunity(communityId, cancellationToken, request.Progress);
+        // Check now reads as though nothing happened. The caller watches it work, and hears straight
+        // away if Discord refuses (D27).
+        return await _discordRoles.ReconcileCommunity(communityId, cancellationToken, request.Progress);
     }
 
     public async Task Handle(RemoveCommunityTitleRoleCommand request, CancellationToken cancellationToken)
@@ -204,7 +206,7 @@ internal sealed class DiscordRoleAdminSaga :
         await _roles.DeleteServer(communityId, cancellationToken);
     }
 
-    public async Task<int> Handle(ReconcileCommunityDiscordRolesCommand request,
+    public async Task<DiscordRolePassResult> Handle(ReconcileCommunityDiscordRolesCommand request,
         CancellationToken cancellationToken)
     {
         var (_, communityId) = await Load(request.CommunityName, cancellationToken);
