@@ -1793,6 +1793,9 @@
   <data name="Check now" xml:space="preserve">
     <value>Mrglurg bam</value>
   </data>
+  <data name="Check the bot in Server Settings: its role needs Manage Roles and has to sit above these roles, and the bot can't be timed out." xml:space="preserve">
+    <value>Mrglurg a murpgl ur Blubmurg Murmargl: ug roglub grolm Murmargl Roglubrgl ap mrogl ro blarg grorpmurg blu roglubrgl, ap a murpgl bo grarg glorg grglmrglurg.</value>
+  </data>
   <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
     <value>Grorp Grrmrrgl opa mrglrgl PIUGame.com, blub glorggl murgl.</value>
   </data>
@@ -2639,8 +2642,14 @@
   <data name="Discord asks you to confirm, then brings you back here." xml:space="preserve">
     <value>Discord argmo blub ro gromarg, bamglorg bormug blub bagro urgbam.</value>
   </data>
+  <data name="Discord error {0}" xml:space="preserve">
+    <value>Discord blargurg {0}</value>
+  </data>
   <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
     <value>Discord murmargl blu roglub, ba bo grogmurgl grabmurp mrp.</value>
+  </data>
+  <data name="Discord refused to change roles in this server." xml:space="preserve">
+    <value>Discord murgloo ro grolurg roglubrgl ur blu blubmurg.</value>
   </data>
   <data name="Discord role" xml:space="preserve">
     <value>Discord roglub</value>
@@ -9803,6 +9812,9 @@
   <data name="This server doesn't hand out title roles." xml:space="preserve">
     <value>Blu blubmurg bo grabmurp mrgl roglubrgl.</value>
   </data>
+  <data name="This server requires two-factor authentication for moderator actions (Server Settings → Safety Setup), and that blocks the bot." xml:space="preserve">
+    <value>Blu blubmurg grolm blurg-lurgmrp glarglurgmorpgl ba grombogl grlgmrg (Blubmurg Murmargl → Glubmorp Groglurg), ap blubgrrgl murgloo a murpgl.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>Blu orgab bo ap.</value>
   </data>
@@ -10348,6 +10360,9 @@
   </data>
   <data name="Updated {0} members." xml:space="preserve">
     <value>{0} grogmurgl grolurg.</value>
+  </data>
+  <data name="Updated {0} members. {1} couldn't be updated; the next check tries again." xml:space="preserve">
+    <value>{0} grogmurgl grolurg. {1} bo grarg glorg grolurg; murgbam mrglurg lurg rurg.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Grglargl gro JSON mrblub grgl mrpmurp Phoenix 2 mrgl ro murgl mrp grgllurg.</value>

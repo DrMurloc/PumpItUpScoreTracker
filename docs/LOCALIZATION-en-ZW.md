@@ -959,3 +959,22 @@ still), `mublar` (needs) and the function words table.
 | let (allow) | pluba | |
 | guarantees | gurmbalg | |
 | soon | molbu | `ulo molbu ulo` = as soon as. |
+
+## Discord role refusals (2026-10-18)
+
+Five strings for the role page when Discord refuses a write the bot's own view allowed
+([discord-role-management.md](design/discord-role-management.md) D27–D30). `Discord` is protected.
+Reused as-is: `Murpgl` (bot), `Blubmurg Murmargl` (Server Settings), `roglub` / `roglubrgl` (role /
+roles), `blubmurg` (server), `blu` (this, these), `ur` (in), `ro` (to), `grolurg` (change, updated),
+`grorpmurg` (above), `bo grarg` (can't, couldn't), `glorg` (be), `grglmrglurg` (timed), `grolm` (needs,
+requires), `Mrglurg` (check), `murgbam mrglurg` (the next check), `lurg` (try), `rurg` (again),
+`grogmurgl` (members), `blargurg` (error), `blurg` (two), `ba` (for), `grombogl` (moderator), `grlgmrg`
+(actions), `Groglurg` (set up), `blubgrrgl` (that), `ap` (and), `a` (the), `ug` (its, from *it*),
+`blarg` (sit, from *you sit at*), `mrogl` (has). `murgloo` (block) carries both *refused* and *blocks*:
+a refusal is Discord blocking the write, and Murloc does not tell the two apart.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| factor (two-factor) | lurgmrp | `blurg-lurgmrp`, hyphen kept as the English has it. |
+| authentication | glarglurgmorpgl | Four syllables for fourteen letters. |
+| Safety (Discord's *Safety Setup*) | Glubmorp | Not `Murgplgl`, which is *Remix*. |

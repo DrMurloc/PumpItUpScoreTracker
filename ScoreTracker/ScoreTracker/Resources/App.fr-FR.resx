@@ -1793,6 +1793,9 @@
   <data name="Check now" xml:space="preserve">
     <value>Vérifier maintenant</value>
   </data>
+  <data name="Check the bot in Server Settings: its role needs Manage Roles and has to sit above these roles, and the bot can't be timed out." xml:space="preserve">
+    <value>Vérifiez le bot dans Paramètres du serveur : son rôle doit avoir Gérer les rôles et se trouver au-dessus de ces rôles, et le bot ne doit pas être exclu temporairement.</value>
+  </data>
   <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
     <value>Vérifiez votre identifiant et votre mot de passe PIUGame.com, puis réimportez.</value>
   </data>
@@ -2638,8 +2641,14 @@
   <data name="Discord asks you to confirm, then brings you back here." xml:space="preserve">
     <value>Discord vous demande de confirmer, puis vous ramène ici.</value>
   </data>
+  <data name="Discord error {0}" xml:space="preserve">
+    <value>Erreur Discord {0}</value>
+  </data>
   <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
     <value>Discord gère ce rôle, personne ne peut donc l'attribuer.</value>
+  </data>
+  <data name="Discord refused to change roles in this server." xml:space="preserve">
+    <value>Discord a refusé de modifier les rôles sur ce serveur.</value>
   </data>
   <data name="Discord role" xml:space="preserve">
     <value>Rôle Discord</value>
@@ -9802,6 +9811,9 @@
   <data name="This server doesn't hand out title roles." xml:space="preserve">
     <value>Ce serveur n'attribue pas de rôles de titre.</value>
   </data>
+  <data name="This server requires two-factor authentication for moderator actions (Server Settings → Safety Setup), and that blocks the bot." xml:space="preserve">
+    <value>Ce serveur exige l'authentification à deux facteurs pour les actions de modération (Paramètres du serveur → Configuration de la sécurité), et cela bloque le bot.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>Cette session n'est pas ici.</value>
   </data>
@@ -10347,6 +10359,9 @@
   </data>
   <data name="Updated {0} members." xml:space="preserve">
     <value>{0} membres mis à jour.</value>
+  </data>
+  <data name="Updated {0} members. {1} couldn't be updated; the next check tries again." xml:space="preserve">
+    <value>{0} membres mis à jour. {1} n'ont pas pu être mis à jour ; la prochaine vérification réessaiera.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Téléversez un fichier JSON pour créer les chansons et charts Phoenix 2 en masse.</value>

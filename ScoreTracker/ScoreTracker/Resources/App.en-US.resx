@@ -1793,6 +1793,9 @@
   <data name="Check now" xml:space="preserve">
     <value>Check now</value>
   </data>
+  <data name="Check the bot in Server Settings: its role needs Manage Roles and has to sit above these roles, and the bot can't be timed out." xml:space="preserve">
+    <value>Check the bot in Server Settings: its role needs Manage Roles and has to sit above these roles, and the bot can't be timed out.</value>
+  </data>
   <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
     <value>Check your PIUGame.com username and password, then import again.</value>
   </data>
@@ -2639,8 +2642,14 @@
   <data name="Discord asks you to confirm, then brings you back here." xml:space="preserve">
     <value>Discord asks you to confirm, then brings you back here.</value>
   </data>
+  <data name="Discord error {0}" xml:space="preserve">
+    <value>Discord error {0}</value>
+  </data>
   <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
     <value>Discord manages this role, so nobody can hand it out.</value>
+  </data>
+  <data name="Discord refused to change roles in this server." xml:space="preserve">
+    <value>Discord refused to change roles in this server.</value>
   </data>
   <data name="Discord role" xml:space="preserve">
     <value>Discord role</value>
@@ -9803,6 +9812,9 @@
   <data name="This server doesn't hand out title roles." xml:space="preserve">
     <value>This server doesn't hand out title roles.</value>
   </data>
+  <data name="This server requires two-factor authentication for moderator actions (Server Settings → Safety Setup), and that blocks the bot." xml:space="preserve">
+    <value>This server requires two-factor authentication for moderator actions (Server Settings → Safety Setup), and that blocks the bot.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>This session isn't here.</value>
   </data>
@@ -10348,6 +10360,9 @@
   </data>
   <data name="Updated {0} members." xml:space="preserve">
     <value>Updated {0} members.</value>
+  </data>
+  <data name="Updated {0} members. {1} couldn't be updated; the next check tries again." xml:space="preserve">
+    <value>Updated {0} members. {1} couldn't be updated; the next check tries again.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Upload a JSON file to create Phoenix 2 songs and charts in bulk.</value>
