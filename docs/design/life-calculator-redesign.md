@@ -70,6 +70,13 @@ have caught it because the math lived in the `.razor` code-behind.
    lower. The first cut rebuilt the state by replaying bads down to the old life, which
    overshoots in steps of 50 — so every tick of a slider drag quietly bled life (field
    test 3). Pinned by `AtResumesExactlyWithNoDrift`.
+   The slider **commits on release** (UX rule 12, 2026-10-18). It used to render its live level
+   beside its own `@oninput`, so every tick of a drag went to the server, rebuilt the bar and
+   the chart, and came back as a one-round-trip-old value written onto the thumb — pulling it
+   backwards under the finger. Now the circuit hears `change` only, and `life-calculator.js`
+   paints the number beside the thumb while the finger moves, editing Blazor's own text node
+   so a ladder row tapped afterwards still updates it. The bar, the ladder highlight and the
+   chart move once, on release.
 10. **The lifebar stays page-local markup, not a shared component.** One-off until the
     judgment-distribution work finds it a second home. Promotion later is mechanical: the
     markup already reads every color from tokens.
