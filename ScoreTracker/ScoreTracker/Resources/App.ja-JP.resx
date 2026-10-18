@@ -967,6 +967,9 @@
   <data name="Any" xml:space="preserve">
     <value>すべて</value>
   </data>
+  <data name="Any clear" xml:space="preserve">
+    <value>クリア（グレード不問）</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>レベル指定なし</value>
   </data>
@@ -5289,6 +5292,9 @@
   <data name="Need To Pass" xml:space="preserve">
     <value>{1}を抜くにはあと{0}</value>
   </data>
+  <data name="Needs" xml:space="preserve">
+    <value>条件</value>
+  </data>
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>API キーが必要です。あなたが API を呼ぶか、PIU Scores があなたを呼びます。</value>
   </data>
@@ -6320,6 +6326,9 @@
   </data>
   <data name="Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving." xml:space="preserve">
     <value>任意です。プレイヤーにはツールの横にリンクが表示されます。掲載を申請すると、DrMurloc が承認前に読みます。</value>
+  </data>
+  <data name="or better" xml:space="preserve">
+    <value>以上</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>並び替え</value>
