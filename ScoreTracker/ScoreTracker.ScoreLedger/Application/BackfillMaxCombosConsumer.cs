@@ -63,11 +63,11 @@ internal sealed class BackfillMaxCombosConsumer(IPhoenixRecordRepository records
 
         await records.SetMaxCombos(mix, userId, judgedRecords
             .Select(r => (r.ChartId,
-                PhoenixComboSolver.MaxComboFor(r.Judgements, r.Score, noteCounts[r.ChartId])))
+                PhoenixComboSolver.MaxComboFor(r.Judgements, r.Score, noteCounts[r.ChartId], r.IsBroken)))
             .ToArray(), cancellationToken);
         await journal.SetMaxCombos(userId, mix, judgedEntries
             .Select(e => (e.ChartId, e.OccurredAt,
-                PhoenixComboSolver.MaxComboFor(e.Judgements, e.Score, noteCounts[e.ChartId])))
+                PhoenixComboSolver.MaxComboFor(e.Judgements, e.Score, noteCounts[e.ChartId], e.IsBroken)))
             .ToArray(), cancellationToken);
 
         return (judgedRecords.Length, judgedEntries.Count);

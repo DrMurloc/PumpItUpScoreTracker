@@ -45,8 +45,9 @@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillPlayerHighlights"
            data-testid="backfill-player-highlights">@L["Backfill Highlights"]</MudButton>
 @* Re-solves the max combo of every judged record and journal row from its score, its counts and
-   the catalog's note count — every judged row, not only the empty ones, so a corrected note
-   count catches up on the next press. Touches nothing but MaxCombo, announces nothing. Safe to
+   the catalog's note count — or, for a pass on a chart with no count yet, the pass's own total —
+   every judged row, not only the empty ones, so a corrected or newly learned note count catches
+   up on the next press. Touches nothing but MaxCombo, announces nothing. Safe to
    re-press. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillMaxCombos"
            data-testid="backfill-max-combos">@L["Backfill max combos"]</MudButton>

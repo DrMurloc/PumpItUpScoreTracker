@@ -115,6 +115,26 @@ public sealed class RecordObservedPlaysHandlerTests
     }
 
     [Fact]
+    public async Task APassOnAChartWithNoCountIsSolvedAgainstItsOwnTotalAndABreakIsNot()
+    {
+        // The catalog has no count for the chart. A pass judges every note, so its own 1,078 is
+        // the denominator; the break beside it may have stopped short, so it waits for the catalog.
+        var ctx = new HandlerContext();
+        var counts = new JudgementCounts(1028, 30, 12, 6, 2);
+        var screen = new ScoreScreen(1028, 30, 12, 6, 2, 410);
+
+        await ctx.Handler.Handle(Command(
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, screen.CalculatePhoenixScore, PhoenixPlate.SuperbGame,
+                false, PlayedAt, counts),
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, screen.CalculatePhoenixScore, null,
+                true, PlayedAt.AddMinutes(4), counts)), CancellationToken.None);
+
+        Assert.Equal(2, ctx.Written.Count);
+        Assert.Equal(410, ctx.Written.Single(e => !e.IsBroken).Judgements!.MaxCombo);
+        Assert.Null(ctx.Written.Single(e => e.IsBroken).Judgements!.MaxCombo);
+    }
+
+    [Fact]
     public async Task ADisagreementWithTheCatalogLogsOnceAndChangesNothing()
     {
         var ctx = new HandlerContext();

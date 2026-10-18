@@ -83,6 +83,26 @@ public sealed class BackfillMaxCombosConsumerTests
     }
 
     [Fact]
+    public async Task APassOnAChartWithNoCountIsSolvedAgainstItsOwnTotal()
+    {
+        // A RISE chart the catalog has learned no count for: the pass judged all 950 of its notes,
+        // so the press solves it the way the write path does.
+        var ctx = new ConsumerContext();
+        ctx.GivenJudgedRecord(MixEnum.Rise, Alice);
+        ctx.GivenJudgedEntry(MixEnum.Rise, Alice);
+
+        await ctx.Consumer.Consume(Context());
+
+        ctx.Records.Verify(r => r.SetMaxCombos(MixEnum.Rise, Alice,
+            It.Is<IReadOnlyList<(Guid ChartId, int? MaxCombo)>>(c => c.Count == 1 && c[0].MaxCombo == 947),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.SetMaxCombos(Alice, MixEnum.Rise,
+            It.Is<IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, int? MaxCombo)>>(c =>
+                c.Count == 1 && c[0].MaxCombo == 947),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AStageBreakRowSolvesToNothingAndUnjudgedRowsAreNeverRead()
     {
         var ctx = new ConsumerContext();

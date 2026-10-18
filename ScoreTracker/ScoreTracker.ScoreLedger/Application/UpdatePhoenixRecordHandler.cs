@@ -83,7 +83,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                     // and a stage break has none — so whatever a caller sent is dropped instead of
                     // stored against a play that cannot support one.
                     new ScoreJournalEntry(playedAt, request.Source, user.User.Id, request.ChartId, null, null, true,
-                        request.Mix, sessionId, PhoenixComboSolver.WithMaxCombo(request.Judgements, null, null),
+                        request.Mix, sessionId,
+                        PhoenixComboSolver.WithMaxCombo(request.Judgements, null, null, isBroken: true),
                         false, IsStageBroken: true,
                         Cause: NoteCountWatch.CauseFor(true, request.Judgements, breakFacts, request.Mix))
                 }, cancellationToken);
@@ -124,7 +125,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
             : await NoteCountWatch.NoteCountFor(charts, request.Mix, request.ChartId, cancellationToken);
         NoteCountWatch.WarnOnDisagreement(logger, request.Mix, request.ChartId, request.Judgements, noteCount,
             request.IsBroken, false);
-        var judgements = PhoenixComboSolver.WithMaxCombo(request.Judgements, request.Score, noteCount);
+        var judgements =
+            PhoenixComboSolver.WithMaxCombo(request.Judgements, request.Score, noteCount, request.IsBroken);
         // The site's saved timestamp, when it supplied one, is the truthful record/journal
         // time; the clock only stamps submissions the site never dated.
         var recordedAt = request.RecordedAt ?? dateTimeOffset.Now;

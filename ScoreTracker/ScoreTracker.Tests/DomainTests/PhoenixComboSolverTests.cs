@@ -16,7 +16,7 @@ public sealed class PhoenixComboSolverTests
     {
         var screen = new ScoreScreen(perfects, greats, goods, bads, misses, maxCombo);
         var counts = new JudgementCounts(perfects, greats, goods, bads, misses);
-        return PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, counts.NoteCount);
+        return PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, counts.NoteCount, false);
     }
 
     [Theory]
@@ -38,15 +38,17 @@ public sealed class PhoenixComboSolverTests
         Assert.Equal(1000, SolveRoundTrip(950, 50, 0, 0, 0, 1000));
     }
 
-    [Fact]
-    public void JudgementsThatDoNotCoverTheChartAnswerNothing()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JudgementsThatDoNotCoverTheChartAnswerNothing(bool isBroken)
     {
         var counts = new JudgementCounts(400, 10, 2, 1, 5);
         var screen = new ScoreScreen(400, 10, 2, 1, 5, 410);
 
         // 418 judged notes against a 1,000-note chart: the play stopped early, or the catalog
         // count is stale. Either way the denominator is unknown.
-        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, 1000));
+        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, 1000, isBroken));
     }
 
     [Fact]
@@ -54,9 +56,35 @@ public sealed class PhoenixComboSolverTests
     {
         var counts = new JudgementCounts(900, 40, 5, 2, 3);
 
-        Assert.Null(PhoenixComboSolver.MaxComboFor(null, 985000, 950));
-        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, null, 950));
-        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, 985000, null));
+        Assert.Null(PhoenixComboSolver.MaxComboFor(null, 985000, 950, false));
+        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, null, 950, false));
+    }
+
+    /// <summary>
+    ///     A pass judges every note, so a chart the catalog has no count for yet is solved against
+    ///     the pass's own total — the denominator the game scored it against.
+    /// </summary>
+    [Theory]
+    [InlineData(900, 40, 5, 2, 3, 947)]
+    [InlineData(1028, 30, 12, 6, 2, 410)]
+    [InlineData(446, 0, 0, 0, 0, 446)]
+    public void APassOnAChartWithNoCountSolvesAgainstItsOwnTotal(int perfects, int greats, int goods, int bads,
+        int misses, int maxCombo)
+    {
+        var screen = new ScoreScreen(perfects, greats, goods, bads, misses, maxCombo);
+        var counts = new JudgementCounts(perfects, greats, goods, bads, misses);
+
+        Assert.Equal(maxCombo, PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, null, false));
+    }
+
+    /// <summary>A break may have stopped short of the chart's end, so its total proves nothing.</summary>
+    [Fact]
+    public void ABreakOnAChartWithNoCountAnswersNothing()
+    {
+        var counts = new JudgementCounts(900, 40, 5, 2, 3);
+        var screen = new ScoreScreen(900, 40, 5, 2, 3, 947);
+
+        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, screen.CalculatePhoenixScore, null, true));
     }
 
     [Fact]
@@ -66,7 +94,8 @@ public sealed class PhoenixComboSolverTests
 
         // A perfect score on a chart these judgements could never produce one on: the implied
         // combo lands above the note count, which is a contradiction rather than a reading.
-        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, 1000000, counts.NoteCount));
+        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, 1000000, counts.NoteCount, false));
+        Assert.Null(PhoenixComboSolver.MaxComboFor(counts, 1000000, null, false));
     }
 
     /// <summary>
@@ -79,7 +108,7 @@ public sealed class PhoenixComboSolverTests
         var screen = new ScoreScreen(900, 40, 5, 2, 3, 947);
         var counts = new JudgementCounts(900, 40, 5, 2, 3);
 
-        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, counts.NoteCount);
+        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, counts.NoteCount, false);
 
         Assert.NotNull(carried);
         Assert.Equal(947, carried!.MaxCombo);
@@ -98,10 +127,10 @@ public sealed class PhoenixComboSolverTests
         var counts = new JudgementCounts(400, 10, 2, 1, 5, 410);
         var screen = new ScoreScreen(400, 10, 2, 1, 5, 410);
 
-        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, 1000);
+        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, 1000, false);
 
         Assert.NotNull(carried);
         Assert.Null(carried!.MaxCombo);
-        Assert.Null(PhoenixComboSolver.WithMaxCombo(null, 985000, 950));
+        Assert.Null(PhoenixComboSolver.WithMaxCombo(null, 985000, 950, false));
     }
 }

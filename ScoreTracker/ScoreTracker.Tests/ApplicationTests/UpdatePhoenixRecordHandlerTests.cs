@@ -370,6 +370,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         var playedAt = new DateTimeOffset(2026, 7, 17, 23, 15, 58, TimeSpan.FromHours(9));
         var judgements = new JudgementCounts(1100, 14, 1, 1, 14);
+        // The catalog has no count for the chart, so the pass is solved against its own 1,130.
+        var stored = judgements with { MaxCombo = 430 };
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 978147,
@@ -377,10 +379,28 @@ public sealed class UpdatePhoenixRecordHandlerTests
             CancellationToken.None);
 
         ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
-            It.Is<RecordedPhoenixScore>(s => s.RecordedDate == playedAt && Equals(s.Judgements, judgements)),
+            It.Is<RecordedPhoenixScore>(s => s.RecordedDate == playedAt && Equals(s.Judgements, stored)),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Journal.Verify(j => j.Append(
-            It.Is<ScoreJournalEntry>(e => e.OccurredAt == playedAt && Equals(e.Judgements, judgements)),
+            It.Is<ScoreJournalEntry>(e => e.OccurredAt == playedAt && Equals(e.Judgements, stored)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABreakOnAChartWithNoCountStoresNoCombo()
+    {
+        // A break may have stopped short of the chart's end, so its own total is not the
+        // denominator its score was taken over; with no catalog count there is nothing to solve.
+        var ctx = new HandlerContext();
+        var judgements = new JudgementCounts(1100, 14, 1, 1, 14);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 978147, Plate: null,
+                RecordedAt: Now, Judgements: judgements),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.IsBroken && Equals(s.Judgements, judgements)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
