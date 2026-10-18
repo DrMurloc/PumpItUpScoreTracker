@@ -24,6 +24,9 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
 
         public Name SongName { get; }
 
+        /// <summary>Any pass, whatever the grade.</summary>
+        public PhoenixLetterGrade? MinimumGrade => null;
+
         /// <summary>The mix whose boss chart this title asks for — the rail it sits on.</summary>
         public Name Mix { get; }
 

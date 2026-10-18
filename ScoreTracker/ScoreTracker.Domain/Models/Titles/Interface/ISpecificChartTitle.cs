@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -12,6 +13,13 @@ namespace ScoreTracker.Domain.Models.Titles.Interface
         ///     nothing and silently never completes.
         /// </summary>
         Name SongName { get; }
+
+        /// <summary>
+        ///     The letter grade the chart asks for, or null when any unbroken result earns the title —
+        ///     a boss breaker's clear. What the titles page prints beside the chart instead of the
+        ///     description sentence, so it is read from the title rather than parsed out of its text.
+        /// </summary>
+        PhoenixLetterGrade? MinimumGrade { get; }
 
         bool AppliesToChart(Chart chart);
     }

@@ -33,6 +33,8 @@ public sealed class Phoenix2ChartGradeTitle : PhoenixTitle, ISpecificChartTitle
 
     public Name SongName { get; }
 
+    public PhoenixLetterGrade? MinimumGrade => _minimumGrade;
+
     public override bool PopulatesFromDatabase => false;
 
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)

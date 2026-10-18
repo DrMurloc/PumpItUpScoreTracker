@@ -28,6 +28,9 @@ public sealed class Phoenix2ChartClearTitle : PhoenixTitle, ISpecificChartTitle
 
     public Name SongName { get; }
 
+    /// <summary>Any unbroken clear, whatever the grade.</summary>
+    public PhoenixLetterGrade? MinimumGrade => null;
+
     /// <summary>The mix whose boss chart this title asks for — the rail it sits on.</summary>
     public Name Mix { get; }
 
