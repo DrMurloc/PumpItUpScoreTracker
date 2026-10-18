@@ -104,6 +104,14 @@ reads as being above 99.5% of players. That reuses the one shipped ramp
 (`ThemeScales.BandFor`) rather than inventing a second, inverted set of cutoffs — consumers never
 re-implement band cutoffs (UX-GUIDELINES §1). The percentage always prints beside the colour.
 
+**The players it is out of are the mix's own**: accounts with a linked game tag that hold at
+least one title in that mix (owner, 2026-10-18). It used to be every account with a linked game
+tag, whatever it played, so a Phoenix 2 title was measured against players who had never touched
+Phoenix 2 — on the 10-16 copy, 547 players hold a Phoenix 2 title against 1,682 linked accounts,
+which put every Phoenix 2 percentage at about a third of its real size. The holder count above the
+line already filtered the same way, so both numbers now count the same people. The season recap's
+rarity badge reads the same count.
+
 ## Suggested level (Phoenix 2 only)
 
 The tier-list page's PUMBILITY track (`FolderTitleTrack`, [pumbility-title-track.md](pumbility-title-track.md))
@@ -159,6 +167,33 @@ Owner call, field-test round 3: a personalised version was built first and rejec
 that one was too blunt for. The reference grades are the single knob if a column reads wrong
 against real data.
 
+## Chart titles open their chart (2026-10-18)
+
+A title that names one chart — 126 on Phoenix 2 (90 skill rungs, 34 boss breakers, two one-off
+badges, 119 distinct charts) and 92 on Phoenix 1 (60 skill rungs, 32 boss breakers) — used to show
+that chart as a sentence in the drawer ("U Got 2 Know S19 — SSS or better"), and a signed-in
+player's progress bar beside it could only ever read 0 / 1. Owner-approved mock:
+<https://claude.ai/artifact/5ExrLFjGAtJLYoPEwTRw1J>.
+
+- **The drawer shows the site's chart card** (`TierListChartCard`) in place of the sentence: jacket,
+  stepball, your score straddling the art, the Passed / broken border, and the title's ask as the
+  card's last line — *Needs* with the letter grade and "or better", or *Any clear* where any
+  unbroken result earns it. Tapping the card opens Chart Details over the drawer, the same dialog
+  every chart card opens, on the World board; closing it leaves the drawer where it was.
+- **The card replaces the 0 / 1 bar** on titles a single result decides. A Phoenix 1 skill rung
+  keeps its 900,000 → 990,000 climb under the card, because that bar measures something.
+- **Every title that names one chart gets it**, in both mixes: limiting it to Phoenix 2 would be a
+  mix check with nothing to show for it. A title is matched to its chart the way it is earned
+  (`ISpecificChartTitle.AppliesToChart`), so the page cannot point at a different chart than the
+  one that counts; `MinimumGrade` says what the title asks of it.
+- **Six official-only one-offs stay text** — DOGE MAJOR STOCKHOLDER, B.P.M FOLLOWER, HUMAN
+  METRONOME, PERFECT BREAKER, GOD OF CONTROL, GRAND DADDY. They name their chart only inside the
+  scraped description, and nothing keys off a title's name.
+- **Boss breaker cells carry their chart**: the jacket, the stepball, then which of the era's two
+  charts it is (*SINGLE* / *DOUBLE*; a one-chart era keeps *BOSS BREAKER*). Skill rails stay
+  numbered pips — ninety thumbnails would bury the ladders.
+- **Signed out**, the card shows the chart with no score and no border.
+
 ## What was tried and dropped
 
 - **A "Closest to earning" panel**, ranking unearned titles by work left. Dropped in round 3:
@@ -180,4 +215,5 @@ against real data.
 | `TitleRailsTests` (component) | Section assembly, official marking across both mixes, rarity banding, the worn title |
 | `SuggestedTitleLevelTests` (component) | Impersonality, singles-one-level-up, monotonicity, the level-10 floor; grade order, the merge, and that no rung falls short above one that doesn't |
 | `TitleDetailDrawerTests` (bUnit) | What a player reads: the grade on the same line as its folder, both types on a merged row, the merge and the no-folder row rendered rather than dropped |
-| `TitlesPageTests` (bUnit) | Rails render, filters dim, search matches a title's chart, drawer states, signed-out |
+| `TitlesPageTests` (bUnit) | Rails render, filters dim, search matches a title's chart, drawer states, signed-out, a chart title's card and its dialog, boss cells' art |
+| `TitleChartsTests` (unit) | A chart title resolves to exactly the chart it is earned on; a title with no chart, or a chart missing from the catalog, resolves to nothing |

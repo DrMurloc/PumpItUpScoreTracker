@@ -27,6 +27,11 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return CacheKeys.Mix(nameof(EFTitleRepository), mix, "Titles");
         }
 
+        private static string UserCountKey(MixEnum mix)
+        {
+            return CacheKeys.Mix(nameof(EFTitleRepository), mix, "Titles", "UserCount");
+        }
+
         public async Task SaveTitles(MixEnum mix, Guid userId, IEnumerable<TitleAchievedRecord> acquiredTitles,
             CancellationToken cancellationToken)
         {
@@ -56,7 +61,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             await database.Set<UserTitleEntity>().AddRangeAsync(newEntities, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(CacheKey(mix));
-            _cache.Remove(CacheKey(mix) + "__UserCount");
+            _cache.Remove(UserCountKey(mix));
         }
 
         public async Task SetHighestDifficultyTitle(MixEnum mix, Guid userId, Name title, DifficultyLevel level,
@@ -125,13 +130,17 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             });
         }
 
-        public async Task<int> CountTitledUsers(CancellationToken cancellationToken)
+        public async Task<int> CountTitledUsers(MixEnum mix, CancellationToken cancellationToken)
         {
-            return await _cache.GetOrCreateAsync($"{nameof(EFTitleRepository)}__Titles__UserCount", async o =>
+            return await _cache.GetOrCreateAsync(UserCountKey(mix), async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                return await database.User.Where(u => u.GameTag != null).CountAsync(cancellationToken);
+                var mixId = MixIds.For(mix);
+                return await database.User
+                    .Where(u => u.GameTag != null &&
+                                database.Set<UserTitleEntity>().Any(t => t.UserId == u.Id && t.MixId == mixId))
+                    .CountAsync(cancellationToken);
             });
         }
 
@@ -212,7 +221,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             }
 
             _cache.Remove(CacheKey(mix));
-            _cache.Remove(CacheKey(mix) + "__UserCount");
+            _cache.Remove(UserCountKey(mix));
         }
     }
 }

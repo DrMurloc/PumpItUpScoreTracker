@@ -4,7 +4,8 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 
 /// <param name="Holders">Holder count per title. A title nobody holds is absent, not zero.</param>
 /// <param name="TrackedPlayers">
-///     Players with any title at all — the population a rarity percentage is out of.
+///     Linked accounts holding at least one title in this mix — the population a rarity
+///     percentage is out of (docs/design/titles-overhaul.md, Rarity).
 /// </param>
 [ExcludeFromCodeCoverage]
 public sealed record TitleRarityRecord(IReadOnlyDictionary<Name, int> Holders, int TrackedPlayers)

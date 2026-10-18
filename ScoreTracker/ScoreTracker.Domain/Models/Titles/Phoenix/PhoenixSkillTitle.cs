@@ -17,6 +17,7 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
         990000)
     {
         SongName = songName;
+        MinimumGrade = letterRequirement;
         Skill = skill;
         SkillLevel = skillLevel;
         _chartType = chartType;
@@ -29,6 +30,8 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
     }
 
     public Name SongName { get; }
+
+    public PhoenixLetterGrade? MinimumGrade { get; }
 
     /// <summary>The track this title belongs to — BRACKET, HALF, DRILL, and so on.</summary>
     public Name Skill { get; }

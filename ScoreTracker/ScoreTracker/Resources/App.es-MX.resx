@@ -964,6 +964,9 @@
   <data name="Any" xml:space="preserve">
     <value>Cualquiera</value>
   </data>
+  <data name="Any clear" xml:space="preserve">
+    <value>cualquier pase</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Cualquier nivel</value>
   </data>
@@ -5269,6 +5272,9 @@
   <data name="Need To Pass" xml:space="preserve">
     <value>Necesitas {0} para superar a {1}</value>
   </data>
+  <data name="Needs" xml:space="preserve">
+    <value>Necesita</value>
+  </data>
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>Necesita una llave de API. Tú llamas a la API, o PIU Scores te llama a ti.</value>
   </data>
@@ -6297,6 +6303,9 @@
   </data>
   <data name="Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving." xml:space="preserve">
     <value>Opcional. Los jugadores ven un enlace junto a tu herramienta. Si pides aparecer en la lista, DrMurloc lo lee antes de aprobarla.</value>
+  </data>
+  <data name="or better" xml:space="preserve">
+    <value>o mejor</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Ordenar por</value>

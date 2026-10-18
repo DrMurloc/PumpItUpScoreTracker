@@ -10782,6 +10782,26 @@ button.chart-card-art {
     border-style: dashed;
 }
 
+/* A boss cell carries its chart: the jacket flush against the pip's left edge, the stepball, then
+   which of the era's two charts it is (docs/design/titles-overhaul.md, chart titles). */
+.title-pip.with-art,
+.title-rails.grid .title-pip.wide.with-art {
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 0 8px 0 0;
+}
+
+.title-pip-jacket {
+    display: block;
+    height: 28px;
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.title-pip.with-art .difficulty-bubble {
+    flex: 0 0 auto;
+}
+
 /* One-offs: titles with no ladder behind them. Name colour is how many players hold it,
    and the glow ramp orders the bands where hue cannot. */
 .title-badges {
@@ -10995,6 +11015,28 @@ button.chart-card-art {
     border-left: 2px solid var(--mix-primary);
     padding: 7px 10px;
     margin: 0 0 14px;
+}
+
+/* A chart title's chart, as the site's chart card, standing where the sentence did. */
+.title-chart {
+    margin: 0 0 14px;
+}
+
+.title-chart-req {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--mix-ink);
+}
+
+.title-chart-needs {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
 }
 
 .title-note {

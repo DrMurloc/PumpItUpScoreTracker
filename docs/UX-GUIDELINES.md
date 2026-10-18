@@ -438,6 +438,10 @@ generalizes to any progression the game already models as a ladder:
   behind the pips, because ladders legitimately have holes (Expert Lv.9 is reachable without
   Lv.1).
 - **A rung's fill measures from the rung below it**, never from zero, matching `CompletionFloor`.
+- **A rung that names one chart shows the chart.** The detail drawer draws the site's chart card
+  rather than the chart's name in a sentence, and the card opens Chart Details like every other
+  chart card; a boss breaker cell carries the jacket and stepball. A rail of numbered rungs stays
+  numbered — art belongs where a rung IS a chart, not on every pip.
 - **Filtering fades, it does not remove.** A rail keeps its whole ladder when filtered; the rungs
   that do not match drop to 16% opacity in place. A ladder with holes punched through it stops
   reading as a ladder, and where your earned rungs sit on the climb is the thing worth seeing.

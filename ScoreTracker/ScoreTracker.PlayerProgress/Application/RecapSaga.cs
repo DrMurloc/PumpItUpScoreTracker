@@ -539,7 +539,7 @@ internal sealed class RecapSaga :
         var titleHolders = (await _titles.GetTitleAggregations(mix, cancellationToken))
             .GroupBy(t => t.Title)
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Count));
-        var titledUsers = await _titles.CountTitledUsers(cancellationToken);
+        var titledUsers = await _titles.CountTitledUsers(mix, cancellationToken);
         var chartAggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
             .ToDictionary(a => a.ChartId);
 

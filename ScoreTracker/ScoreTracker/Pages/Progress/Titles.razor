@@ -2,13 +2,18 @@
 @rendermode RenderModes.Interactive
 @using System.Globalization
 @using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Interface
 @using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.SecondaryPorts
 @using Title = ScoreTracker.Domain.Models.Titles.Title
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
@@ -122,7 +127,11 @@ else
                             <div class="title-rail-track">
                                 @foreach (var rung in rail.Rungs)
                                 {
-                                    <TitleRungPip Rung="rung" WideLabel="@WideLabelFor(rail, rung)"
+                                    @* A boss cell IS a chart, so it carries the chart's art; every other
+                                       rail keeps its plain pips. *@
+                                    var art = section.Section == TitleSection.BossBreakers ? ChartFor(rung) : null;
+                                    <TitleRungPip Rung="rung" Chart="art"
+                                                  WideLabel="@(art == null ? WideLabelFor(rail, rung) : ArtLabelFor(rail, rung))"
                                                   Dimmed="@(!Matches(rung))" OnSelected="Select"></TitleRungPip>
                                 }
                             </div>
@@ -157,7 +166,12 @@ else
 
     <TitleDetailDrawer Rung="_selected" Ladder="_selectedLadder" Mix="_currentMix"
                        IsLoggedIn="CurrentUser.IsLoggedIn" CurrentUserId="_currentUserId"
-                       TrackedPlayers="_trackedPlayers" OnClosed="Deselect"></TitleDetailDrawer>
+                       TrackedPlayers="_trackedPlayers" OnClosed="Deselect"
+                       Chart="ChartFor(_selected)" Best="BestFor(_selected)" OnOpenChart="OpenChart"></TitleDetailDrawer>
+
+    @* Opens over the drawer and leaves it where it was: closing the dialog returns to the title
+       the player was reading. *@
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
 }
 
 @inject IMediator Mediator
@@ -190,6 +204,11 @@ else
     private Guid? _currentUserId;
     private Title? _worn;
 
+    private IReadOnlyDictionary<Name, Chart> _titleCharts = new Dictionary<Name, Chart>();
+    private IReadOnlyDictionary<Guid, RecordedPhoenixScore> _bestByChart = new Dictionary<Guid, RecordedPhoenixScore>();
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
@@ -213,6 +232,20 @@ else
         _earned = rungs.Count(r => r.State == RungState.Earned);
         _official = rungs.Count(r => r.Official);
         _worn = TitleRails.WornTitle(_sections)?.Title;
+
+        // Only a mix with chart titles reads the catalog and the player's records — XX has none.
+        if (progress.Any(p => p.Title is ISpecificChartTitle))
+        {
+            var charts = await Mediator.Send(new GetChartsQuery(_currentMix));
+            _titleCharts = TitleCharts.Resolve(progress.Select(p => p.Title), charts);
+            if (_currentUserId is { } userId)
+            {
+                var best = new Dictionary<Guid, RecordedPhoenixScore>();
+                foreach (var record in await Mediator.Send(new GetPhoenixRecordsQuery(userId, _currentMix)))
+                    best.TryAdd(record.ChartId, record);
+                _bestByChart = best;
+            }
+        }
 
         _loading = false;
     }
@@ -301,6 +334,32 @@ else
     {
         _selected = null;
         _selectedLadder = Array.Empty<Name>();
+    }
+
+    private Chart? ChartFor(TitleRung? rung) =>
+        rung != null && _titleCharts.TryGetValue(rung.Title.Name, out var chart) ? chart : null;
+
+    private RecordedPhoenixScore? BestFor(TitleRung? rung) =>
+        ChartFor(rung) is { } chart && _bestByChart.TryGetValue(chart.Id, out var best) ? best : null;
+
+    /// <summary>
+    ///     A boss cell with its chart's art says which of the era's charts it is in one word — the
+    ///     stepball beside it already says the level. An era with one boss keeps "BOSS BREAKER",
+    ///     there being nothing to tell apart.
+    /// </summary>
+    private string ArtLabelFor(TitleRailRow rail, TitleRung rung)
+    {
+        var label = WideLabelFor(rail, rung) ?? rung.Title.Name.ToString();
+        const string suffix = " BOSS BREAKER";
+        return label.Length > suffix.Length && label.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+            ? label[..^suffix.Length]
+            : label;
+    }
+
+    private void OpenChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
 }

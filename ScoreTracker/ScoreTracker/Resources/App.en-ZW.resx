@@ -967,6 +967,9 @@
   <data name="Any" xml:space="preserve">
     <value>Ro</value>
   </data>
+  <data name="Any clear" xml:space="preserve">
+    <value>Ro maglplgl</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Ro grorpmurm</value>
   </data>
@@ -5298,6 +5301,9 @@
   <data name="Need To Pass" xml:space="preserve">
     <value>Ropa {0} ro grubla {1}</value>
   </data>
+  <data name="Needs" xml:space="preserve">
+    <value>Grolm</value>
+  </data>
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>Murgloo API blarglurp. Murgm golba API, blu PIU Mgrlgmrg golba murgm.</value>
   </data>
@@ -6329,6 +6335,9 @@
   </data>
   <data name="Optional. Players see a link to it next to your tool. If you ask to be listed, DrMurloc reads it before approving." xml:space="preserve">
     <value>Opa. Morp loob a grorpgl ro ug bumarg gromurp rorgl. Ob blub argmo ro bru grogmo, DrMurloc rorgmo ug bagrol marogl.</value>
+  </data>
+  <data name="or better" xml:space="preserve">
+    <value>ol mrrgl</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Grrglgrrgl murm</value>
