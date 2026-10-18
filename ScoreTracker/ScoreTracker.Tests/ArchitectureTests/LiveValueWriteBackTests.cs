@@ -32,13 +32,10 @@ public sealed class LiveValueWriteBackTests
 
     private static readonly Regex HandRolledValue = new(@"\svalue\s*=\s*""?@", RegexOptions.Compiled);
 
-    // Baseline captured 2026-10-18. Shrink-only.
-    private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>
-    {
-        // The level slider: the rule-12 shape on a range input. Its fix is the RangeSlider
-        // pattern (commit on change, paint the live readout in script), not @bind.
-        ["Pages/Tools/LifeCalculator.razor"] = 1,
-    };
+    // Shrink-only, and empty: the one entry at the baseline (2026-10-18), the Life Calculator's
+    // level slider, moved to the RangeSlider pattern — commit on change, paint the live readout
+    // in script — the same day. Nothing gets added here.
+    private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>();
 
     [Fact]
     public void LiveInputsNeverWriteTheirOwnValueBack()

@@ -46,9 +46,14 @@
         <div class="lc-bench-head">
             <div class="lc-level">
                 <label class="lc-eyebrow" for="lc-level">@L["Level"]</label>
+                @* The drag belongs to the browser (UX rule 12): the circuit hears the release, and
+                   life-calculator.js paints the number beside the thumb while the finger moves.
+                   Rendering the live level wrote a one-round-trip-old value back onto the thumb
+                   and pulled it backwards mid-drag, and rebuilt the bar and the chart on every
+                   tick of it. *@
                 <input type="range" id="lc-level" min="1" max="@DifficultyLevel.Max" step="1"
-                       value="@_level" @oninput="OnLevelInput"/>
-                <span class="lc-level-value">@_level</span>
+                       value="@_level" @onchange="OnLevelChange" @ref="_levelInput"/>
+                <span class="lc-level-value" @ref="_levelReadout">@_level</span>
             </div>
         </div>
 
@@ -397,6 +402,8 @@
     private bool _showProvenance;
 
     private ElementReference _lifeElement;
+    private ElementReference _levelInput;
+    private ElementReference _levelReadout;
     private IJSObjectReference? _module;
     private DotNetObjectReference<LifeCalculator>? _selfRef;
 
@@ -464,9 +471,10 @@
     {
         if (!firstRender) return;
         _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/life-calculator.js");
+        await _module.InvokeVoidAsync("followLevel", _levelInput, _levelReadout);
     }
 
-    private void OnLevelInput(ChangeEventArgs e)
+    private void OnLevelChange(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var level)) SetLevel(level);
     }

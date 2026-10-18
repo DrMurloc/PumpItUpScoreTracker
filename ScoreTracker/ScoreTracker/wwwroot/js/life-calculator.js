@@ -41,3 +41,21 @@ export function countTo(element, from, to, ms) {
 function format(value) {
     return value.toLocaleString();
 }
+
+// The level slider (UX rule 12). Blazor renders the committed level and hears one `change` per
+// release; while the finger is on the thumb, the number beside it is painted here from the
+// input's own value. A round trip per `input` event wrote a one-latency-old level back onto the
+// thumb and pulled it backwards under the finger.
+export function followLevel(input, readout) {
+    if (!input || !readout || input.dataset.followed) return;
+    input.dataset.followed = '1';
+
+    input.addEventListener('input', () => {
+        // Edit Blazor's own text node rather than replacing it. textContent would swap in a new
+        // node, and Blazor's next write to the number (a ladder row tapped) would land on the
+        // detached one and leave the readout stale.
+        const text = Array.from(readout.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+        if (text) text.nodeValue = input.value;
+        else readout.textContent = input.value;
+    });
+}
