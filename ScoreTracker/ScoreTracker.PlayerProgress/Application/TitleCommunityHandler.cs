@@ -40,7 +40,7 @@ internal sealed class TitleCommunityHandler :
     public async Task<TitleRarityRecord> Handle(GetTitleRarityQuery request, CancellationToken cancellationToken)
     {
         var aggregations = await _titles.GetTitleAggregations(request.Mix, cancellationToken);
-        var trackedPlayers = await _titles.CountTitledUsers(cancellationToken);
+        var trackedPlayers = await _titles.CountTitledUsers(request.Mix, cancellationToken);
         return new TitleRarityRecord(
             aggregations.ToDictionary(a => a.Title, a => a.Count),
             trackedPlayers);

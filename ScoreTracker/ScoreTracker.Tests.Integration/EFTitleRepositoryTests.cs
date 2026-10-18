@@ -115,8 +115,8 @@ public sealed class EFTitleRepositoryTests : IAsyncLifetime
     public async Task RarityCountsOnlyPlayersWhoHaveLinkedAGameTag()
     {
         // Both the per-title count and the population it is divided by filter on a linked game
-        // tag, so a rarity percentage reads "of players with a linked account" — the two agree,
-        // which is the part that matters. An unlinked account counts in neither.
+        // tag — the two agree, which is the part that matters. An unlinked account counts in
+        // neither.
         var linked = await _seed.SeedUserAsync("Linked");
         var alsoLinked = await _seed.SeedUserAsync("AlsoLinked");
         var unlinked = await _seed.SeedUserAsync("Unlinked");
@@ -136,7 +136,39 @@ public sealed class EFTitleRepositoryTests : IAsyncLifetime
 
         Assert.Equal(2, aggregations[(Name)"Advanced Lv. 1"]);
         Assert.Equal(1, aggregations[(Name)"The Master"]);
-        Assert.Equal(2, await BuildRepository().CountTitledUsers(CancellationToken.None));
+        Assert.Equal(2, await BuildRepository().CountTitledUsers(MixEnum.Phoenix, CancellationToken.None));
+    }
+
+    /// <summary>
+    ///     The population a rarity is out of is the mix's own titled players: a linked account
+    ///     whose titles are all in another mix, or that holds none at all, is not counted.
+    /// </summary>
+    [Fact]
+    public async Task TheRarityPopulationIsTheMixsOwnTitledPlayers()
+    {
+        var phoenixOnly = await _seed.SeedUserAsync("PhoenixOnly");
+        var both = await _seed.SeedUserAsync("Both");
+        var phoenix2Only = await _seed.SeedUserAsync("Phoenix2Only");
+        var untitled = await _seed.SeedUserAsync("Untitled");
+        await LinkGameTagAsync(phoenixOnly, "PhoenixOnlyTag");
+        await LinkGameTagAsync(both, "BothTag");
+        await LinkGameTagAsync(phoenix2Only, "Phoenix2OnlyTag");
+        await LinkGameTagAsync(untitled, "UntitledTag");
+
+        var repository = BuildRepository();
+        await repository.SaveTitles(MixEnum.Phoenix, phoenixOnly,
+            new[] { Achieved(phoenixOnly, "Advanced Lv. 1") }, CancellationToken.None);
+        await repository.SaveTitles(MixEnum.Phoenix, both,
+            new[] { Achieved(both, "Advanced Lv. 1") }, CancellationToken.None);
+        await repository.SaveTitles(MixEnum.Phoenix2, both,
+            new[] { Achieved(both, "[S] ADVANCED LV.1") }, CancellationToken.None);
+        await repository.SaveTitles(MixEnum.Phoenix2, phoenix2Only,
+            new[] { Achieved(phoenix2Only, "[S] ADVANCED LV.1") }, CancellationToken.None);
+
+        var reader = BuildRepository();
+        Assert.Equal(2, await reader.CountTitledUsers(MixEnum.Phoenix, CancellationToken.None));
+        Assert.Equal(2, await reader.CountTitledUsers(MixEnum.Phoenix2, CancellationToken.None));
+        Assert.Equal(0, await reader.CountTitledUsers(MixEnum.XX, CancellationToken.None));
     }
 
     [Fact]

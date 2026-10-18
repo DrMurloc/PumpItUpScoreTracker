@@ -465,7 +465,7 @@ public sealed class RecapSagaTests
                 .ReturnsAsync(Array.Empty<TitleAchievedRecord>());
             Titles.Setup(t => t.GetTitleAggregations(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<TitleAggregationRecord>());
-            Titles.Setup(t => t.CountTitledUsers(It.IsAny<CancellationToken>())).ReturnsAsync(1000);
+            Titles.Setup(t => t.CountTitledUsers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>())).ReturnsAsync(1000);
             PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Stats(UserId, 100, 20.0));
             PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),

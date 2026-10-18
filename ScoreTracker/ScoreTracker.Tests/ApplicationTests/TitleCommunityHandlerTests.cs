@@ -54,13 +54,28 @@ public sealed class TitleCommunityHandlerTests
                 new TitleAggregationRecord("The Master", 8),
                 new TitleAggregationRecord("Advanced Lv. 7", 142)
             });
-        _titles.Setup(t => t.CountTitledUsers(It.IsAny<CancellationToken>())).ReturnsAsync(1562);
+        _titles.Setup(t => t.CountTitledUsers(MixEnum.Phoenix, It.IsAny<CancellationToken>())).ReturnsAsync(1562);
 
         var result = await Handler.Handle(new GetTitleRarityQuery(MixEnum.Phoenix), CancellationToken.None);
 
         Assert.Equal(1562, result.TrackedPlayers);
         Assert.Equal(8, result.Holders[(Name)"The Master"]);
         Assert.Equal(8 / 1562.0, result.ShareOf("The Master"));
+    }
+
+    /// <summary>A title's rarity is out of the players holding a title in its own mix.</summary>
+    [Fact]
+    public async Task RarityIsOutOfThePlayersHoldingATitleInThatMix()
+    {
+        _titles.Setup(t => t.GetTitleAggregations(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new TitleAggregationRecord("[PHOENIX] SINGLE BOSS BREAKER", 4) });
+        _titles.Setup(t => t.CountTitledUsers(MixEnum.Phoenix, It.IsAny<CancellationToken>())).ReturnsAsync(1489);
+        _titles.Setup(t => t.CountTitledUsers(MixEnum.Phoenix2, It.IsAny<CancellationToken>())).ReturnsAsync(547);
+
+        var result = await Handler.Handle(new GetTitleRarityQuery(MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Equal(547, result.TrackedPlayers);
+        Assert.Equal(4 / 547.0, result.ShareOf("[PHOENIX] SINGLE BOSS BREAKER"));
     }
 
     [Fact]

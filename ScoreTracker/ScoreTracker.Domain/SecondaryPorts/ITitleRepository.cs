@@ -17,7 +17,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
 
         Task<DifficultyLevel> GetCurrentTitleLevel(MixEnum mix, Guid userId, CancellationToken cancellationToken);
         Task<IEnumerable<TitleAggregationRecord>> GetTitleAggregations(MixEnum mix, CancellationToken cancellationToken);
-        Task<int> CountTitledUsers(CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Linked accounts holding at least one title in this mix — the population a title's
+        ///     rarity is out of. Filtered the way <see cref="GetTitleAggregations" /> counts holders,
+        ///     so the two numbers in a percentage count the same people
+        ///     (docs/design/titles-overhaul.md, Rarity).
+        /// </summary>
+        Task<int> CountTitledUsers(MixEnum mix, CancellationToken cancellationToken);
 
         Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(MixEnum mix, Name title,
             CancellationToken cancellationToken);
