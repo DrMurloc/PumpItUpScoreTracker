@@ -110,7 +110,12 @@ nothing else shows it.
   backfill and because a stored value can be sorted, filtered and exported without a catalog
   join at every read; the backfill button (D15) is what keeps it honest after a note-count fix.
   Precision caveat from the solver stands: exact to one combo under ~2,500 notes, one combo out
-  above.
+  above. *Amended 2026-10-18 (owner's go):* a pass on a chart with no note count yet solves
+  against its own total — a pass judges every note, the premise D13's learner already writes into
+  the catalog — so "no note count" now leaves only a break unsolved. Without it no RISE capture
+  ever stored a combo: every Rise count was blank, and the combo the plays write receives is
+  solved again rather than kept (the solve returns it, since the write checked it against the same
+  score). A count that disagrees with the play still answers null, as before.
 
 - **D15 — an admin button backfills max combo**, user by user: `BackfillMaxCombosCommand` on the
   bus, a ScoreLedger consumer that walks every user holding judged rows (306 on Phoenix, 126 on

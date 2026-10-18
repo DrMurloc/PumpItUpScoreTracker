@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -7,16 +8,38 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.ScoreLedger.Domain;
 
 /// <summary>
-///     The catalog's note count, as the two write paths need it: once to solve a play's max
-///     combo, and once as a tripwire. A judged play whose sum disagrees with the stored count —
-///     a pass, which judges every note, or a fail the site graded as finished — is written
-///     exactly as it arrived and logs one warning naming the chart, so a stale catalog (a
-///     re-step, a bad first sample) or the game's own edge (a graded fail that stopped a few
-///     notes short) can be found in one query. It refuses nothing, reclassifies nothing and
-///     rewrites nothing (docs/design/stage-breaks-and-max-combo.md D12-2, D13).
+///     The catalog's note count, as the write paths need it: to solve a play's max combo, as a
+///     tripwire, and — on the plays write — to be learned where it is blank. A judged play whose
+///     sum disagrees with the stored count — a pass, which judges every note, or a fail the site
+///     graded as finished — is written exactly as it arrived and logs one warning naming the
+///     chart, so a stale catalog (a re-step, a bad first sample) or the game's own edge (a graded
+///     fail that stopped a few notes short) can be found in one query. It refuses nothing,
+///     reclassifies nothing and rewrites nothing (docs/design/stage-breaks-and-max-combo.md D12-2,
+///     D13); a learned count only ever fills a blank.
 /// </summary>
 internal static class NoteCountWatch
 {
+    /// <summary>
+    ///     Fills a blank note count from posted plays: a pass judges every note, so its five counts
+    ///     add up to the chart's total. A chart that already has a count keeps it. A Perfect Game
+    ///     teaches nothing — it scores 1,000,000 whatever its total, so the score check every other
+    ///     posted play passed cannot vouch for its counts — and neither does a break, which may have
+    ///     stopped short. The first teaching pass on a chart is the one used.
+    /// </summary>
+    public static async Task LearnBlankCounts(IChartRepository charts, MixEnum mix,
+        IEnumerable<RecordObservedPlaysCommand.ObservedPlay> plays, CancellationToken cancellationToken)
+    {
+        var teaching = plays
+            .Where(p => !p.IsBroken && !p.IsStageBroken &&
+                        p.Judgements is { } counts && counts.Perfects != counts.NoteCount)
+            .DistinctBy(p => p.ChartId);
+        foreach (var play in teaching)
+        {
+            if ((await FactsFor(charts, mix, play.ChartId, cancellationToken)).NoteCount != null) continue;
+            await charts.UpdateNoteCount(mix, play.ChartId, play.Judgements!.NoteCount, cancellationToken);
+        }
+    }
+
     /// <summary>
     ///     What the catalog knows about a chart that a written play needs: the note count, and
     ///     the level the stage-break solver sizes the life bar from. Both null when the chart is

@@ -15,11 +15,15 @@ namespace ScoreTracker.Domain.Services;
 ///         denominator the game scored against, and a breakdown that stops short of the note
 ///         count is not it — a stage break is the obvious case, but a stale catalog note count
 ///         is the same problem wearing different clothes. When the sum does not match, this
-///         answers null rather than a number nobody can check.
+///         answers null rather than a number nobody can check. A pass judges every note, so
+///         where the catalog has no count for the chart yet, a pass's own total is the
+///         denominator; a break may have stopped short and waits for the catalog.
 ///     </para>
 ///     <para>
-///         The site reports no max combo on any surface we read, so this is how the value is
-///         known at all. It lives beside the forward formula in
+///         The official site reports no max combo on any surface we read, so for an import this
+///         is how the value is known at all. A play posted with its combo has had that combo
+///         checked against the same score, and solving gives it back, so every source stores
+///         the one answer this arithmetic gives. It lives beside the forward formula in
 ///         <see cref="Domain.Records.ScoreScreen" />'s assembly so a round-trip test can pin
 ///         the pair, and outside Records because that folder is excluded from coverage.
 ///     </para>
@@ -32,12 +36,14 @@ namespace ScoreTracker.Domain.Services;
 /// </summary>
 public static class PhoenixComboSolver
 {
-    public static int? MaxComboFor(JudgementCounts? judgements, PhoenixScore? score, int? chartNoteCount)
+    public static int? MaxComboFor(JudgementCounts? judgements, PhoenixScore? score, int? chartNoteCount,
+        bool isBroken)
     {
-        if (judgements == null || score == null || chartNoteCount == null) return null;
+        if (judgements == null || score == null) return null;
 
         var total = judgements.NoteCount;
-        if (total <= 0 || total != chartNoteCount.Value) return null;
+        var notes = chartNoteCount ?? (isBroken ? null : total);
+        if (notes == null || total <= 0 || total != notes.Value) return null;
 
         var judged = .995 * (judgements.Perfects
                              + .6 * judgements.Greats
@@ -58,10 +64,10 @@ public static class PhoenixComboSolver
     ///     earlier bug) must not survive a re-solve. Null in, null out.
     /// </summary>
     public static JudgementCounts? WithMaxCombo(JudgementCounts? judgements, PhoenixScore? score,
-        int? chartNoteCount)
+        int? chartNoteCount, bool isBroken)
     {
         return judgements == null
             ? null
-            : judgements with { MaxCombo = MaxComboFor(judgements, score, chartNoteCount) };
+            : judgements with { MaxCombo = MaxComboFor(judgements, score, chartNoteCount, isBroken) };
     }
 }

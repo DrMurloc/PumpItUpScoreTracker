@@ -7,12 +7,15 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
@@ -26,6 +29,7 @@ public sealed class SittingSagaTests
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IMessageScheduler> _scheduler = new();
     private readonly Mock<IScoreSessionRepository> _sessions = new();
+    private readonly Mock<IChartRepository> _charts = new();
 
     public SittingSagaTests()
     {
@@ -37,7 +41,20 @@ public sealed class SittingSagaTests
     private SittingSaga Saga()
     {
         return new SittingSaga(_sessions.Object, _mediator.Object, _scheduler.Object, FakeDateTime.At(Now).Object,
-            new SittingGate(), NullLogger<SittingSaga>.Instance);
+            new SittingGate(), _charts.Object, NullLogger<SittingSaga>.Instance);
+    }
+
+    private static RecordObservedPlaysCommand.ObservedPlay Judged(Guid chartId, JudgementCounts counts,
+        bool isBroken = false)
+    {
+        return new RecordObservedPlaysCommand.ObservedPlay(chartId, 950000, isBroken ? null : PhoenixPlate.SuperbGame,
+            isBroken, Now.AddMinutes(-1), counts);
+    }
+
+    private void GivenRiseChart(Guid chartId, int? noteCount)
+    {
+        _charts.Setup(c => c.GetChart(MixEnum.Rise, chartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount).Build());
     }
 
     private static RecordObservedPlaysCommand.ObservedPlay Play(DateTimeOffset playedAt, bool isBroken = false)
@@ -97,6 +114,84 @@ public sealed class SittingSagaTests
             Now.UtcDateTime + ScoreBatchPolicy.SittingQuietWindow(MixEnum.Rise) + ScoreBatchPolicy.DrainBuffer,
             It.Is<SittingSaga.CloseSittingCommand>(c => c.SessionId == opened && c.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AJudgedPassOnAChartWithNoCountTeachesItBeforeAnythingIsWritten()
+    {
+        var chartId = Guid.NewGuid();
+        GivenRiseChart(chartId, null);
+        var sendsBeforeLearning = -1;
+        _charts.Setup(c => c.UpdateNoteCount(MixEnum.Rise, chartId, 1078, It.IsAny<CancellationToken>()))
+            .Callback(() => sendsBeforeLearning = _mediator.Invocations.Count)
+            .Returns(Task.CompletedTask);
+
+        await Saga().Handle(Record(false, Judged(chartId, new JudgementCounts(1028, 30, 12, 6, 2))),
+            CancellationToken.None);
+
+        _charts.Verify(c => c.UpdateNoteCount(MixEnum.Rise, chartId, 1078, It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Equal(0, sendsBeforeLearning);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c => c.Plays.Single().ChartId == chartId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     A Perfect Game scores 1,000,000 whatever its total, so a misread count would pass the
+    ///     score check; a break may have stopped short; a play read off a song list has no counts.
+    /// </summary>
+    [Theory]
+    [InlineData("perfect game")]
+    [InlineData("break")]
+    [InlineData("no judgments")]
+    public async Task APerfectGameABreakOrAPlayWithoutJudgmentsTeachesNothing(string play)
+    {
+        var chartId = Guid.NewGuid();
+        GivenRiseChart(chartId, null);
+        var observed = play switch
+        {
+            "perfect game" => Judged(chartId, new JudgementCounts(446, 0, 0, 0, 0)),
+            "break" => Judged(chartId, new JudgementCounts(1028, 30, 12, 6, 2), isBroken: true),
+            _ => Play(Now.AddMinutes(-1)) with { ChartId = chartId }
+        };
+
+        await Saga().Handle(Record(true, observed), CancellationToken.None);
+
+        _charts.Verify(c => c.UpdateNoteCount(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AChartThatHasACountKeepsIt()
+    {
+        var chartId = Guid.NewGuid();
+        GivenRiseChart(chartId, 1100);
+
+        await Saga().Handle(Record(false, Judged(chartId, new JudgementCounts(1028, 30, 12, 6, 2))),
+            CancellationToken.None);
+
+        _charts.Verify(c => c.UpdateNoteCount(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheFirstTeachingPassOnAChartIsTheOneUsed()
+    {
+        var chartId = Guid.NewGuid();
+        GivenRiseChart(chartId, null);
+
+        await Saga().Handle(Record(false,
+                Judged(chartId, new JudgementCounts(446, 0, 0, 0, 0)),
+                Judged(chartId, new JudgementCounts(1028, 30, 12, 6, 2)) with { PlayedAt = Now.AddMinutes(-3) },
+                Judged(chartId, new JudgementCounts(1030, 30, 12, 6, 2)) with { PlayedAt = Now.AddMinutes(-2) }),
+            CancellationToken.None);
+
+        _charts.Verify(c => c.UpdateNoteCount(MixEnum.Rise, chartId, 1078, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _charts.Verify(c => c.UpdateNoteCount(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsNotIn(1078),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

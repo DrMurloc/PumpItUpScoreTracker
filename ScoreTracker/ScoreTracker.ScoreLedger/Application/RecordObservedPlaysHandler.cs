@@ -52,7 +52,8 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
                 var score = p.IsStageBroken ? null : p.Score;
                 return new ScoreJournalEntry(p.PlayedAt, request.Source, request.UserId, p.ChartId,
                     score, BestAttemptPolicy.PlateFor(isBroken, p.Plate), isBroken, request.Mix,
-                    request.SessionId, PhoenixComboSolver.WithMaxCombo(p.Judgements, score, chart.NoteCount), false,
+                    request.SessionId,
+                    PhoenixComboSolver.WithMaxCombo(p.Judgements, score, chart.NoteCount, isBroken), false,
                     IsStageBroken: p.IsStageBroken,
                     Cause: NoteCountWatch.CauseFor(p.IsStageBroken, p.Judgements, chart, request.Mix));
             })

@@ -12,10 +12,11 @@ namespace ScoreTracker.ScoreLedger.Application;
 
 /// <summary>
 ///     Sittings: the plays the plays endpoint records, gathered by play time and announced once each
-///     (docs/design/rise.md §12). Recording finds or opens each play's sitting, writes the plays under
-///     it and schedules its close; the close replays the sitting from the journal once its mix's quiet
-///     window has passed with nothing arriving, or at once when the tool that posted the plays says the
-///     session is over (D25); the five-minute sweep closes a sitting whose scheduled close was lost.
+///     (docs/design/rise.md §12). Recording fills any blank note count the plays teach (rise.md §4.5),
+///     then finds or opens each play's sitting, writes the plays under it and schedules its close; the
+///     close replays the sitting from the journal once its mix's quiet window has passed with nothing
+///     arriving, or at once when the tool that posted the plays says the session is over (D25); the
+///     five-minute sweep closes a sitting whose scheduled close was lost.
 ///     Nothing is held in memory, so a restart costs a sitting nothing but a later card.
 /// </summary>
 internal sealed class SittingSaga(
@@ -24,6 +25,7 @@ internal sealed class SittingSaga(
     IMessageScheduler scheduler,
     IDateTimeOffsetAccessor dateTime,
     SittingGate gate,
+    IChartRepository charts,
     ILogger<SittingSaga> logger)
     : IRequestHandler<RecordSittingPlaysCommand>,
         IRequestHandler<CloseOpenSittingsCommand>,
@@ -51,6 +53,9 @@ internal sealed class SittingSaga(
         var now = dateTime.Now;
         var window = ScoreBatchPolicy.SittingQuietWindow(request.Mix);
         using var entered = await gate.Enter(request.UserId, request.Mix, cancellationToken);
+
+        // Before anything is written, so the plays below are solved against the counts they teach.
+        await NoteCountWatch.LearnBlankCounts(charts, request.Mix, request.Plays, cancellationToken);
 
         var open = await sessions.GetOpenSittings(request.UserId, request.Mix, now - window, cancellationToken);
         var plan = SittingPlanner.Plan(open, request.Plays.Select(p => p.PlayedAt).ToArray(), window);
