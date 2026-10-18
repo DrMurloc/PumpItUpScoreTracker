@@ -13,9 +13,10 @@ namespace ScoreTracker.ScoreLedger.Application;
 /// <summary>
 ///     Sittings: the plays the plays endpoint records, gathered by play time and announced once each
 ///     (docs/design/rise.md §12). Recording fills any blank note count the plays teach (rise.md §4.5),
-///     then finds or opens each play's sitting, writes the plays under it and schedules its close; the close replays the sitting from the journal once its mix's quiet
-///     window has passed with nothing arriving, or at once when the tool that posted the plays says the
-///     session is over (D25); the five-minute sweep closes a sitting whose scheduled close was lost.
+///     then finds or opens each play's sitting, writes the plays under it and schedules its close; the
+///     close replays the sitting from the journal once its mix's quiet window has passed with nothing
+///     arriving, or at once when the tool that posted the plays says the session is over (D25); the
+///     five-minute sweep closes a sitting whose scheduled close was lost.
 ///     Nothing is held in memory, so a restart costs a sitting nothing but a later card.
 /// </summary>
 internal sealed class SittingSaga(
