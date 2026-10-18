@@ -265,6 +265,30 @@ public sealed class CommunityDiscordPageTests : ComponentTestBase
     }
 
     /// <summary>
+    ///     Pump United (2026-10-18): Discord refused every write in the server, and Check now said
+    ///     "Everyone already has the right roles" — the pass only counted what changed. A refused pass
+    ///     names the refusal in the server's health list, where the fix is, and the all-clear line
+    ///     the bot's own view would have drawn stays away (D27).
+    /// </summary>
+    [Fact]
+    public async Task ACheckDiscordRefusedSaysSoInsteadOfAllIsWell()
+    {
+        Given(Linked());
+        Mediator.Setup(m => m.Send(It.IsAny<ReconcileCommunityDiscordRolesCommand>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DiscordRolePassResult(0, 1, BotRoleRefusal.NoAccess, 50001));
+        var page = Render();
+        Assert.Contains("The bot can hand out every role below.", page.Markup);
+
+        await page.Find("button:has(span:contains('Check now'))").ClickAsync(new());
+
+        page.WaitForAssertion(() =>
+            Assert.Contains("Discord refused to change roles in this server.", page.Markup));
+        Assert.Contains("Discord error 50001", page.Markup);
+        Assert.DoesNotContain("The bot can hand out every role below.", page.Markup);
+    }
+
+    /// <summary>
     ///     Changing the server takes every role back first, so it asks rather than doing it on one
     ///     click (owner call). The confirmation body lives in a MudDialog, which needs a provider
     ///     this tree has none of — so what is asserted is the half that matters: the click alone
