@@ -104,6 +104,14 @@ reads as being above 99.5% of players. That reuses the one shipped ramp
 (`ThemeScales.BandFor`) rather than inventing a second, inverted set of cutoffs — consumers never
 re-implement band cutoffs (UX-GUIDELINES §1). The percentage always prints beside the colour.
 
+**The players it is out of are the mix's own**: accounts with a linked game tag that hold at
+least one title in that mix (owner, 2026-10-18). It used to be every account with a linked game
+tag, whatever it played, so a Phoenix 2 title was measured against players who had never touched
+Phoenix 2 — on the 10-16 copy, 547 players hold a Phoenix 2 title against 1,682 linked accounts,
+which put every Phoenix 2 percentage at about a third of its real size. The holder count above the
+line already filtered the same way, so both numbers now count the same people. The season recap's
+rarity badge reads the same count.
+
 ## Suggested level (Phoenix 2 only)
 
 The tier-list page's PUMBILITY track (`FolderTitleTrack`, [pumbility-title-track.md](pumbility-title-track.md))
