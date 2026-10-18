@@ -83,7 +83,10 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   these mixes.
 - **D10. Note counts are per mix and learned, never derived.** RISE-mode judgment totals do not equal the arcade
   note counts (§4.5); `ChartMix.NoteCount` already exists per mix and starts null for Rise. The Arcade Station's
-  totals equal our Phoenix 2 counts exactly, so Rise Arcade rows inherit them.
+  totals equal our Phoenix 2 counts exactly, so Rise Arcade rows inherit them. *Built 2026-10-18 (owner's go):*
+  the site learns them from the plays write — a pass that is not a Perfect Game teaches a blank count, once
+  (§4.5). Until then every Rise count stayed null: the plan filed the learning under the capture app (§8), and the
+  app leaves it to the site.
 - **D11 (owner, 2026-09-21). The RISE grade ladder is the published one** (§5.2), shipped with the unmeasured low
   floors as a placeholder. Ingested letter grades (the capture app reads the grade off the result screen) are
   checked against the table and every disproof is recorded, the way Phoenix 2's floors were found. Safe because a
@@ -279,11 +282,18 @@ the Rise mix gets `MixVersion` rows and every membership row an `AddedInVersionI
 RISE-mode judgment totals against our arcade counts: 4NT S22 **1,078 vs 1,100**; Darkside Of The Mind S23 1,333 =
 1,333 (twice); Aragami S22 **1,356 vs 1,349**. The Japanese wiki says RISE changed charts in long-hold sections
 (added taps, other panels) and the Korean wiki that hold ticks are judged differently — so RISE totals are neither
-the arcade's nor the arcade's plus one per hold. They are learned per chart from result screens (a result-screen
-capture carries the five counts; a best read off a song list carries none, D24), stored in the Rise membership
-row's `NoteCount`, and stay null until seen. Everything that
-reads a note count (the max-combo solver, the stage-break solver, the calculators) treats null as unknown, which it
-already does.
+the arcade's nor the arcade's plus one per hold. They are learned per chart from result screens: a pass posted to
+the plays write (§6.3) with its five counts fills the chart's blank `NoteCount` on the mix's membership row with
+their total — once, never overwriting a stored count, the rule the official import's learner keeps
+([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) D13). Three plays teach nothing: a best read off a
+song list, which carries no counts (D24); a break, which may stop short; and a Perfect Game, which scores 1,000,000
+whatever its total, so the score check that vouches for every other capture cannot vouch for its counts — one
+reached the journal misread as 416 notes for 446. A wrong count would cost more than a missing one: the catalog is
+write-once, and once a Rise chart has a count the capture app checks every clear against it and holds a capture
+that disagrees for review. The rule belongs to the plays write, not to Rise, so a blank Rise Arcade count fills the
+same way. Until a chart's count is known, whatever reads one treats null as unknown, which it already does — except
+the max-combo solver, which takes a pass's own total as the chart's, since a pass judges every note
+(stage-breaks-and-max-combo.md D14).
 
 ---
 
@@ -337,9 +347,13 @@ a floor that moves must keep reading them the way the game did (D11).
 | FULL COMBO | every note Perfect or Great — "zero Goods or lower" | **Ultimate Game** |
 | NO MISS | zero misses, at least one Bad or Good | Superb Game |
 
-A run with Goods but no Bads or Misses is a Phoenix Extreme Game and displays as NO MISS in RISE. Derived from
-judgments on a capture, the exact Phoenix plate is stored; on manual entry the player picks one of the three and the
-site stores the weakest plate that guarantees it. Display names come from the profile. The site's plate tolerance
+A run with Goods but no Bads or Misses is a Phoenix Extreme Game and displays as NO MISS in RISE, so it is stored as
+Superb Game like any other NO MISS. Derived from judgments on a capture, the strongest of the three marks the counts
+earn is stored; on manual entry the player picks one of the three and the site stores the weakest plate that
+guarantees it. Either way a Rise record holds one of the three plates D5 names, and a capture's five counts stay on
+the row, so its exact Phoenix plate can always be read back from them. *Corrected 2026-10-18:* this paragraph used to
+say a capture stores the exact Phoenix plate, which contradicted the table above and D5; the code has always stored
+the mark. Display names come from the profile. The site's plate tolerance
 table needs no change.
 
 ### 5.4 Rise Arcade
@@ -414,6 +428,11 @@ sent, provided the two agree (only 1,000,000 is a Perfect Game; `award-does-not-
 sent with no `award` records a Perfect Game, and a pass has to score above zero (`score-invalid`). The ledger
 already records plays without judgments — the official best list arrives that way — so both of its commands
 receive none.
+
+**What a judged play leaves behind (D10, built 2026-10-18).** A judged pass on a chart whose note count is still
+blank teaches it before the play is written (§4.5), and every judged play stores the max combo solved from its score
+and counts. The combo a play is posted with is checked against the score and then solved again rather than kept;
+the solve gives the same number back, since it inverts the same formula the check ran.
 
 **Closing a sitting (D25, owner, 2026-09-26).** A second write, `POST api/v2/players/me/sittings/close` with
 `{ "mix": … }`, ends the caller's open sittings on that mix and announces them right away. The capture app calls it
@@ -520,7 +539,8 @@ merge (§11.5).
 
 **Phase 2 — the capture app**: screen-grab and F12 modes, template-matched
 digits on the fixed result layout, the score and accuracy checksums, chart resolution against the Rise catalog,
-`POST api/v2/players/me/plays` (D14). Skips Challenge aggregates (division badge in the header). Learns note counts (D10).
+`POST api/v2/players/me/plays` (D14). Skips Challenge aggregates (division badge in the header). The note counts
+(D10) are learned by the site from what the app posts, not by the app (§4.5).
 Shipped as PIU Scores Watcher in its own repository; the site offers its download (§6.4, D26).
 
 **Phase 3 — boards and PUMBILITY** with their own tuning; revisit the capability answers.
