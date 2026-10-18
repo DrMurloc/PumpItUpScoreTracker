@@ -1,7 +1,10 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
 @using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles.Interface
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -28,7 +31,37 @@
                     <h3>@Rung.Title.Name</h3>
                 </div>
                 <div class="title-drawer-body">
-                    <p class="title-req">@Rung.Title.Description</p>
+                    @if (Chart != null)
+                    {
+                        @* A title that names one chart shows the chart, as the card every other
+                           chart on the site is drawn as, and opens it the same way. Its last line
+                           is what the title asks of it, so the sentence it replaces loses nothing
+                           (docs/design/titles-overhaul.md, chart titles). *@
+                        <div class="title-chart">
+                            <TierListChartCard Chart="Chart" Score="Best" Passed="@(Best is { IsBroken: false })"
+                                               Broke="@(Best is { IsBroken: true })" ShowToDo="false"
+                                               ShowStandingText="false" OnOpen="OpenChart">
+                                <Body>
+                                    <div class="title-chart-req">
+                                        <span class="title-chart-needs">@L["Needs"]</span>
+                                        @if (MinimumGrade is { } grade)
+                                        {
+                                            <LetterGradeIcon Grade="grade" Mix="Chart.Mix" Height="15"></LetterGradeIcon>
+                                            <span>@L["or better"]</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@L["Any clear"]</span>
+                                        }
+                                    </div>
+                                </Body>
+                            </TierListChartCard>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="title-req">@Rung.Title.Description</p>
+                    }
 
                     @if (Rung.Official)
                     {
@@ -36,7 +69,7 @@
                             @L["Progress tracked by the official piugame import, not by piuscores data."]
                         </p>
                     }
-                    else if (IsLoggedIn)
+                    else if (IsLoggedIn && !CardSaysItAll)
                     {
                         <p class="title-label">@L["Your progress"]</p>
                         @* A gem title's bar spans one gem (LinkLadder floors it at the rung
@@ -213,6 +246,26 @@
     [Parameter] public Guid? CurrentUserId { get; set; }
     [Parameter] public int TrackedPlayers { get; set; }
     [Parameter] public EventCallback OnClosed { get; set; }
+
+    /// <summary>The chart this title asks for, when it names exactly one; null draws the sentence.</summary>
+    [Parameter] public Chart? Chart { get; set; }
+
+    /// <summary>The viewer's best on <see cref="Chart" />, painted on the card the way any chart card paints it.</summary>
+    [Parameter] public RecordedPhoenixScore? Best { get; set; }
+
+    /// <summary>The card was tapped; the page owns the Chart Details dialog, so it opens it.</summary>
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+
+    private PhoenixLetterGrade? MinimumGrade => (Rung?.Title as ISpecificChartTitle)?.MinimumGrade;
+
+    /// <summary>
+    ///     A title one result decides could only ever print 0 / 1 beside its chart, and the card's
+    ///     own score says more than that. A Phoenix 1 skill rung keeps its bar: 900,000 to 990,000 is
+    ///     a climb the bar actually measures.
+    /// </summary>
+    private bool CardSaysItAll => Chart != null && Rung is { Title.CompletionRequired: <= 1 };
+
+    private Task OpenChart(Guid _) => Chart == null ? Task.CompletedTask : OnOpenChart.InvokeAsync(Chart);
 
     private bool _loadingHolders;
     private TitleHoldersRecord? _holders;

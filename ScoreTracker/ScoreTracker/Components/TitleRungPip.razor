@@ -1,5 +1,6 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 
@@ -13,11 +14,27 @@
         title="@Rung.Title.Name"
         aria-label="@Rung.Title.Name"
         @onclick="OnSelect">
+    @if (Chart != null)
+    {
+        @* A plain image rather than SongImage: that one brings a tooltip and its own tab stop,
+           and neither belongs inside a button that already names the title. Jacket sizing stays
+           SongImage's — natural width, no rounding. The bubble is chart-less on purpose, so a
+           boss cell never borrows the Hardmode glow. *@
+        <img class="title-pip-jacket" src="@Chart.Song.ImagePath" alt="" height="28"/>
+        <DifficultyBubble Type="Chart.Type" Level="Chart.Level" Mix="Chart.Mix" Height="18"></DifficultyBubble>
+    }
     <span>@Label</span>
 </button>
 
 @code {
     [Parameter] [EditorRequired] public TitleRung Rung { get; set; } = default!;
+
+    /// <summary>
+    ///     The chart the rung asks for, drawn on the pip as its jacket and stepball. Passed only where
+    ///     a rung IS a chart and the cell has room — the boss breaker grid; a numbered skill rail
+    ///     stays numbered.
+    /// </summary>
+    [Parameter] public Chart? Chart { get; set; }
 
     /// <summary>Wide rungs carry a name instead of a number — a capstone, a plate tier, a gem.</summary>
     [Parameter] public string? WideLabel { get; set; }
@@ -45,6 +62,7 @@
             };
             var classes = $"title-pip {state}";
             if (WideLabel != null) classes += " wide";
+            if (Chart != null) classes += " with-art";
             if (Rung.Official) classes += " official";
             if (Dimmed) classes += " dim";
             return classes;
