@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Localization;
 using Moq;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Services;
 using Xunit;
+using static ScoreTracker.Tests.Components.ScoreFileRoundTrip;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Components;
@@ -96,14 +94,6 @@ public sealed class PhoenixScoreFileExampleTests
     private static List<IDictionary<string, object?>> Cells(IEnumerable<dynamic> rows)
     {
         return rows.Select(r => (IDictionary<string, object?>)r).ToList();
-    }
-
-    private static Chart CatalogChart(MixEnum mix, string song, ChartType type, int level)
-    {
-        return new Chart(Guid.NewGuid(), mix,
-            new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
-                TimeSpan.FromMinutes(2), "Artist", Bpm.From(150, 150)),
-            type, level, mix, null, 1200);
     }
 
     private static IStringLocalizer PassThroughLocalizer()

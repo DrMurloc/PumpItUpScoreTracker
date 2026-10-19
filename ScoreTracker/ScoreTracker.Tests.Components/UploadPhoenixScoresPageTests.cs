@@ -169,12 +169,6 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
                 TimeSpan.FromMinutes(2), "Doin", Bpm.From(195, 195)),
             ChartType.Single, 20, MixEnum.Phoenix, null, 1200);
 
-    private static Chart CatalogChart(MixEnum mix, string song, ChartType type, int level) =>
-        new(Guid.NewGuid(), mix,
-            new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
-                TimeSpan.FromMinutes(2), "Artist", Bpm.From(150, 150)),
-            type, level, mix, null, 1200);
-
     private void StoreCredential() =>
         _clientStore.Setup(s => s.Read(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new StoredCredentialBlob(Guid.NewGuid(), "sealed", 0));
@@ -419,12 +413,12 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         var twoPad = MixProfiles.For(mix).ChartTypes.Contains(ChartType.Double) ? ChartType.Double : ChartType.HalfDouble;
         var catalog = new[]
         {
-            CatalogChart(mix, "BRAIN POWER", ChartType.Single, 16),
-            CatalogChart(mix, "Conflict", ChartType.Single, 17),
-            CatalogChart(mix, "Chinese restaurant", ChartType.Single, 18),
-            CatalogChart(mix, "Final Audition 2", twoPad, 20),
-            CatalogChart(mix, "Switronic", twoPad, 18),
-            CatalogChart(mix, "Switronic", twoPad, 22)
+            ScoreFileRoundTrip.CatalogChart(mix, "BRAIN POWER", ChartType.Single, 16),
+            ScoreFileRoundTrip.CatalogChart(mix, "Conflict", ChartType.Single, 17),
+            ScoreFileRoundTrip.CatalogChart(mix, "Chinese restaurant", ChartType.Single, 18),
+            ScoreFileRoundTrip.CatalogChart(mix, "Final Audition 2", twoPad, 20),
+            ScoreFileRoundTrip.CatalogChart(mix, "Switronic", twoPad, 18),
+            ScoreFileRoundTrip.CatalogChart(mix, "Switronic", twoPad, 22)
         };
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(catalog);
         var helpers = JSInterop.SetupModule("./js/helpers.js");
@@ -436,15 +430,10 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         var download = helpers.VerifyInvoke("downloadFileFromStream");
         Assert.Equal(PhoenixScoreFileExample.FileName(mix), download.Arguments[0]);
-        var file = Assert.IsType<MemoryStream>(Assert.IsType<DotNetStreamReference>(download.Arguments[1]).Stream).ToArray();
+        var file = ScoreFileRoundTrip.DownloadedBytes(download);
         Assert.StartsWith("Song,Difficulty,Score,Plate,IsBroken,Notes (not imported)\r\n",
             Encoding.UTF8.GetString(file, 3, file.Length - 3));
-        var catalogReader = new Mock<IMediator>();
-        catalogReader.Setup(m => m.Send(It.IsAny<GetChartQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GetChartQuery q, CancellationToken _) =>
-                catalog.SingleOrDefault(c => c.Song.Name == q.SongName && c.Type == q.Type && c.Level == q.Level));
-        var (scores, errors) = await new PhoenixScoreFileExtractor(catalogReader.Object)
-            .GetScores(new DownloadedFile(file), mix, CancellationToken.None);
+        var (scores, errors) = await ScoreFileRoundTrip.ReadBack(file, mix, catalog);
 
         Assert.Empty(errors);
         Assert.Equal(5, scores.Count());
@@ -807,26 +796,5 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
 
         cut.WaitForAssertion(() => Assert.Contains("PIUGame.com stopped responding", cut.Markup));
-    }
-
-    /// <summary>The bytes a download handed the browser, offered back to the upload as a picked file.</summary>
-    private sealed class DownloadedFile : IBrowserFile
-    {
-        private readonly byte[] _bytes;
-
-        public DownloadedFile(byte[] bytes)
-        {
-            _bytes = bytes;
-        }
-
-        public string Name => "piu-scores-example.csv";
-        public DateTimeOffset LastModified => DateTimeOffset.UnixEpoch;
-        public long Size => _bytes.Length;
-        public string ContentType => "text/csv";
-
-        public Stream OpenReadStream(long maxAllowedSize = 512000, CancellationToken cancellationToken = default)
-        {
-            return new MemoryStream(_bytes);
-        }
     }
 }
