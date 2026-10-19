@@ -452,6 +452,12 @@ profile's `Features.ScoresWatcher`, which only they set (§3).
   to Account → API for the token the app asks for. The spreadsheet upload of §6.1 sits beside it, introduced as the
   do-it-yourself alternative, its Upload CSV outlined so the download is the card's one filled button. On a phone
   the columns stack, the watcher first.
+
+  *Amended 2026-10-18.* The column's line says what an upload does: a passing row becomes the score on that chart,
+  even when it is lower ([score-truth-model.md](score-truth-model.md) D9). It used to promise that a better score
+  replaces a worse one, which a CSV has not done since D9. A **Download Example** text button sits before Upload
+  CSV and hands out the mix's own five-row example ([import-scores-refresh.md](import-scores-refresh.md), amended
+  2026-10-18), and the column caption names the half-double shorthand `HD`, not `HDB`.
 - **The Import Scores widget.** On a RISE mix the widget's spreadsheet state gives way to one line naming the app,
   the same download button and *How it works*, a link to the import page. XX and older keep the spreadsheet.
 
@@ -506,7 +512,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Catalog, Rise Arcade | the 352-song Arcade Station list (§4.2) as membership rows on the Phoenix 2 charts, Single and Double, Phoenix 2 levels and note counts |
 | Chart pages and search | `/Charts` browse and search, the canonical chart page, the details dialog and the app-bar search on both mixes; half-doubles draw the H. DOUBLE stepball, singles the Phoenix 2 stepballs (D12) |
 | Recording | manual entry on the chart page, the details dialog, the SRP quick record and the Quick Record widget; Rise grades with no plus tiers on the published ladder (§5.2); Rise's three marks as its plates, shown as Perfect Game / Full Combo / No Miss (D5); Rise Arcade with Phoenix 2 grades and the eight plates; the broken flag on both |
-| Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HD23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted, blank for a RISE clear with no mark), IsBroken; keep-best by default |
+| Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HD23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted, blank for a RISE clear with no mark), IsBroken; a passing row overwrites, lower or not, and a broken one can only raise a record ([score-truth-model.md](score-truth-model.md) D9); **Download Example** hands out a five-row example in the mix's own terms |
 | Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
 | Passed-in-another-mix border | on, but only within a platform: Rise ↔ Rise Arcade, and the arcade family among themselves (D6) |
 | Tier lists | open on both mixes with community votes and the pass tiers; the score-derived lenses weight players by the competitive level on their PlayerStats row, which only a mix with PUMBILITY wrote at the time, so they arrive with phase 3. Since D20 RISE carries its own competitive levels, and since 2026-10-03 the pass tiers weight players by them too, as on every mix without difficulty titles — before then they grouped players by difficulty title, which RISE has none of, and read Not Rated; Phoenix 1 keeps its difficulty-title groups ([pumbility-tier-list.md §10a](pumbility-tier-list.md)) |

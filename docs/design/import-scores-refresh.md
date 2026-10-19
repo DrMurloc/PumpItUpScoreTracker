@@ -68,7 +68,7 @@ the copy deck below is the mock's copy verbatim.
 | Step 1 | Choose which pages of your best scores to pull. Leave To page empty for all of them. |
 | Step 2 | Copy the script. |
 | Step 3 | While logged in on {0}, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can break it. `{0}` is the selected mix's site (amended 2026-09-11). |
-| Step 4 | Upload the CSV here — also takes a hand-kept spreadsheet with the same columns. |
+| Step 4 | Upload the CSV here. A spreadsheet you keep yourself works too — download the example for its columns. (Amended 2026-10-18; it read "Upload the CSV here — also takes a hand-kept spreadsheet with the same columns.") |
 | Skeleton caption | Imported scores will appear here as they come in. |
 | Confirming | Only new or improved scores will be saved. Saving can't be undone — stopping midway keeps what's already saved. |
 | Saving | Leaving or cancelling stops the upload; scores already saved stay. |
@@ -142,6 +142,27 @@ on Phoenix 2 it found no scores and told a signed-in player to sign in.
   script CSV can carry a broken card below a better fail the import already recorded, and uploading
   it would have dragged that record back down. Passing rows stay authoritative (score-truth-model.md D9).
 - Step 3's copy names the site through `{0}`.
+
+**Amended 2026-10-18 — an example to copy.** Players kept asking what shape the upload wants. The
+only example the site handed out sat behind the XX page's *Supported Formats* dialog, and step 4
+promised "the same columns" without ever showing them.
+
+- **Download Example** is a text button before **Upload CSV** in two places: step 4 here, and the
+  spreadsheet column of the site-less card ([rise.md §6.4](rise.md)). The XX page's existing example
+  moves out of its dialog into the card's actions too; the file it hands out is unchanged.
+- The file is `piu-scores-example-<mix>.csv`: the five upload columns, plus a translated **Notes**
+  column the reader skips, and five rows in the selected mix's own terms. On a mix with the eight
+  plates that is three Singles and two Doubles, four plate codes and a stage break; on RISE it is
+  three Singles and two half-doubles, its three marks, a clear with no mark and a stage break. It
+  goes out through the same `CsvText` as the site's other downloads, byte-order mark included.
+- Every row is a chart the mix really has. A row names a song and a level, and resolves to that
+  song's closest-level chart of its type in the selected mix's catalog, else to the closest-level
+  chart of that type, so a rerate or a new mix cannot hand out a row that fails to upload.
+- Uploading the example untouched is not blocked: the confirm step still asks first, and Undo covers
+  it.
+- The Account panel's **Download Scores** now writes a file this page reads back: the score as plain
+  digits and the plate as the mix's own code, where it wrote `993,512` and `Perfect Game` and nearly
+  every row failed on the way back in. An older mix exports its own records; only XX did before.
 
 ## Field-test rounds
 

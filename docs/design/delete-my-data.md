@@ -228,7 +228,9 @@ Counts come from ScoreLedger for the score bucket. The contributions bucket show
 without counts — five new cross-vertical contract queries to print five numbers is not worth it.
 
 **Export first.** `Download Scores` already exists in the profile panel. It appears in this flow
-too, beside the banner.
+too, beside the banner. Since 2026-10-18 its file uploads back as it came out: the score as plain
+digits and the plate as the mix's own code, and an older mix exports its own records rather than
+an empty file ([import-scores-refresh.md](import-scores-refresh.md), amended 2026-10-18).
 
 ## 6. The undo page
 
