@@ -3233,8 +3233,8 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>6つの判定数を入力してください</value>
   </data>
-  <data name="Fill one in yourself: one row per chart, and a better score replaces a worse one." xml:space="preserve">
-    <value>自分で記入する場合：1行に1譜面、より良いスコアが以前のスコアを置き換えます。</value>
+  <data name="Fill one in yourself, one row per chart. A passing row becomes your score on that chart, even if it's lower." xml:space="preserve">
+    <value>自分で記入する場合：1行に1譜面。クリアした行は、スコアが下がる場合もその譜面のスコアになります。</value>
   </data>
   <data name="Fill out the judgements to see results." xml:space="preserve">
     <value>判定数を入力すると結果が表示されます。</value>
@@ -4075,7 +4075,7 @@
     <value>{0} にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
-    <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>
+    <value>その CSV をここにアップロードします。自分で管理しているスプレッドシートも使えます。列はサンプルをダウンロードして確認してください。</value>
   </data>
   <data name="Import page" xml:space="preserve">
     <value>ページをインポート</value>
@@ -5854,6 +5854,9 @@
   </data>
   <data name="Notes" xml:space="preserve">
 	  <value>ノーツ</value>
+  </data>
+  <data name="Notes (not imported)" xml:space="preserve">
+    <value>メモ（インポートされません）</value>
   </data>
   <data name="Notes before you fail" xml:space="preserve">
     <value>失敗までのノート数</value>
@@ -8903,7 +8906,7 @@
     <value>トップ50内の順位</value>
   </data>
   <data name="Spreadsheet Import Columns" xml:space="preserve">
-    <value>列: Song、Difficulty（S16、HDB23、D20）、Score、Plate（PG・FC・NM。アーケード版ではプレートのコード）、IsBroken。</value>
+    <value>列: Song、Difficulty（S16、HD23、D20）、Score、Plate（PG・FC・NM。アーケード版ではプレートのコード）、IsBroken。</value>
   </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
 	  <value>CSVファイルの処理中</value>
@@ -8938,6 +8941,9 @@
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Stage Break · {0}%地点</value>
+  </data>
+  <data name="Stage break: {0} {1}, {2} empty." xml:space="preserve">
+    <value>Stage Break：{0} {1}、{2} は空欄。</value>
   </data>
   <data name="stage breaks" xml:space="preserve">
     <value>ステージブレイク</value>
@@ -11886,6 +11892,9 @@
   <data name="{0} in your pool that no peer holds" xml:space="preserve">
     <value>あなたのプールにあって持っているピアがいない譜面 {0}</value>
   </data>
+  <data name="{0} is half-double. Cleared with no mark: leave {1} empty." xml:space="preserve">
+    <value>{0} はハーフダブル。マークなしでクリアした場合は {1} を空欄にします。</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>
   </data>
@@ -12336,14 +12345,29 @@
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}：{1}のSSS+は{2}の900,000相当</value>
   </data>
+  <data name="{0}: as the game spells it. Capitals don't matter." xml:space="preserve">
+    <value>{0}：ゲームの表記どおりに。大文字・小文字は区別しません。</value>
+  </data>
   <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
     <value>{0}: あなたの称号を持つプレーヤーがトップ50に持つ各レベルの譜面数</value>
+  </data>
+  <data name="{0}: digits only, no commas." xml:space="preserve">
+    <value>{0}：数字のみ。カンマは入れません。</value>
+  </data>
+  <data name="{0}: PG Perfect Game · FC Full Combo · NM No Miss" xml:space="preserve">
+    <value>{0}：PG Perfect Game · FC Full Combo · NM No Miss</value>
+  </data>
+  <data name="{0}: PG UG EG SG MG TG FG RG, Perfect Game down to Rough Game." xml:space="preserve">
+    <value>{0}：PG UG EG SG MG TG FG RG（Perfect GameからRough Gameまで）。</value>
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}：完全なトップ50を持つ {1} 人の平均トップ50</value>
   </data>
   <data name="{0}: {1} of them, {2}%" xml:space="preserve">
     <value>{0}：{1}人、{2}%</value>
+  </data>
+  <data name="{0}: {1} or {2}, then the level." xml:space="preserve">
+    <value>{0}：{1} か {2} の後にレベル。</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}日前</value>

@@ -3217,8 +3217,8 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Preencha as seis contagens</value>
   </data>
-  <data name="Fill one in yourself: one row per chart, and a better score replaces a worse one." xml:space="preserve">
-    <value>Preencha à mão: uma linha por chart, e uma pontuação melhor substitui uma pior.</value>
+  <data name="Fill one in yourself, one row per chart. A passing row becomes your score on that chart, even if it's lower." xml:space="preserve">
+    <value>Preencha à mão: uma linha por chart. Uma linha com pass vira sua pontuação nesse chart, mesmo que seja menor.</value>
   </data>
   <data name="Fill out the judgements to see results." xml:space="preserve">
     <value>Preencha os julgamentos para ver os resultados.</value>
@@ -4058,7 +4058,7 @@
     <value>Conectado no {0}, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
-    <value>Envie o CSV aqui — também aceita uma planilha própria com as mesmas colunas.</value>
+    <value>Envie o CSV aqui. Uma planilha própria também serve — baixe o exemplo para ver as colunas.</value>
   </data>
   <data name="Import page" xml:space="preserve">
     <value>Importar página</value>
@@ -5823,6 +5823,9 @@
   </data>
   <data name="Notes" xml:space="preserve">
     <value>Notas</value>
+  </data>
+  <data name="Notes (not imported)" xml:space="preserve">
+    <value>Notas (não importadas)</value>
   </data>
   <data name="Notes before you fail" xml:space="preserve">
     <value>Notas antes de falhar</value>
@@ -8849,7 +8852,7 @@
     <value>Posição no top 50</value>
   </data>
   <data name="Spreadsheet Import Columns" xml:space="preserve">
-    <value>Colunas: Song, Difficulty (S16, HDB23, D20), Score, Plate (PG, FC ou NM; o código da placa em uma versão de arcade), IsBroken.</value>
+    <value>Colunas: Song, Difficulty (S16, HD23, D20), Score, Plate (PG, FC ou NM; o código da placa em uma versão de arcade), IsBroken.</value>
   </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>A planilha está sendo carregada e processada...</value>
@@ -8883,6 +8886,9 @@
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Stage break · aos {0}%</value>
+  </data>
+  <data name="Stage break: {0} {1}, {2} empty." xml:space="preserve">
+    <value>Stage break: {0} {1}, {2} vazio.</value>
   </data>
   <data name="stage breaks" xml:space="preserve">
     <value>quedas</value>
@@ -11818,6 +11824,9 @@
   <data name="{0} in your pool that no peer holds" xml:space="preserve">
     <value>{0} no seu conjunto que nenhum par tem</value>
   </data>
+  <data name="{0} is half-double. Cleared with no mark: leave {1} empty." xml:space="preserve">
+    <value>{0} é half-double. Pass sem marca: deixe {1} vazio.</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} não está em {1} — a música inteira saiu.</value>
   </data>
@@ -12268,14 +12277,29 @@
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: um SSS+ em {1} vale um 900.000 em {2}</value>
   </data>
+  <data name="{0}: as the game spells it. Capitals don't matter." xml:space="preserve">
+    <value>{0}: como o jogo escreve. Maiúsculas não importam.</value>
+  </data>
   <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
     <value>{0}: charts de cada nível que os jogadores com seu título têm no top 50</value>
+  </data>
+  <data name="{0}: digits only, no commas." xml:space="preserve">
+    <value>{0}: só dígitos, sem pontos nem vírgulas.</value>
+  </data>
+  <data name="{0}: PG Perfect Game · FC Full Combo · NM No Miss" xml:space="preserve">
+    <value>{0}: PG Perfect Game · FC Full Combo · NM No Miss</value>
+  </data>
+  <data name="{0}: PG UG EG SG MG TG FG RG, Perfect Game down to Rough Game." xml:space="preserve">
+    <value>{0}: PG UG EG SG MG TG FG RG, de Perfect Game a Rough Game.</value>
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: o top 50 médio dos {1} deles que têm um completo</value>
   </data>
   <data name="{0}: {1} of them, {2}%" xml:space="preserve">
     <value>{0}: {1} deles, {2}%</value>
+  </data>
+  <data name="{0}: {1} or {2}, then the level." xml:space="preserve">
+    <value>{0}: {1} ou {2}, depois o nível.</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>há {0} d</value>
