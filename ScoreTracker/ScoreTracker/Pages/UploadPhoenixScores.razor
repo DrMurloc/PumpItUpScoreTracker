@@ -83,12 +83,16 @@
                 }
                 <section class="siteless-spreadsheet">
                     <h3>@L["Upload a spreadsheet"]</h3>
-                    <MudText Typo="Typo.body2">@L["Fill one in yourself: one row per chart, and a better score replaces a worse one."]</MudText>
+                    <MudText Typo="Typo.body2">@L["Fill one in yourself, one row per chart. A passing row becomes your score on that chart, even if it's lower."]</MudText>
                     <MudText Typo="Typo.caption" Class="siteless-muted">@L["Spreadsheet Import Columns"]</MudText>
                     @if (_csvStep == CsvStep.Idle)
                     {
-                        <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Outlined"
-                                   StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+                        <div class="d-flex flex-wrap" style="gap:.5rem">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileDownload"
+                                       OnClick="DownloadExample">@L["Download Example"]</MudButton>
+                            <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+                        </div>
                     }
                     else
                     {
@@ -357,13 +361,17 @@
                 </li>
                 <li>
                     <MudText Typo="Typo.body2">@L["Import Manual Step 4"]</MudText>
-                    <MudButton HtmlTag="label"
-                               Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               Size="Size.Small"
-                               Class="mt-1"
-                               StartIcon="@Icons.Material.Filled.UploadFile"
-                               for="uploadInput">@L["Upload CSV"]</MudButton>
+                    <div class="d-flex flex-wrap mt-1" style="gap:.5rem">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   OnClick="DownloadExample">@L["Download Example"]</MudButton>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.UploadFile"
+                                   for="uploadInput">@L["Upload CSV"]</MudButton>
+                    </div>
                 </li>
             </ol>
         }
@@ -922,6 +930,12 @@
     private async Task DownloadFailures()
     {
         await CsvText.DownloadAsync(JSRuntime, "failedUploads.csv", _failedUploads);
+    }
+
+    private async Task DownloadExample()
+    {
+        await CsvText.DownloadAsync(JSRuntime, PhoenixScoreFileExample.FileName(_currentMix),
+            PhoenixScoreFileExample.Rows(_currentMix, _charts.Values, L));
     }
 
     private async Task SaveScores()
