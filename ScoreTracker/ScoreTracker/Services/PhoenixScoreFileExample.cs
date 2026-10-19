@@ -55,13 +55,13 @@ public static class PhoenixScoreFileExample
     public static IReadOnlyList<dynamic> Rows(MixEnum mix, IEnumerable<Chart> charts, IStringLocalizer localizer)
     {
         var profile = MixProfiles.For(mix);
+        var twoPadType = profile.ChartTypes.Contains(ChartType.Double) ? ChartType.Double : ChartType.HalfDouble;
         var (rows, notes) = profile.Awards switch
         {
-            AwardSet.PhoenixPlates => (PlateRows, PlateNotes(localizer)),
+            AwardSet.PhoenixPlates => (PlateRows, PlateNotes(localizer, twoPadType)),
             AwardSet.RiseMarks => (MarkRows, MarkNotes(localizer)),
             _ => throw new ArgumentOutOfRangeException(nameof(mix), mix, "This mix uploads through the XX page")
         };
-        var twoPadType = profile.ChartTypes.Contains(ChartType.Double) ? ChartType.Double : ChartType.HalfDouble;
         var notesHeader = localizer["Notes (not imported)"].Value;
         var catalog = charts.ToArray();
         var taken = new HashSet<Guid>();
@@ -97,8 +97,9 @@ public static class PhoenixScoreFileExample
             .FirstOrDefault();
     }
 
-    // The column names and cell values ride in as arguments, so no translation can change what the file says.
-    private static string[] PlateNotes(IStringLocalizer localizer)
+    // The column names, chart-type codes and cell values ride in as arguments, so no translation can change
+    // what the file says.
+    private static string[] PlateNotes(IStringLocalizer localizer, ChartType twoPadType)
     {
         return new[]
         {
@@ -106,7 +107,8 @@ public static class PhoenixScoreFileExample
             ScoreNote(localizer),
             localizer["{0}: PG UG EG SG MG TG FG RG, Perfect Game down to Rough Game.",
                 nameof(PhoenixSpreadsheetScoreDto.Plate)].Value,
-            localizer["{0}: S or D, then the level.", nameof(PhoenixSpreadsheetScoreDto.Difficulty)].Value,
+            localizer["{0}: {1} or {2}, then the level.", nameof(PhoenixSpreadsheetScoreDto.Difficulty),
+                ChartType.Single.GetShortHand(), twoPadType.GetShortHand()].Value,
             StageBreakNote(localizer)
         };
     }
