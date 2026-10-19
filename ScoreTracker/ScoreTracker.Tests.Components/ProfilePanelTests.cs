@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using Bunit;
 using Bunit.TestDoubles;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -24,7 +26,9 @@ using Xunit;
 
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Components;
 
@@ -179,5 +183,67 @@ public sealed class ProfilePanelTests : ComponentTestBase
             Times.Once);
         _uiSettings.Verify(u => u.ClearSetting(HardmodeOptIn.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
         Assert.False(NavigatedTo("/Account"));
+    }
+
+    private static readonly DateTimeOffset Recorded = new(2026, 10, 18, 0, 0, 0, TimeSpan.Zero);
+
+    private async Task<BunitJSModuleInterop> DownloadScoresAsync(IRenderedComponent<ProfilePanel> panel)
+    {
+        var helpers = JSInterop.SetupModule("./js/helpers.js");
+        helpers.SetupVoid("downloadFileFromStream", _ => true).SetVoidResult();
+        await panel.FindAll("button").First(b => b.TextContent.Contains("Download Scores"))
+            .ClickAsync(new MouseEventArgs());
+        return helpers;
+    }
+
+    /// <summary>
+    ///     The export is the file a player edits and uploads again, so every row has to read back in: the
+    ///     score as plain digits and the plate as the mix's own code. It wrote "991,250" and "Ultimate Game",
+    ///     and nearly every row failed on the way back.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix2)]
+    [InlineData(MixEnum.Rise)]
+    public async Task DownloadScoresHandsBackAFileTheUploadReads(MixEnum mix)
+    {
+        var passed = ScoreFileRoundTrip.CatalogChart(mix, "Conflict", ChartType.Single, 17);
+        var broken = ScoreFileRoundTrip.CatalogChart(mix, "Switronic", ChartType.Single, 18);
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { passed, broken });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RecordedPhoenixScore(passed.Id, 991250, PhoenixPlate.UltimateGame, false, Recorded),
+                new RecordedPhoenixScore(broken.Id, 702300, null, true, Recorded)
+            });
+        var panel = RenderWithStoredLanguage(null);
+
+        var helpers = await DownloadScoresAsync(panel);
+
+        var file = ScoreFileRoundTrip.DownloadedBytes(helpers.VerifyInvoke("downloadFileFromStream"));
+        var (scores, errors) = await ScoreFileRoundTrip.ReadBack(file, mix, new[] { passed, broken });
+        Assert.Empty(errors);
+        var pass = Assert.Single(scores, s => s.ChartId == passed.Id);
+        Assert.Equal(991250, (int)pass.Score!.Value);
+        Assert.Equal(PhoenixPlate.UltimateGame, pass.Plate);
+        Assert.True(Assert.Single(scores, s => s.ChartId == broken.Id).IsBroken);
+    }
+
+    /// <summary>Every mix before Phoenix keeps its records under its own name, and only XX's used to be read.</summary>
+    [Fact]
+    public async Task DownloadScoresOnAnOlderMixReadsThatMixsRecords()
+    {
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Prime2);
+        _mediator.Setup(m => m.Send(It.IsAny<GetXXBestChartAttemptsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BestXXChartAttempt>());
+        var panel = RenderWithStoredLanguage(null);
+
+        await DownloadScoresAsync(panel);
+
+        _mediator.Verify(m => m.Send(It.Is<GetXXBestChartAttemptsQuery>(q => q.Mix == MixEnum.Prime2),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

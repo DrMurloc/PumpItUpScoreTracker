@@ -978,3 +978,35 @@ a refusal is Discord blocking the write, and Murloc does not tell the two apart.
 | factor (two-factor) | lurgmrp | `blurg-lurgmrp`, hyphen kept as the English has it. |
 | authentication | glarglurgmorpgl | Four syllables for fourteen letters. |
 | Safety (Discord's *Safety Setup*) | Glubmorp | Not `Murgplgl`, which is *Remix*. |
+
+## The example CSV batch (2026-10-18)
+
+Nine strings for the import page's example spreadsheet, the site-less card's line about what an upload
+does, and step 4 of the manual import ([import-scores-refresh.md](design/import-scores-refresh.md), amended
+2026-10-18). The file's column names, the chart-type codes and `TRUE` arrive as placeholders, and the plate
+and mark codes are acronyms, so none of them needs a word. Reused as-is: `Glurg` (fill), `blubmurgl`
+(yourself), `gropmur` (in), `mrp` (one, and *the* in the step-4 line, as its older wording had it),
+`Grolgub` (row), `ba` (for, per), `Murgl` (chart), `lurgurg` (passing), `murgblarg` (becomes), `gromurp`
+(your), `Mrglrgl` (score), `ap` (on), `blubgrrgl` (that), `morgro` (even, from *even where it scores
+lower*), `ob` (if), `lurgmo` (lower), `Roblub` (notes), `bo` (not, no, don't), `grabgru` (import), `ulo`
+(as), `gl` (the), `glargmo` (game), `ug` (it, its), `ub` (only), `Ulboglurg` (Perfect Game), `glub` (down),
+`ro` (to), `ol` (or), `bamglorg` (then), `Grorpmurm` (level), `arg` (is), `Mrmurm-Groggl` (half-double),
+`mag` (with), `murmrgl` (leave), `Mrpmurg arglglorg` (stage break), `Grglargl` (upload), `blubmorg` (here,
+from the step's older wording), `blgrlgrrglmaglmorg` (spreadsheet), `Blub` (you), `algo` (keep), `grogrolg`
+(works), `ugl` (too, also), `Murlg` (download), `Bromgl` (example) and `rglgrglurg` (columns).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| imported | grabgrugro | `grabgru` + the `gro` participle ending. |
+| it's | ugarg | `ug` (it) + `arg` (is), one word because the English is one. |
+| spells | blarglub | |
+| capitals (letters) | gromblarg | |
+| matter (verb) | glumarg | |
+| digits | grumborp | Not `murgrorp`, which the judgement-count strings already spend. |
+| commas | plurgmo | Not `glorgplgl`, which is *rank*. |
+| Rough Game | Grogurglurg | One word, as `Ulboglurg` is for Perfect Game. |
+| Full Combo | Mrglmr Grombal | `mrglmr` (full) + `grombal` (combo). |
+| No Miss | Bo Glubmar | `bo` (no) + `glubmar` (miss). |
+| cleared (a pass) | lurgurggro | `lurgurg` (passing) + `gro`. |
+| mark (RISE's PG, FC, NM) | glomarg | Not `Murp` (plate): RISE stores its marks as plates but never calls them that. Not `blurp`, which the comment strings spend. |
+| empty | bamgl | On `Bam` (nothing). |

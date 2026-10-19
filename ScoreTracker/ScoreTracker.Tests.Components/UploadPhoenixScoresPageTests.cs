@@ -121,6 +121,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         Assert.Equal("_blank", privacy.GetAttribute("target"));
         Assert.Single(cut.FindAll("a[href='/Account?tab=api']"));
         Assert.Contains("Upload CSV", cut.Markup);
+        Assert.Contains(cut.FindAll("button"), b => b.TextContent.Contains("Download Example"));
         Assert.Single(cut.FindAll("input#uploadInput"));
     }
 
@@ -397,6 +398,46 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         var file = Assert.IsType<MemoryStream>(Assert.IsType<DotNetStreamReference>(download.Arguments[1]).Stream).ToArray();
         Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, file.Take(3).ToArray());
         Assert.Contains(title, Encoding.UTF8.GetString(file, 3, file.Length - 3));
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.Phoenix2)]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public async Task TheExampleUploadsAsItIs(MixEnum mix)
+    {
+        // A player who downloads the example and uploads it straight back gets every row in: each
+        // row is a chart the mix has, written in the mix's own codes.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+        var twoPad = MixProfiles.For(mix).ChartTypes.Contains(ChartType.Double) ? ChartType.Double : ChartType.HalfDouble;
+        var catalog = new[]
+        {
+            ScoreFileRoundTrip.CatalogChart(mix, "BRAIN POWER", ChartType.Single, 16),
+            ScoreFileRoundTrip.CatalogChart(mix, "Conflict", ChartType.Single, 17),
+            ScoreFileRoundTrip.CatalogChart(mix, "Chinese restaurant", ChartType.Single, 18),
+            ScoreFileRoundTrip.CatalogChart(mix, "Final Audition 2", twoPad, 20),
+            ScoreFileRoundTrip.CatalogChart(mix, "Switronic", twoPad, 18),
+            ScoreFileRoundTrip.CatalogChart(mix, "Switronic", twoPad, 22)
+        };
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(catalog);
+        var helpers = JSInterop.SetupModule("./js/helpers.js");
+        helpers.SetupVoid("downloadFileFromStream", _ => true).SetVoidResult();
+        var cut = RenderComponent<UploadPhoenixScores>();
+        if (mix.HasOfficialSite()) await cut.Find(".mud-expand-panel-header").ClickAsync(new MouseEventArgs());
+
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Download Example")).ClickAsync(new MouseEventArgs());
+
+        var download = helpers.VerifyInvoke("downloadFileFromStream");
+        Assert.Equal(PhoenixScoreFileExample.FileName(mix), download.Arguments[0]);
+        var file = ScoreFileRoundTrip.DownloadedBytes(download);
+        Assert.StartsWith("Song,Difficulty,Score,Plate,IsBroken,Notes (not imported)\r\n",
+            Encoding.UTF8.GetString(file, 3, file.Length - 3));
+        var (scores, errors) = await ScoreFileRoundTrip.ReadBack(file, mix, catalog);
+
+        Assert.Empty(errors);
+        Assert.Equal(5, scores.Count());
+        Assert.Null(Assert.Single(scores, s => s.IsBroken).Plate);
     }
 
     [Fact]

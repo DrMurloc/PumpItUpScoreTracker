@@ -112,6 +112,7 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Scores (plural / collection) | スコア | Same word — Japanese doesn't grammatically distinguish. |
 | Score (Data Backed) | スコア（データあり） | Full-width parens per the punctuation convention. |
 | Note Count | ノーツ数 | "Min/Max Note Count" → 最低/最高ノーツ数. "Notes" → ノーツ. |
+| Notes (written remarks) | メモ | Not ノーツ, which is the arrows. The example spreadsheet's `Notes (not imported)` column → メモ（インポートされません）. |
 | Step Artist | 譜面作者 | "Step Artist: X" → 譜面作者：{0}. |
 | BPM | BPM | Untranslated. "Min/Max BPM" → 最低/最高BPM. |
 | Tier List | ティアリスト | Loanword, katakana. "PIU Tier List" → PIUティアリスト, "Calculated Tier List" → 計算ティアリスト. |
