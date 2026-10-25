@@ -298,7 +298,7 @@
                             {
                                 var captured = kv.Key;
                                 <MudItem xs="8">
-                                    @foreach (var level in LevelBucket.From(captured).GetDifficulties())
+                                    @foreach (var level in BucketLevels(captured))
                                     {
                                         <MudChip T="string" Color="@(level.Item1 == ChartType.Single ? Color.Error : level.Item1 == ChartType.Double ? Color.Success : Color.Warning)"
                                                  Value="@($"{level.Item1.ToString()[0]}{level.Item2}")"></MudChip>
@@ -308,7 +308,7 @@
                                     @($"x{kv.Value}")
                                 </MudItem>
                                 <MudItem xs="2">
-                                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete"
+                                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" Class="rand-bucket-remove"
                                                    OnClick="() => RemoveBucket(captured)" aria-label="@L["Remove"]"></MudIconButton>
                                 </MudItem>
                             }
@@ -334,7 +334,8 @@
                                                  Clearable="false" HideSpinButtons="true"></MudNumericField>
                             </MudItem>
                             <MudItem xs="12" sm="2">
-                                <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="AddBucket">@L["Add"]</MudButton>
+                                <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="rand-bucket-add"
+                                           Disabled="@(!_newCustomBuckets.Any())" OnClick="AddBucket">@L["Add"]</MudButton>
                             </MudItem>
                         }
                     </MudGrid>
@@ -808,8 +809,21 @@
         await Notify();
     }
 
+    // A key that is not a bucket gets no chips: its row still shows its count and Remove, and the
+    // draw skips it the same way.
+    private static IEnumerable<(ChartType, DifficultyLevel)> BucketLevels(string key)
+    {
+        return LevelBucket.TryParse(key, out var bucket)
+            ? bucket.GetDifficulties()
+            : Array.Empty<(ChartType, DifficultyLevel)>();
+    }
+
     private async Task AddBucket()
     {
+        // Nothing picked is no bucket, and leaves the other minimums alone. The tap can land
+        // before the render that disables Add.
+        if (!_newCustomBuckets.Any()) return;
+
         Settings.ClearChartTypeMinimums();
         Settings.ClearLevelMinimums();
         Settings.ClearChartTypeLevelMinimums();
