@@ -112,7 +112,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         {
             _logger.LogError(e, "{Mix} leaderboard sweep failed; snapshot {SnapshotId} stays unsealed", mix,
                 snapshotId);
-            await _snapshots.MarkFailed(snapshotId, e.ToString(), CancellationToken.None);
+            await _snapshots.MarkFailed(snapshotId, FailureText.Of(e), CancellationToken.None);
         }
     }
 
@@ -146,7 +146,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             {
                 _logger.LogError(e, "Finishing {Mix} snapshot {SnapshotId} failed; it stays unsealed", mix,
                     snapshotId);
-                await _snapshots.MarkFailed(snapshotId, e.ToString(), CancellationToken.None);
+                await _snapshots.MarkFailed(snapshotId, FailureText.Of(e), CancellationToken.None);
             }
         }
         finally
