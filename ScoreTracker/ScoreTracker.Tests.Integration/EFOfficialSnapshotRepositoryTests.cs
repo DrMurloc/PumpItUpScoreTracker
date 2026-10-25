@@ -84,26 +84,6 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PurgeUnsealedRemovesTheRunAndItsRowsButSparesSealedOnes()
-    {
-        var snapshots = Snapshots();
-        var kept = await SeedSealedSnapshot(Week1);
-        var staleId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1.AddDays(-10),
-            CancellationToken.None);
-        await snapshots.WritePlacements(staleId, new[]
-        {
-            new PlacementRow(kept.board.Id, kept.alice.Id, 1, 991000)
-        }, CancellationToken.None);
-
-        await snapshots.PurgeUnsealed(MixEnum.Phoenix2, Week1.AddDays(-7), CancellationToken.None);
-
-        Assert.Empty(await snapshots.GetPlacements(staleId, PlacementScope.OfficialOnly, CancellationToken.None));
-        Assert.Single(await snapshots.GetPlacements(kept.snapshotId, PlacementScope.OfficialOnly, CancellationToken.None),
-            p => p.Place == 1);
-        Assert.Equal(kept.snapshotId, (await snapshots.GetLatestSealed(MixEnum.Phoenix2, CancellationToken.None))!.Id);
-    }
-
-    [Fact]
     public async Task TheSeenCheckAnswersForTheAskedPlayersFromFinishedWeeksOnly()
     {
         var snapshots = Snapshots();

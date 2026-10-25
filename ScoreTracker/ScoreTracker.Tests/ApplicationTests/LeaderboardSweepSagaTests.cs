@@ -591,14 +591,4 @@ public sealed class LeaderboardSweepSagaTests
             It.IsAny<IReadOnlyCollection<(Guid ChartId, int Place)>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
-    [Fact]
-    public async Task StaleUnsealedRunsPurgeBeforeANewRunStarts()
-    {
-        var f = Arrange();
-
-        await f.Saga.Consume(Context());
-
-        f.Snapshots.Verify(s => s.PurgeUnsealed(MixEnum.Phoenix2, Now - TimeSpan.FromDays(7),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
 }

@@ -33,7 +33,6 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     IRequestHandler<GetMissingChartsQuery, IReadOnlyList<MissingChartRecord>>,
     IRequestHandler<ResolveMissingChartCommand>
 {
-    private static readonly TimeSpan UnsealedPurgeAge = TimeSpan.FromDays(7);
     // The sweep checkpoints at least once per board, so a live run heartbeats every few
     // seconds; a run that has been silent this long is dead (killed process, deploy) and
     // must not hold the overlap lock.
@@ -93,7 +92,6 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var ct = context.CancellationToken;
         var now = _dateTime.Now;
 
-        await _snapshots.PurgeUnsealed(mix, now - UnsealedPurgeAge, ct);
         if (await _snapshots.HasLiveRun(mix, now - HeartbeatWindow, ct))
         {
             _logger.LogWarning(

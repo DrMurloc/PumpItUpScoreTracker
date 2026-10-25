@@ -17,9 +17,6 @@ internal interface IOfficialSnapshotRepository
     Task MarkFailed(int snapshotId, string error, CancellationToken ct);
     Task Seal(int snapshotId, DateTimeOffset completedAt, CancellationToken ct);
 
-    /// <summary>Deletes unsealed runs older than the cutoff, including their placement/popularity/highlight rows.</summary>
-    Task PurgeUnsealed(MixEnum mix, DateTimeOffset olderThan, CancellationToken ct);
-
     /// <summary>
     ///     True when an unsealed run has heartbeated since the cutoff — the only kind of
     ///     run the overlap guard respects. A run whose process died stops beating and no

@@ -67,26 +67,6 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 .SetProperty(s => s.Stage, "Sealed"), ct);
     }
 
-    public async Task PurgeUnsealed(MixEnum mix, DateTimeOffset olderThan, CancellationToken ct)
-    {
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        var staleIds = await database.Set<OfficialLeaderboardSnapshotEntity>()
-            .Where(s => s.MixId == mixId && s.CompletedAt == null && s.StartedAt < olderThan)
-            .Select(s => s.Id)
-            .ToArrayAsync(ct);
-        if (staleIds.Length == 0) return;
-
-        await database.Set<OfficialLeaderboardPlacementEntity>()
-            .Where(p => staleIds.Contains(p.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialChartPopularityEntity>()
-            .Where(p => staleIds.Contains(p.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialWeeklyHighlightEntity>()
-            .Where(h => staleIds.Contains(h.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialLeaderboardSnapshotEntity>()
-            .Where(s => staleIds.Contains(s.Id)).ExecuteDeleteAsync(ct);
-    }
-
     public async Task<bool> HasLiveRun(MixEnum mix, DateTimeOffset heartbeatCutoff, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
