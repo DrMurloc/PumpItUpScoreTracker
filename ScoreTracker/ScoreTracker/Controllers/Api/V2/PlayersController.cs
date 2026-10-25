@@ -452,14 +452,13 @@ public sealed class PlayersController : ApiV2ControllerBase
         }
 
         var page = userIds.Skip(offset).Take(pageSize).ToArray();
-        var rows = new List<PlayerV2Dto>();
-        foreach (var id in page)
-        {
-            var user = await _mediator.Send(new GetUserByIdQuery(id));
-            if (user is null) continue;
-
-            rows.Add(new PlayerV2Dto(user, await ResolveGameTag(id)));
-        }
+        var identities = await PlayerIdentities.Resolve(_mediator, page);
+        // Rows keep the page's order — the sorted id list the cursor counts through — whatever
+        // order the bulk read returned them in.
+        var rows = page
+            .Where(identities.ContainsKey)
+            .Select(id => new PlayerV2Dto(identities[id].User, identities[id].GameTag))
+            .ToArray();
 
         var next = offset + page.Length < userIds.Count
             ? ContinuationToken.FromOffset(offset + page.Length, fingerprint)

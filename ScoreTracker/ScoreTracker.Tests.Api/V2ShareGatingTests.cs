@@ -7,6 +7,7 @@ using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Web.Controllers.Api.V2;
 using ScoreTracker.Web.Dtos.ApiV2;
@@ -34,6 +35,10 @@ public sealed class V2ShareGatingTests
             .ReturnsAsync(Enumerable.Empty<RecordedPhoenixScore>());
         _mediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiTestData.PublicUser);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByIdsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.PublicUser });
+        _mediator.Setup(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, string>());
     }
 
     /// <param name="asTool">null builds a personal-token caller; a value builds a tool caller.</param>
