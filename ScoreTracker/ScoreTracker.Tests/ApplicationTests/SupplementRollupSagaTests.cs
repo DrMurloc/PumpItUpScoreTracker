@@ -76,7 +76,7 @@ public sealed class SupplementRollupSagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlacementRow>());
         snapshots.Setup(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<PlacementScope>(),
-                It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HashSet<int>());
         snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((SnapshotRun?)null);
@@ -110,7 +110,7 @@ public sealed class SupplementRollupSagaTests
             .ReturnsAsync((users ?? new[] { Person(PublicUser, true) }).ToArray());
 
         var records = new Mock<IOfficialRecordRepository>();
-        records.Setup(r => r.DeleteSupplementedHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        records.Setup(r => r.DeleteHighlights(It.IsAny<int>(), true, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var fixture = new Fixture(snapshots, scores, records, identity, new SupplementRollupSaga(snapshots.Object,

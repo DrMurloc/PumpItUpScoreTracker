@@ -67,26 +67,6 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 .SetProperty(s => s.Stage, "Sealed"), ct);
     }
 
-    public async Task PurgeUnsealed(MixEnum mix, DateTimeOffset olderThan, CancellationToken ct)
-    {
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        var staleIds = await database.Set<OfficialLeaderboardSnapshotEntity>()
-            .Where(s => s.MixId == mixId && s.CompletedAt == null && s.StartedAt < olderThan)
-            .Select(s => s.Id)
-            .ToArrayAsync(ct);
-        if (staleIds.Length == 0) return;
-
-        await database.Set<OfficialLeaderboardPlacementEntity>()
-            .Where(p => staleIds.Contains(p.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialChartPopularityEntity>()
-            .Where(p => staleIds.Contains(p.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialWeeklyHighlightEntity>()
-            .Where(h => staleIds.Contains(h.SnapshotId)).ExecuteDeleteAsync(ct);
-        await database.Set<OfficialLeaderboardSnapshotEntity>()
-            .Where(s => staleIds.Contains(s.Id)).ExecuteDeleteAsync(ct);
-    }
-
     public async Task<bool> HasLiveRun(MixEnum mix, DateTimeOffset heartbeatCutoff, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
@@ -141,6 +121,17 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 .Where(s => s.MixId == mixId)
                 .OrderByDescending(s => s.StartedAt)
                 .Take(count)
+                .ToArrayAsync(ct))
+            .Select(ToRun).ToArray();
+    }
+
+    public async Task<IReadOnlyList<SnapshotRun>> GetUnfinishedRuns(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return (await database.Set<OfficialLeaderboardSnapshotEntity>()
+                .Where(s => s.MixId == mixId && s.CompletedAt == null)
+                .OrderBy(s => s.StartedAt)
                 .ToArrayAsync(ct))
             .Select(ToRun).ToArray();
     }
@@ -250,20 +241,26 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return result;
     }
 
+    /// <summary>Players per seen-set query; each one is a seek on the (PlayerId, SnapshotId) index.</summary>
+    private const int SeenChunk = 500;
+
     public async Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
-        CancellationToken ct)
+        IReadOnlyCollection<int> playerIds, CancellationToken ct)
     {
+        var seen = new HashSet<int>();
+        if (playerIds.Count == 0) return seen;
+
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        // Unsealed leftovers count as "seen" — the conservative direction for a debut.
-        return (await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
-                .Where(p => p.SnapshotId < beforeSnapshotId &&
+        foreach (var chunk in playerIds.Chunk(SeenChunk))
+            seen.UnionWith(await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+                .Where(p => chunk.Contains(p.PlayerId) && p.SnapshotId < beforeSnapshotId &&
                             database.Set<OfficialLeaderboardSnapshotEntity>()
-                                .Any(s => s.Id == p.SnapshotId && s.MixId == mixId))
+                                .Any(s => s.Id == p.SnapshotId && s.MixId == mixId && s.CompletedAt != null))
                 .Select(p => p.PlayerId)
                 .Distinct()
-                .ToArrayAsync(ct))
-            .ToHashSet();
+                .ToArrayAsync(ct));
+        return seen;
     }
 
     public async Task<IReadOnlyList<PlayerDimension>> GetPlayers(MixEnum mix, CancellationToken ct)
@@ -788,7 +785,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     private static SnapshotRun ToRun(OfficialLeaderboardSnapshotEntity entity)
     {
         return new SnapshotRun(entity.Id, entity.StartedAt, entity.CompletedAt, entity.IsBaseline, entity.Stage,
-            entity.BoardsExpected, entity.BoardsWritten, entity.BoardsSkipped, entity.Error);
+            entity.BoardsExpected, entity.BoardsWritten, entity.BoardsSkipped, entity.Error, entity.LastProgressAt);
     }
 
     private static PlayerDimension ToPlayer(OfficialPlayerEntity entity)

@@ -75,8 +75,10 @@ public sealed class SupplementedPlacementTests : IAsyncLifetime
 
         // The debut seen-set: a supplemented player must not read as "already seen" to the
         // official reading, or their real first placement would never register as a debut.
-        Assert.DoesNotContain(s.Ours.Id,
-            await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, s.SnapshotId + 1, official, ct));
+        var seen = await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, s.SnapshotId + 1, official,
+            new[] { s.Official.Id, s.Ours.Id }, ct);
+        Assert.Contains(s.Official.Id, seen);
+        Assert.DoesNotContain(s.Ours.Id, seen);
 
         Assert.Single(await snapshots.GetPlayerNames(MixEnum.Phoenix2, official, ct));
     }
@@ -194,9 +196,18 @@ public sealed class SupplementedPlacementTests : IAsyncLifetime
         Assert.Equal(1, (await records.GetHighlights(s.SnapshotId, false, ct)).Single().Score);
         Assert.Equal(9, (await records.GetHighlights(s.SnapshotId, true, ct)).Single().Score);
 
-        await records.DeleteSupplementedHighlights(s.SnapshotId, ct);
+        await records.DeleteHighlights(s.SnapshotId, true, ct);
         Assert.Single(await records.GetHighlights(s.SnapshotId, false, ct));
         Assert.Empty(await records.GetHighlights(s.SnapshotId, true, ct));
+
+        // The other direction: finishing a run clears the official reading and leaves ours alone.
+        await records.WriteHighlights(s.SnapshotId, MixEnum.Phoenix2, new[]
+        {
+            new HighlightRow(HighlightKinds.WeeklyPulse, 1, null, null, null, null, null, 0, null, 9, 8, 7)
+        }, true, ct);
+        await records.DeleteHighlights(s.SnapshotId, false, ct);
+        Assert.Empty(await records.GetHighlights(s.SnapshotId, false, ct));
+        Assert.Single(await records.GetHighlights(s.SnapshotId, true, ct));
     }
 
     [Fact]

@@ -182,10 +182,10 @@ internal sealed class EFOfficialRecordRepository : IOfficialRecordRepository
             .Where(h => h.MixId == mixId).ExecuteDeleteAsync(ct);
     }
 
-    public async Task DeleteSupplementedHighlights(int snapshotId, CancellationToken ct)
+    public async Task DeleteHighlights(int snapshotId, bool isSupplemented, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         await database.Set<OfficialWeeklyHighlightEntity>()
-            .Where(h => h.SnapshotId == snapshotId && h.IsSupplemented).ExecuteDeleteAsync(ct);
+            .Where(h => h.SnapshotId == snapshotId && h.IsSupplemented == isSupplemented).ExecuteDeleteAsync(ct);
     }
 }

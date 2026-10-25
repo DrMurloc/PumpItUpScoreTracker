@@ -3274,6 +3274,12 @@
   <data name="Finish later" xml:space="preserve">
     <value>Terminar luego</value>
   </data>
+  <data name="Finish queued - watch the runs table" xml:space="preserve">
+    <value>Finalización en cola - vigila la tabla de ejecuciones</value>
+  </data>
+  <data name="Finish run" xml:space="preserve">
+    <value>Terminar ejecución</value>
+  </data>
   <data name="Finished" xml:space="preserve">
     <value>Terminada</value>
   </data>

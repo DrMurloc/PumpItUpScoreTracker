@@ -3274,6 +3274,12 @@
   <data name="Finish later" xml:space="preserve">
     <value>나중에 마무리</value>
   </data>
+  <data name="Finish queued - watch the runs table" xml:space="preserve">
+    <value>마무리 작업이 대기열에 등록되었습니다 - 실행 기록 표를 확인하세요</value>
+  </data>
+  <data name="Finish run" xml:space="preserve">
+    <value>실행 마무리</value>
+  </data>
   <data name="Finished" xml:space="preserve">
     <value>완료</value>
   </data>

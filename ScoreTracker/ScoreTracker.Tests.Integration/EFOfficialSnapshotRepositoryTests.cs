@@ -84,23 +84,51 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PurgeUnsealedRemovesTheRunAndItsRowsButSparesSealedOnes()
+    public async Task AFailedRunFinishedLaterTakesItsPlaceAmongTheWeeks()
     {
         var snapshots = Snapshots();
-        var kept = await SeedSealedSnapshot(Week1);
-        var staleId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1.AddDays(-10),
-            CancellationToken.None);
-        await snapshots.WritePlacements(staleId, new[]
-        {
-            new PlacementRow(kept.board.Id, kept.alice.Id, 1, 991000)
-        }, CancellationToken.None);
+        var ct = CancellationToken.None;
+        var week1 = await SeedSealedSnapshot(Week1);
+        var sundayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, ct);
+        var tuesdayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(2), ct);
+        await snapshots.CreateRun(MixEnum.Phoenix, false, Week2, ct);
 
-        await snapshots.PurgeUnsealed(MixEnum.Phoenix2, Week1.AddDays(-7), CancellationToken.None);
+        var unfinished = await snapshots.GetUnfinishedRuns(MixEnum.Phoenix2, ct);
 
-        Assert.Empty(await snapshots.GetPlacements(staleId, PlacementScope.OfficialOnly, CancellationToken.None));
-        Assert.Single(await snapshots.GetPlacements(kept.snapshotId, PlacementScope.OfficialOnly, CancellationToken.None),
-            p => p.Place == 1);
-        Assert.Equal(kept.snapshotId, (await snapshots.GetLatestSealed(MixEnum.Phoenix2, CancellationToken.None))!.Id);
+        Assert.Equal(new[] { sundayId, tuesdayId }, unfinished.Select(r => r.Id));
+        Assert.Equal(Week2, unfinished[0].LastProgressAt);
+
+        // Finished days later, but sealed at the time its download ended.
+        await snapshots.Seal(sundayId, Week2.AddMinutes(57), ct);
+        var nextSundayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(7), ct);
+
+        Assert.Equal(sundayId, (await snapshots.GetLatestSealed(MixEnum.Phoenix2, ct))!.Id);
+        Assert.Equal(week1.snapshotId, (await snapshots.GetSealedBefore(MixEnum.Phoenix2, sundayId, ct))!.Id);
+        Assert.Equal(sundayId, (await snapshots.GetSealedBefore(MixEnum.Phoenix2, nextSundayId, ct))!.Id);
+        Assert.Equal(new[] { tuesdayId, nextSundayId },
+            (await snapshots.GetUnfinishedRuns(MixEnum.Phoenix2, ct)).Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task TheSeenCheckAnswersForTheAskedPlayersFromFinishedWeeksOnly()
+    {
+        var snapshots = Snapshots();
+        var ct = CancellationToken.None;
+        var (_, board, alice, _) = await SeedSealedSnapshot(Week1);
+        var carol = (await snapshots.EnsurePlayers(MixEnum.Phoenix2, new[] { ("carol", (Uri?)null) }, Week1,
+            ct)).Single();
+        // Carol's only placement is in a run that never finished, so no week ever showed her.
+        var failedId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1.AddDays(2), ct);
+        await snapshots.WritePlacements(failedId, new[] { new PlacementRow(board.Id, carol.Id, 1, 999000) }, ct);
+        var currentId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, ct);
+        // More players than one query takes, so the answer has to come back from every chunk.
+        var asked = Enumerable.Range(1_000_000, 600).Append(carol.Id).Append(alice.Id).ToArray();
+
+        var seen = await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, currentId, PlacementScope.OfficialOnly,
+            asked, ct);
+
+        // Bob placed in the finished week too, but nobody asked about him.
+        Assert.Equal(new[] { alice.Id }, seen);
     }
 
     [Fact]

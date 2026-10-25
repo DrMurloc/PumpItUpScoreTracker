@@ -17,9 +17,6 @@ internal interface IOfficialSnapshotRepository
     Task MarkFailed(int snapshotId, string error, CancellationToken ct);
     Task Seal(int snapshotId, DateTimeOffset completedAt, CancellationToken ct);
 
-    /// <summary>Deletes unsealed runs older than the cutoff, including their placement/popularity/highlight rows.</summary>
-    Task PurgeUnsealed(MixEnum mix, DateTimeOffset olderThan, CancellationToken ct);
-
     /// <summary>
     ///     True when an unsealed run has heartbeated since the cutoff — the only kind of
     ///     run the overlap guard respects. A run whose process died stops beating and no
@@ -33,6 +30,9 @@ internal interface IOfficialSnapshotRepository
 
     Task<IReadOnlyList<SnapshotRun>> GetSealedAscending(MixEnum mix, CancellationToken ct);
     Task<IReadOnlyList<SnapshotRun>> GetRecentRuns(MixEnum mix, int count, CancellationToken ct);
+
+    /// <summary>Every run of this mix that never sealed, failed or still working.</summary>
+    Task<IReadOnlyList<SnapshotRun>> GetUnfinishedRuns(MixEnum mix, CancellationToken ct);
     Task<bool> AnySealed(MixEnum mix, CancellationToken ct);
 
     Task<IReadOnlyList<BoardDimension>> GetBoards(MixEnum mix, CancellationToken ct);
@@ -162,11 +162,14 @@ internal interface IOfficialSnapshotRepository
         CancellationToken ct);
 
     /// <summary>
-    ///     Every player id with a placement in any of this mix's snapshots before the given
-    ///     one — the all-history "seen" set that makes a debut a debut.
+    ///     Which of these players hold a placement in a finished week of this mix before the given
+    ///     snapshot — what makes a debut a debut. An unfinished run is never a week, so it never
+    ///     counts. The cost follows how many players are asked about, not how many weeks the table
+    ///     holds, so a caller asks only about the players it cannot settle itself
+    ///     (<see cref="SeenPlayers.ToCheck" />).
     /// </summary>
     Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
-        CancellationToken ct);
+        IReadOnlyCollection<int> playerIds, CancellationToken ct);
 
     /// <summary>One board's rows within one snapshot, in display order.</summary>
     Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, PlacementScope scope,

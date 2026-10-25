@@ -134,6 +134,7 @@ else
         <MudTh>@L["Stage"]</MudTh>
         <MudTh Style="text-align:right">@L["Boards"]</MudTh>
         <MudTh Style="text-align:right">@L["Duration"]</MudTh>
+        <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>@context.StartedAt.ToLocalTime().ToString("g")</MudTd>
@@ -165,6 +166,16 @@ else
                 ? $"{(context.CompletedAt.Value - context.StartedAt).TotalMinutes:0}m"
                 : "—")
         </MudTd>
+        <MudTd>
+            @if (context.CanFinish)
+            {
+                <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                           Disabled="_finishQueued.Contains(context.SnapshotId)"
+                           OnClick="() => FinishRun(context)" data-testid="finish-run">
+                    @L["Finish run"]
+                </MudButton>
+            }
+        </MudTd>
     </RowTemplate>
 </MudTable>
 
@@ -174,6 +185,7 @@ else
     private bool _rebuildQueued;
     private bool _popularityQueued;
     private bool _supplementQueued;
+    private readonly HashSet<int> _finishQueued = new();
     private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
     private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
     private IReadOnlyList<MissingChartRecord> _missingCharts = Array.Empty<MissingChartRecord>();
@@ -260,7 +272,20 @@ else
     {
         _mix = mix;
         _importQueued = _rebuildQueued = _popularityQueued = _supplementQueued = false;
+        _finishQueued.Clear();
         await Load();
+    }
+
+    /// <summary>
+    ///     Finishes a failed run whose download completed: its week is worked out and published,
+    ///     dated to when the download ended. The table offers it only on a run that can take its
+    ///     place as a week.
+    /// </summary>
+    private async Task FinishRun(ImportRunRecord run)
+    {
+        _finishQueued.Add(run.SnapshotId);
+        await Bus.Publish(new FinishLeaderboardRunCommand(_mix, run.SnapshotId));
+        Snackbar.Add(L["Finish queued - watch the runs table"].Value, Severity.Success);
     }
 
     /// <summary>
