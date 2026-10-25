@@ -462,7 +462,6 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("recalculate-chart-similarity",     r => r.PublishRecalculateChartSimilarity(),      "0 12 * * *"), // 07:00 ET — order-independent: reads only the piucenter crawl, not the jobs above
     ("rebuild-chart-pumbility-presence", r => r.PublishRebuildChartPresence(),            "30 12 * * *"), // 07:30 ET — order-independent: reads scores and the official ranking, not the jobs above
 
-    ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
     // The P2 pumbility board recomputes daily at 01:00 GMT+9 (16:00 UTC); Sundays 16:30 UTC
     // imports right after a fresh recompute. Requires PiuGame:ServiceUsername/ServicePassword
     // (the P2 boards are login-gated) — without them the import fails loudly naming the keys.
@@ -538,6 +537,9 @@ RecurringJob.RemoveIfExists("purge-community-highlights");
 // "process-pumbility-census" became "process-pumbility-tier-list" when the pool counts took
 // tier-list-family names; same orphaned-row hazard as above.
 RecurringJob.RemoveIfExists("process-pumbility-census");
+// Phoenix 1's weekly leaderboard import: the game is offline, so its boards no longer move. The
+// admin page's Run import now still reaches the mix by hand.
+RecurringJob.RemoveIfExists("start-leaderboard-import");
 
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

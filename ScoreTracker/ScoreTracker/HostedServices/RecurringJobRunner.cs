@@ -120,9 +120,6 @@ public sealed class RecurringJobRunner
             _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Rise)),
             _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.RiseArcade)));
 
-    public Task PublishStartLeaderboardImport() =>
-        _bus.Publish(new StartLeaderboardImportCommand());
-
     public Task PublishStartPhoenix2LeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand(MixEnum.Phoenix2));
 
