@@ -277,6 +277,16 @@ others while every test stayed green. Two ratchets hold it now (`HighlightVocabu
 `RivalUserIds` — an unpassed Blazor parameter is silently null, which is how the segmented row
 stayed unreachable in a component that had supported it all along.
 
+**A rival or clubmate glows whether or not their account is private** (owner, 2026-10-05:
+*"Rivals and Community glows always happen anywhere regardless of private status. Them being in
+your rivals or community overrides their private status for you."*). Joining a user-created
+community shares a player's existence and scores with it. A rival edge onto a private player forms
+only through a shared community or their invite code (D20, D23), and the edge is the consent (D11).
+So a board that hides private accounts from strangers still keeps the link for these rows. The bases
+are `IPlayerVisibilityReader`'s. The Official tab of a chart's leaderboard was the board that broke
+this: from 2026-08-04 it kept no private account's link but your own
+([official-leaderboards-overhaul.md](official-leaderboards-overhaul.md) L3).
+
 ### 3.7 Feeds
 
 Rivals page = rivals only, green marks clubmates. Community page = communities only, red marks
