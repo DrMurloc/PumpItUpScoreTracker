@@ -17,7 +17,8 @@ namespace ScoreTracker.Tests.Api;
 
 /// <summary>
 ///     The players list a tool crawls to learn who shared with it: one row per player, in the order
-///     the cursor counts through, each carrying one game tag — the newer Phoenix mix's link first.
+///     the cursor counts through, each carrying one game tag — the newer Phoenix mix's link first —
+///     and every page read in bulk rather than a player at a time.
 /// </summary>
 public sealed class V2PlayersListApiShapeTests
 {
@@ -44,11 +45,17 @@ public sealed class V2PlayersListApiShapeTests
     public V2PlayersListApiShapeTests()
     {
         _currentUser.SetupGet(c => c.User).Returns(ApiTestData.PublicUser);
-        _mediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GetUserByIdQuery q, CancellationToken _) => UserFor(q.UserId));
-        _mediator.Setup(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GetLinkedOfficialPlayerTagQuery q, CancellationToken _) =>
-                Tags.GetValueOrDefault((q.Mix, q.UserId)));
+        // The bulk read hands accounts back in its own order — here, the reverse of the page.
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByIdsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetUsersByIdsQuery q, CancellationToken _) => q.UserIds
+                .OrderByDescending(id => id)
+                .Select(UserFor)
+                .OfType<User>()
+                .ToArray());
+        _mediator.Setup(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetLinkedOfficialPlayerTagsQuery q, CancellationToken _) => q.UserIds
+                .Where(id => Tags.ContainsKey((q.Mix, id)))
+                .ToDictionary(id => id, id => Tags[(q.Mix, id)]));
     }
 
     private static User? UserFor(Guid id)
@@ -125,5 +132,22 @@ public sealed class V2PlayersListApiShapeTests
 
         var page = Assert.IsType<CursorPageDto<PlayerV2Dto>>(Assert.IsType<JsonResult>(result).Value);
         Assert.Equal(ApiTestData.PublicUserId, Assert.Single(page.Data).UserId);
+    }
+
+    /// <summary>
+    ///     One read for the accounts and one per mix for the tags, however long the page: a read per
+    ///     row puts hundreds of round trips behind a single response.
+    /// </summary>
+    [Fact]
+    public async Task APageIsReadInBulkRatherThanAPlayerAtATime()
+    {
+        await Controller(ThirdUserId, ApiTestData.PrivateUserId, ApiTestData.PublicUserId).GetPlayers();
+
+        _mediator.Verify(m => m.Send(It.IsAny<GetUsersByIdsQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+        _mediator.Verify(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mediator.Verify(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

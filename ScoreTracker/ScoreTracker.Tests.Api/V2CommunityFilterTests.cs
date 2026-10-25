@@ -6,6 +6,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Controllers.Api.V2;
 using ScoreTracker.Web.Dtos.ApiV2;
@@ -31,9 +32,11 @@ public sealed class V2CommunityFilterTests
     public V2CommunityFilterTests()
     {
         _currentUser.SetupGet(c => c.User).Returns(ApiTestData.PublicUser);
-        _mediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GetUserByIdQuery q, CancellationToken _) =>
-                q.UserId == ApiTestData.PrivateUserId ? ApiTestData.PrivateUser : ApiTestData.PublicUser);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByIdsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetUsersByIdsQuery q, CancellationToken _) =>
+                new[] { ApiTestData.PublicUser, ApiTestData.PrivateUser }.Where(u => q.UserIds.Contains(u.Id)).ToArray());
+        _mediator.Setup(m => m.Send(It.IsAny<GetLinkedOfficialPlayerTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, string>());
         _mediator.Setup(m => m.Send(It.IsAny<GetToolReadablePlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { ApiTestData.PublicUserId, ApiTestData.PrivateUserId });
         _mediator.Setup(m => m.Send(It.IsAny<GetToolOwnerQuery>(), It.IsAny<CancellationToken>()))
