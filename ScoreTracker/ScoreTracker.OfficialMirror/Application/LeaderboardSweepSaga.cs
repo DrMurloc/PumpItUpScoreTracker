@@ -24,19 +24,19 @@ namespace ScoreTracker.OfficialMirror.Application;
 ///     boards, chart boards (checkpointed per board), popularity, the two tier-list feeds —
 ///     and seals it. Only the seal makes the snapshot visible; a failure records its stage and
 ///     exception for /Admin/OfficialLeaderboards while the site keeps serving the last sealed
-///     snapshot, so players see stale data rather than a diagnostic.
+///     snapshot, so players see stale data rather than a diagnostic. A run that failed after its
+///     download completed is kept, and can be finished from there.
 /// </summary>
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
+    IConsumer<FinishLeaderboardRunCommand>,
     IConsumer<RebuildWeeklyHighlightsCommand>,
     IConsumer<RefreshPopularityCommand>,
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
     IRequestHandler<GetMissingChartsQuery, IReadOnlyList<MissingChartRecord>>,
     IRequestHandler<ResolveMissingChartCommand>
 {
-    // The sweep checkpoints at least once per board, so a live run heartbeats every few
-    // seconds; a run that has been silent this long is dead (killed process, deploy) and
-    // must not hold the overlap lock.
-    private static readonly TimeSpan HeartbeatWindow = TimeSpan.FromMinutes(15);
+    // One finish at a time: a second press waits here, then finds the run already finished.
+    private static readonly SemaphoreSlim FinishGate = new(1, 1);
 
     private readonly IOfficialSiteClient _officialSite;
     private readonly IOfficialSnapshotRepository _snapshots;
@@ -92,11 +92,11 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var ct = context.CancellationToken;
         var now = _dateTime.Now;
 
-        if (await _snapshots.HasLiveRun(mix, now - HeartbeatWindow, ct))
+        if (await _snapshots.HasLiveRun(mix, now - SweepRuns.HeartbeatWindow, ct))
         {
             _logger.LogWarning(
                 "A {Mix} leaderboard sweep is already in flight (heartbeat within {Window}); skipping this trigger",
-                mix, HeartbeatWindow);
+                mix, SweepRuns.HeartbeatWindow);
             return;
         }
 
@@ -116,6 +116,45 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         }
     }
 
+    /// <summary>
+    ///     Finishes a run whose download completed but which died working out its week. It runs the
+    ///     same last stretch a Sunday does, sealed at the time the download ended, so the week takes
+    ///     its place in history in order. Whatever highlights the failed attempt wrote are cleared
+    ///     first, so the week is written once.
+    /// </summary>
+    public async Task Consume(ConsumeContext<FinishLeaderboardRunCommand> context)
+    {
+        var (mix, snapshotId) = (context.Message.Mix, context.Message.SnapshotId);
+        var ct = context.CancellationToken;
+        await FinishGate.WaitAsync(ct);
+        try
+        {
+            var run = SweepRuns.NextToFinish(await _snapshots.GetUnfinishedRuns(mix, ct),
+                await _snapshots.GetLatestSealed(mix, ct), _dateTime.Now);
+            if (run?.Id != snapshotId)
+            {
+                _logger.LogWarning("{Mix} snapshot {SnapshotId} is not the run to finish next", mix, snapshotId);
+                return;
+            }
+
+            try
+            {
+                await _records.DeleteHighlights(snapshotId, false, ct);
+                await FinishRun(snapshotId, mix, run.IsBaseline, run.LastProgressAt, ct);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Finishing {Mix} snapshot {SnapshotId} failed; it stays unsealed", mix,
+                    snapshotId);
+                await _snapshots.MarkFailed(snapshotId, e.ToString(), CancellationToken.None);
+            }
+        }
+        finally
+        {
+            FinishGate.Release();
+        }
+    }
+
     private async Task RunSweep(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
     {
         var players = new SweepPlayerCache(_snapshots, mix, _dateTime.Now);
@@ -131,10 +170,21 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         await _snapshots.UpdateProgress(snapshotId, "TierLists", 0, 0, 0, _dateTime.Now, ct);
         await PopulateOfficialScoresTierList(mix, chartScores, ct);
 
-        await _snapshots.UpdateProgress(snapshotId, "Highlights", 0, 0, 0, _dateTime.Now, ct);
+        await _snapshots.UpdateProgress(snapshotId, SweepRuns.HighlightsStage, 0, 0, 0, _dateTime.Now, ct);
+        await FinishRun(snapshotId, mix, isBaseline, null, ct);
+    }
+
+    /// <summary>
+    ///     A run's last stretch, the same whether a Sunday reaches it or a failed run is finished
+    ///     later: the week's highlights, the seal, and the event the digest and the supplemented
+    ///     reading wait on. A run finished later is sealed at <paramref name="sealedAt" />.
+    /// </summary>
+    private async Task FinishRun(int snapshotId, MixEnum mix, bool isBaseline, DateTimeOffset? sealedAt,
+        CancellationToken ct)
+    {
         await ComputeHighlights(snapshotId, mix, isBaseline, ct);
 
-        await _snapshots.Seal(snapshotId, _dateTime.Now, ct);
+        await _snapshots.Seal(snapshotId, sealedAt ?? _dateTime.Now, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId} sealed", mix, snapshotId);
 
         // The digest feed reads the sealed week's highlights + cutlines; it skips baseline seals.

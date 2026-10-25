@@ -125,6 +125,11 @@ public sealed record SupplementedSummaryRecord(int Players, int Rows, DateTimeOf
 public sealed record OfficialPopularityRecord(Guid ChartId, int Place, int? PreviousPlace,
     IReadOnlyList<int> RecentPlaces);
 
+/// <param name="CanFinish">
+///     The failed run to finish next: its download completed and it is the earliest that can still
+///     take its place as a week — see <c>FinishLeaderboardRunCommand</c>. At most one run carries it.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record ImportRunRecord(int SnapshotId, DateTimeOffset StartedAt, DateTimeOffset? CompletedAt,
-    bool IsBaseline, string Stage, int BoardsExpected, int BoardsWritten, int BoardsSkipped, string? Error);
+    bool IsBaseline, string Stage, int BoardsExpected, int BoardsWritten, int BoardsSkipped, string? Error,
+    bool CanFinish);

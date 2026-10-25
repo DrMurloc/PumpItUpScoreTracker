@@ -92,7 +92,7 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
 
         // Clear this run's own previous output first, so a re-press replaces rather than doubles.
         await _snapshots.DeleteSupplementedPlacements(latest.Id, ct);
-        await _records.DeleteSupplementedHighlights(latest.Id, ct);
+        await _records.DeleteHighlights(latest.Id, true, ct);
 
         var boards = await _snapshots.GetBoards(mix, ct);
         var written = new List<PlacementRow>();

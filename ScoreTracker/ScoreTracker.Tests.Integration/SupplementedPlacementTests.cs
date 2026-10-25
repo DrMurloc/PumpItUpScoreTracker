@@ -196,9 +196,18 @@ public sealed class SupplementedPlacementTests : IAsyncLifetime
         Assert.Equal(1, (await records.GetHighlights(s.SnapshotId, false, ct)).Single().Score);
         Assert.Equal(9, (await records.GetHighlights(s.SnapshotId, true, ct)).Single().Score);
 
-        await records.DeleteSupplementedHighlights(s.SnapshotId, ct);
+        await records.DeleteHighlights(s.SnapshotId, true, ct);
         Assert.Single(await records.GetHighlights(s.SnapshotId, false, ct));
         Assert.Empty(await records.GetHighlights(s.SnapshotId, true, ct));
+
+        // The other direction: finishing a run clears the official reading and leaves ours alone.
+        await records.WriteHighlights(s.SnapshotId, MixEnum.Phoenix2, new[]
+        {
+            new HighlightRow(HighlightKinds.WeeklyPulse, 1, null, null, null, null, null, 0, null, 9, 8, 7)
+        }, true, ct);
+        await records.DeleteHighlights(s.SnapshotId, false, ct);
+        Assert.Empty(await records.GetHighlights(s.SnapshotId, false, ct));
+        Assert.Single(await records.GetHighlights(s.SnapshotId, true, ct));
     }
 
     [Fact]

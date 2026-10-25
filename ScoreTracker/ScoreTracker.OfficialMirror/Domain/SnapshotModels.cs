@@ -5,8 +5,13 @@ namespace ScoreTracker.OfficialMirror.Domain;
 /// <summary>
 ///     One sweep run: run state while executing, a snapshot once CompletedAt seals it.
 /// </summary>
+/// <param name="LastProgressAt">
+///     The run's heartbeat. Nothing stamps it once a run reaches Highlights, so on a run that died
+///     there it is the time its download ended.
+/// </param>
 internal sealed record SnapshotRun(int Id, DateTimeOffset StartedAt, DateTimeOffset? CompletedAt,
-    bool IsBaseline, string Stage, int BoardsExpected, int BoardsWritten, int BoardsSkipped, string? Error);
+    bool IsBaseline, string Stage, int BoardsExpected, int BoardsWritten, int BoardsSkipped, string? Error,
+    DateTimeOffset LastProgressAt = default);
 
 internal sealed record BoardDimension(int Id, string LeaderboardType, string Name,
     Guid? ChartId, string? ChartType, int? Level);

@@ -34,8 +34,9 @@ internal interface IOfficialRecordRepository
     Task DeleteHighlights(MixEnum mix, CancellationToken ct);
 
     /// <summary>
-    ///     Clears one snapshot's supplemented highlights so a re-run replaces its own output.
-    ///     The official rows are untouched — they belong to the sweep, not to the roll-up.
+    ///     Clears one snapshot's highlights for one reading so a re-run replaces its own output. The
+    ///     other reading's rows are untouched — the official ones belong to the sweep, the
+    ///     supplemented ones to the roll-up.
     /// </summary>
-    Task DeleteSupplementedHighlights(int snapshotId, CancellationToken ct);
+    Task DeleteHighlights(int snapshotId, bool isSupplemented, CancellationToken ct);
 }

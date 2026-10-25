@@ -110,7 +110,7 @@ public sealed class SupplementRollupSagaTests
             .ReturnsAsync((users ?? new[] { Person(PublicUser, true) }).ToArray());
 
         var records = new Mock<IOfficialRecordRepository>();
-        records.Setup(r => r.DeleteSupplementedHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        records.Setup(r => r.DeleteHighlights(It.IsAny<int>(), true, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var fixture = new Fixture(snapshots, scores, records, identity, new SupplementRollupSaga(snapshots.Object,

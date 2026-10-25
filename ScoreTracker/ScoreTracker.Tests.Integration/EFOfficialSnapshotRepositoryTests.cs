@@ -84,6 +84,32 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AFailedRunFinishedLaterTakesItsPlaceAmongTheWeeks()
+    {
+        var snapshots = Snapshots();
+        var ct = CancellationToken.None;
+        var week1 = await SeedSealedSnapshot(Week1);
+        var sundayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, ct);
+        var tuesdayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(2), ct);
+        await snapshots.CreateRun(MixEnum.Phoenix, false, Week2, ct);
+
+        var unfinished = await snapshots.GetUnfinishedRuns(MixEnum.Phoenix2, ct);
+
+        Assert.Equal(new[] { sundayId, tuesdayId }, unfinished.Select(r => r.Id));
+        Assert.Equal(Week2, unfinished[0].LastProgressAt);
+
+        // Finished days later, but sealed at the time its download ended.
+        await snapshots.Seal(sundayId, Week2.AddMinutes(57), ct);
+        var nextSundayId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(7), ct);
+
+        Assert.Equal(sundayId, (await snapshots.GetLatestSealed(MixEnum.Phoenix2, ct))!.Id);
+        Assert.Equal(week1.snapshotId, (await snapshots.GetSealedBefore(MixEnum.Phoenix2, sundayId, ct))!.Id);
+        Assert.Equal(sundayId, (await snapshots.GetSealedBefore(MixEnum.Phoenix2, nextSundayId, ct))!.Id);
+        Assert.Equal(new[] { tuesdayId, nextSundayId },
+            (await snapshots.GetUnfinishedRuns(MixEnum.Phoenix2, ct)).Select(r => r.Id));
+    }
+
+    [Fact]
     public async Task TheSeenCheckAnswersForTheAskedPlayersFromFinishedWeeksOnly()
     {
         var snapshots = Snapshots();

@@ -52,13 +52,15 @@ internal sealed class LeaderboardHubSaga :
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
     private readonly IMemoryCache _cache;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public LeaderboardHubSaga(IOfficialSnapshotRepository snapshots, IOfficialRecordRepository records,
-        IMemoryCache cache)
+        IMemoryCache cache, IDateTimeOffsetAccessor dateTime)
     {
         _snapshots = snapshots;
         _records = records;
         _cache = cache;
+        _dateTime = dateTime;
     }
 
     /// <summary>
@@ -575,9 +577,11 @@ internal sealed class LeaderboardHubSaga :
     public async Task<IReadOnlyList<ImportRunRecord>> Handle(GetImportRunsQuery request,
         CancellationToken cancellationToken)
     {
+        var next = SweepRuns.NextToFinish(await _snapshots.GetUnfinishedRuns(request.Mix, cancellationToken),
+            await _snapshots.GetLatestSealed(request.Mix, cancellationToken), _dateTime.Now);
         return (await _snapshots.GetRecentRuns(request.Mix, request.Take, cancellationToken))
             .Select(r => new ImportRunRecord(r.Id, r.StartedAt, r.CompletedAt, r.IsBaseline, r.Stage,
-                r.BoardsExpected, r.BoardsWritten, r.BoardsSkipped, r.Error))
+                r.BoardsExpected, r.BoardsWritten, r.BoardsSkipped, r.Error, r.Id == next?.Id))
             .ToArray();
     }
 

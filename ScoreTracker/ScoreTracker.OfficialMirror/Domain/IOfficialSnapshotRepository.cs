@@ -30,6 +30,9 @@ internal interface IOfficialSnapshotRepository
 
     Task<IReadOnlyList<SnapshotRun>> GetSealedAscending(MixEnum mix, CancellationToken ct);
     Task<IReadOnlyList<SnapshotRun>> GetRecentRuns(MixEnum mix, int count, CancellationToken ct);
+
+    /// <summary>Every run of this mix that never sealed, failed or still working.</summary>
+    Task<IReadOnlyList<SnapshotRun>> GetUnfinishedRuns(MixEnum mix, CancellationToken ct);
     Task<bool> AnySealed(MixEnum mix, CancellationToken ct);
 
     Task<IReadOnlyList<BoardDimension>> GetBoards(MixEnum mix, CancellationToken ct);

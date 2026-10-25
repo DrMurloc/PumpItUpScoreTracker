@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
@@ -42,6 +43,7 @@ public sealed class LeaderboardSweepSagaTests
         public Mock<IChartRepository> Charts { get; init; } = null!;
         public Mock<IMediator> Mediator { get; init; } = null!;
         public Mock<IOfficialPlayerIdentityRepository> Identity { get; init; } = null!;
+        public Mock<IBus> Bus { get; init; } = null!;
     }
 
     private static Fixture Arrange(
@@ -103,6 +105,8 @@ public sealed class LeaderboardSweepSagaTests
         snapshots.Setup(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<PlacementScope>(),
                 It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HashSet<int>());
+        snapshots.Setup(s => s.GetUnfinishedRuns(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SnapshotRun>());
 
         var records = new Mock<IOfficialRecordRepository>();
         records.Setup(r => r.GetBoardRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
@@ -116,12 +120,48 @@ public sealed class LeaderboardSweepSagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var tierLists = new Mock<ITierListRepository>();
         var mediator = new Mock<IMediator>();
+        var bus = new Mock<IBus>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
             charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
-            new Mock<IBus>().Object, mediator.Object,
+            bus.Object, mediator.Object,
             NullLogger<LeaderboardSweepSaga>.Instance);
         return new Fixture(site, snapshots, records, tierLists, saga)
-            { Charts = charts, Mediator = mediator, Identity = identity };
+            { Charts = charts, Mediator = mediator, Identity = identity, Bus = bus };
+    }
+
+    private static readonly SnapshotRun FinishedWeek = new(PreviousSnapshotId, Now.AddDays(-14),
+        Now.AddDays(-14).AddMinutes(55), false, "Sealed", 0, 0, 0, null, Now.AddDays(-14).AddMinutes(52));
+
+    private static readonly DateTimeOffset DownloadEnded = Now.AddDays(-7).AddMinutes(57);
+
+    private static SnapshotRun FailedRun(int id = SnapshotId, string stage = "Highlights", int daysAgo = 7) =>
+        new(id, Now.AddDays(-daysAgo), null, false, stage, 0, 0, 0, "Execution Timeout Expired",
+            Now.AddDays(-daysAgo).AddMinutes(57));
+
+    /// <summary>A failed run waiting to be finished, a week after the last finished week.</summary>
+    private static Fixture ArrangeFinish(params SnapshotRun[] unfinished)
+    {
+        var f = Arrange();
+        f.Snapshots.Setup(s => s.GetUnfinishedRuns(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(unfinished);
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(FinishedWeek);
+        f.Snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync(FinishedWeek);
+        f.Identity.Setup(i => i.WriteFindings(It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
+        f.Identity.Setup(i => i.GetFindings(It.IsAny<MixEnum>(), true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
+        return f;
+    }
+
+    private static ConsumeContext<FinishLeaderboardRunCommand> FinishContext(int snapshotId = SnapshotId)
+    {
+        var ctx = new Mock<ConsumeContext<FinishLeaderboardRunCommand>>();
+        ctx.SetupGet(c => c.Message).Returns(new FinishLeaderboardRunCommand(MixEnum.Phoenix2, snapshotId));
+        ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return ctx.Object;
     }
 
     private static async IAsyncEnumerable<OfficialChartBoardResult> ToAsync(
@@ -315,6 +355,69 @@ public sealed class LeaderboardSweepSagaTests
 
         f.Snapshots.Verify(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(),
             It.IsAny<PlacementScope>(), It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task FinishingAFailedRunPublishesItsWeekDatedToWhenItsDownloadEnded()
+    {
+        var f = ArrangeFinish(FailedRun());
+
+        await f.Saga.Consume(FinishContext());
+
+        // Whatever the failed attempt wrote goes first, so the week is written once.
+        f.Records.Verify(r => r.DeleteHighlights(SnapshotId, false, It.IsAny<CancellationToken>()), Times.Once);
+        f.Records.Verify(r => r.WriteHighlights(SnapshotId, MixEnum.Phoenix2,
+            It.IsAny<IReadOnlyCollection<HighlightRow>>(), false, It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.Seal(SnapshotId, DownloadEnded, It.IsAny<CancellationToken>()), Times.Once);
+        f.Bus.Verify(b => b.Publish(It.Is<OfficialSnapshotSealedEvent>(e => e.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Finishing works from the stored download; nothing is fetched again.
+        f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Site.Verify(s => s.GetRatingBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ARunWhoseDownloadNeverFinishedIsNotFinished()
+    {
+        var f = ArrangeFinish(FailedRun(stage: "ChartBoards"));
+
+        await f.Saga.Consume(FinishContext());
+
+        f.Records.Verify(r => r.DeleteHighlights(It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        f.Snapshots.Verify(s => s.Seal(It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AReTriggerCannotJumpTheSundayBeforeIt()
+    {
+        var sunday = FailedRun();
+        var tuesday = FailedRun(SnapshotId + 1, daysAgo: 5);
+        var f = ArrangeFinish(sunday, tuesday);
+
+        await f.Saga.Consume(FinishContext(tuesday.Id));
+
+        f.Snapshots.Verify(s => s.Seal(It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AFinishThatFailsLeavesTheRunUnsealedWithTheNewError()
+    {
+        var f = ArrangeFinish(FailedRun());
+        f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+
+        await f.Saga.Consume(FinishContext());
+
+        f.Snapshots.Verify(s => s.MarkFailed(SnapshotId, It.Is<string>(e => e.Contains("boom")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.Seal(It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        f.Bus.Verify(b => b.Publish(It.IsAny<OfficialSnapshotSealedEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

@@ -14,6 +14,7 @@ using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -47,11 +48,13 @@ public sealed class LeaderboardHubSagaTests
             .ReturnsAsync((IReadOnlyCollection<int> ids, CancellationToken _) =>
                 ids.Select(id => new PlayerDimension(id, $"PLAYER{id}",
                     new Uri($"https://example.invalid/{id}.png"), null)).ToArray());
+        snapshots.Setup(s => s.GetUnfinishedRuns(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SnapshotRun>());
         var records = new Mock<IOfficialRecordRepository>();
         records.Setup(r => r.GetHighlights(It.IsAny<int>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HighlightRow>());
         var saga = new LeaderboardHubSaga(snapshots.Object, records.Object,
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Week2.AddDays(3)).Object);
         return new Fixture(snapshots, records, saga);
     }
 
@@ -478,6 +481,26 @@ public sealed class LeaderboardHubSagaTests
         Assert.Null(runs[1].CompletedAt);
         Assert.Equal("ChartBoards", runs[1].Stage);
         Assert.Contains("503", runs[1].Error);
+        Assert.DoesNotContain(runs, r => r.CanFinish);
+    }
+
+    [Fact]
+    public async Task ImportRunsMarkOnlyTheRunToFinishNext()
+    {
+        var f = Arrange(Run(26, Week1));
+        var sunday = new SnapshotRun(27, Week2.AddMinutes(-40), null, false, "Highlights", 0, 0, 0,
+            "Execution Timeout Expired", Week2.AddMinutes(17));
+        var tuesday = new SnapshotRun(28, Week2.AddDays(2), null, false, "Highlights", 0, 0, 0,
+            "Execution Timeout Expired", Week2.AddDays(2).AddMinutes(57));
+        f.Snapshots.Setup(s => s.GetUnfinishedRuns(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { sunday, tuesday });
+        f.Snapshots.Setup(s => s.GetRecentRuns(MixEnum.Phoenix2, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { tuesday, sunday, Run(26, Week1) });
+
+        var runs = await f.Saga.Handle(new GetImportRunsQuery(MixEnum.Phoenix2), CancellationToken.None);
+
+        // Both are complete downloads a week after the 26th, but the Sunday goes first.
+        Assert.Equal(new[] { false, true, false }, runs.Select(r => r.CanFinish));
     }
 
     /// <summary>

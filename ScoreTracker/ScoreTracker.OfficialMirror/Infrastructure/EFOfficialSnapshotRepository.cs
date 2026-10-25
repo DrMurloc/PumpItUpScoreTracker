@@ -125,6 +125,17 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .Select(ToRun).ToArray();
     }
 
+    public async Task<IReadOnlyList<SnapshotRun>> GetUnfinishedRuns(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return (await database.Set<OfficialLeaderboardSnapshotEntity>()
+                .Where(s => s.MixId == mixId && s.CompletedAt == null)
+                .OrderBy(s => s.StartedAt)
+                .ToArrayAsync(ct))
+            .Select(ToRun).ToArray();
+    }
+
     public async Task<bool> AnySealed(MixEnum mix, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
@@ -774,7 +785,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     private static SnapshotRun ToRun(OfficialLeaderboardSnapshotEntity entity)
     {
         return new SnapshotRun(entity.Id, entity.StartedAt, entity.CompletedAt, entity.IsBaseline, entity.Stage,
-            entity.BoardsExpected, entity.BoardsWritten, entity.BoardsSkipped, entity.Error);
+            entity.BoardsExpected, entity.BoardsWritten, entity.BoardsSkipped, entity.Error, entity.LastProgressAt);
     }
 
     private static PlayerDimension ToPlayer(OfficialPlayerEntity entity)
