@@ -340,4 +340,44 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
             .QuerySelectorAll(".rand-through-btn").First(b => b.TextContent.Trim() == "Clear").ClickAsync(new MouseEventArgs());
         Assert.Empty(settings.Channels);
     }
+
+    // ── Minimum Counts: Buckets ─────────────────────────────────────────────────────────────
+
+    private static Task TapBuckets(IRenderedFragment cut)
+    {
+        return cut.FindAll(".rand-min-mode .rand-seg").Single(b => b.TextContent.Trim() == "Buckets")
+            .ClickAsync(new MouseEventArgs());
+    }
+
+    [Fact]
+    public async Task BucketAddWaitsForALevelAndWritesThePickedLevels()
+    {
+        var settings = WithSinglesRange(15, 18);
+        var cut = Render(settings);
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
+        await TapBuckets(cut);
+
+        Assert.True(cut.Find(".rand-bucket-add").HasAttribute("disabled"));
+
+        await cut.FindAll(".mud-chip").First(c => c.TextContent.Trim() == "S15").ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".mud-chip").First(c => c.TextContent.Trim() == "S17").ClickAsync(new MouseEventArgs());
+        await cut.Find(".rand-bucket-add").ClickAsync(new MouseEventArgs());
+
+        var key = Assert.Single(settings.CustomMinimums).Key;
+        Assert.Equal(new[] { "S15", "S17" }, key.Split(',').OrderBy(s => s));
+    }
+
+    [Fact]
+    public async Task ABucketKeyThatIsNotABucketRendersAsARemovableRow()
+    {
+        // A minimum derives Advanced open, so the mode buttons are on screen from the start.
+        var settings = WithSinglesRange(15, 18);
+        settings.CustomMinimums[""] = 1;
+        var cut = Render(settings);
+
+        await TapBuckets(cut);
+
+        await cut.Find(".rand-bucket-remove").ClickAsync(new MouseEventArgs());
+        Assert.Empty(settings.CustomMinimums);
+    }
 }
