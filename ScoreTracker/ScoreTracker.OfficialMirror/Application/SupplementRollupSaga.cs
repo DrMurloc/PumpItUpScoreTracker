@@ -126,16 +126,20 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
     {
         const PlacementScope scope = PlacementScope.IncludingSupplemented;
         var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
+        var current = SupplementMerge.MergedBoards(await _snapshots.GetPlacements(snapshotId, scope, ct));
+        var previousPlacements = previous == null
+            ? null
+            : SupplementMerge.MergedBoards(await _snapshots.GetPlacements(previous.Id, scope, ct));
+        var seen = isBaseline
+            ? null
+            : SeenPlayers.Combine(previousPlacements, await _snapshots.GetSeenPlayerIds(mix, snapshotId, scope,
+                SeenPlayers.ToCheck(current, previousPlacements), ct));
 
-        var input = new HighlightsInput(mix, snapshotId, isBaseline, boards,
-            SupplementMerge.MergedBoards(await _snapshots.GetPlacements(snapshotId, scope, ct)),
-            previous == null
-                ? null
-                : SupplementMerge.MergedBoards(await _snapshots.GetPlacements(previous.Id, scope, ct)),
+        var input = new HighlightsInput(mix, snapshotId, isBaseline, boards, current, previousPlacements,
             Array.Empty<BoardRecordRow>(),
             Array.Empty<FolderRecordRow>(),
             CrossMixRecordHighs.Empty,
-            await _snapshots.GetSeenPlayerIds(mix, snapshotId, scope, ct),
+            seen,
             ScoringConfiguration.PumbilityScoring(mix, false),
             false);
 

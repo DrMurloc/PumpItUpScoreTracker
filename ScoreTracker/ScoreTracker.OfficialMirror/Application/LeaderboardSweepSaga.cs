@@ -164,11 +164,16 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             previousPlacements = await _snapshots.GetPlacements(previous!.Id, PlacementScope.OfficialOnly, ct);
         }
 
+        // A baseline emits no highlights, so it has no debuts to judge.
+        var seen = isBaseline
+            ? null
+            : SeenPlayers.Combine(previousPlacements, await _snapshots.GetSeenPlayerIds(mix, snapshotId,
+                PlacementScope.OfficialOnly, SeenPlayers.ToCheck(current, previousPlacements), ct));
         var input = new HighlightsInput(mix, snapshotId, isBaseline, boards, current, previousPlacements,
             await _records.GetBoardRecords(mix, ct),
             await _records.GetFolderRecords(mix, ct),
             await _records.GetCrossMixHighs(mix, ct),
-            await _snapshots.GetSeenPlayerIds(mix, snapshotId, PlacementScope.OfficialOnly, ct),
+            seen,
             ScoringConfiguration.PumbilityScoring(mix, false));
         var result = HighlightsCalculator.Calculate(input);
         await _records.WriteHighlights(snapshotId, mix, result.Highlights, false, ct);

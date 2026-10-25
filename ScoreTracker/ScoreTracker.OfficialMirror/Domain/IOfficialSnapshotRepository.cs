@@ -162,11 +162,14 @@ internal interface IOfficialSnapshotRepository
         CancellationToken ct);
 
     /// <summary>
-    ///     Every player id with a placement in any of this mix's snapshots before the given
-    ///     one — the all-history "seen" set that makes a debut a debut.
+    ///     Which of these players hold a placement in a finished week of this mix before the given
+    ///     snapshot — what makes a debut a debut. An unfinished run is never a week, so it never
+    ///     counts. The cost follows how many players are asked about, not how many weeks the table
+    ///     holds, so a caller asks only about the players it cannot settle itself
+    ///     (<see cref="SeenPlayers.ToCheck" />).
     /// </summary>
     Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
-        CancellationToken ct);
+        IReadOnlyCollection<int> playerIds, CancellationToken ct);
 
     /// <summary>One board's rows within one snapshot, in display order.</summary>
     Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, PlacementScope scope,

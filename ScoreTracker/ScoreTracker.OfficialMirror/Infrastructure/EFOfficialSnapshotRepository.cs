@@ -250,20 +250,26 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return result;
     }
 
+    /// <summary>Players per seen-set query; each one is a seek on the (PlayerId, SnapshotId) index.</summary>
+    private const int SeenChunk = 500;
+
     public async Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
-        CancellationToken ct)
+        IReadOnlyCollection<int> playerIds, CancellationToken ct)
     {
+        var seen = new HashSet<int>();
+        if (playerIds.Count == 0) return seen;
+
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        // Unsealed leftovers count as "seen" — the conservative direction for a debut.
-        return (await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
-                .Where(p => p.SnapshotId < beforeSnapshotId &&
+        foreach (var chunk in playerIds.Chunk(SeenChunk))
+            seen.UnionWith(await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+                .Where(p => chunk.Contains(p.PlayerId) && p.SnapshotId < beforeSnapshotId &&
                             database.Set<OfficialLeaderboardSnapshotEntity>()
-                                .Any(s => s.Id == p.SnapshotId && s.MixId == mixId))
+                                .Any(s => s.Id == p.SnapshotId && s.MixId == mixId && s.CompletedAt != null))
                 .Select(p => p.PlayerId)
                 .Distinct()
-                .ToArrayAsync(ct))
-            .ToHashSet();
+                .ToArrayAsync(ct));
+        return seen;
     }
 
     public async Task<IReadOnlyList<PlayerDimension>> GetPlayers(MixEnum mix, CancellationToken ct)

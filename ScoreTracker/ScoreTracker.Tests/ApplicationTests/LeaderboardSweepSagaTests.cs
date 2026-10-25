@@ -100,6 +100,9 @@ public sealed class LeaderboardSweepSagaTests
 
         snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlayerDimension>());
+        snapshots.Setup(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<PlacementScope>(),
+                It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<int>());
 
         var records = new Mock<IOfficialRecordRepository>();
         records.Setup(r => r.GetBoardRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
@@ -270,6 +273,49 @@ public sealed class LeaderboardSweepSagaTests
 
         f.Identity.Verify(i => i.WriteFindings(It.IsAny<MixEnum>(),
             It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheDebutCheckAsksOnlyAboutPlayersMissingFromLastWeek()
+    {
+        var f = Arrange();
+        var board = new BoardDimension(1, LeaderboardTypes.Chart, "Board 1", Guid.NewGuid(), "Single", 24);
+        f.Snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { board });
+        f.Snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(PreviousSnapshotId, Now.AddDays(-7), Now.AddDays(-7), false,
+                "Sealed", 0, 0, 0, null));
+        f.Snapshots.Setup(s => s.GetPlacements(PreviousSnapshotId, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new PlacementRow(1, 11, 1, 990000) });
+        f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new PlacementRow(1, 11, 1, 991000), new PlacementRow(1, 33, 2, 980000) });
+        f.Identity.Setup(i => i.WriteFindings(It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
+        f.Identity.Setup(i => i.GetFindings(It.IsAny<MixEnum>(), true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
+
+        await f.Saga.Consume(Context());
+
+        // Player 11 was on last week's board, so only 33 goes to the history.
+        f.Snapshots.Verify(s => s.GetSeenPlayerIds(MixEnum.Phoenix2, SnapshotId, PlacementScope.OfficialOnly,
+            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 33 })),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.Seal(SnapshotId, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABaselineSweepJudgesNoDebuts()
+    {
+        var f = Arrange(hasSealed: false);
+
+        await f.Saga.Consume(Context());
+
+        f.Snapshots.Verify(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(),
+            It.IsAny<PlacementScope>(), It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

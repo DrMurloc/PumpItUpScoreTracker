@@ -75,8 +75,10 @@ public sealed class SupplementedPlacementTests : IAsyncLifetime
 
         // The debut seen-set: a supplemented player must not read as "already seen" to the
         // official reading, or their real first placement would never register as a debut.
-        Assert.DoesNotContain(s.Ours.Id,
-            await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, s.SnapshotId + 1, official, ct));
+        var seen = await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, s.SnapshotId + 1, official,
+            new[] { s.Official.Id, s.Ours.Id }, ct);
+        Assert.Contains(s.Official.Id, seen);
+        Assert.DoesNotContain(s.Ours.Id, seen);
 
         Assert.Single(await snapshots.GetPlayerNames(MixEnum.Phoenix2, official, ct));
     }

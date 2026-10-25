@@ -104,6 +104,28 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheSeenCheckAnswersForTheAskedPlayersFromFinishedWeeksOnly()
+    {
+        var snapshots = Snapshots();
+        var ct = CancellationToken.None;
+        var (_, board, alice, _) = await SeedSealedSnapshot(Week1);
+        var carol = (await snapshots.EnsurePlayers(MixEnum.Phoenix2, new[] { ("carol", (Uri?)null) }, Week1,
+            ct)).Single();
+        // Carol's only placement is in a run that never finished, so no week ever showed her.
+        var failedId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1.AddDays(2), ct);
+        await snapshots.WritePlacements(failedId, new[] { new PlacementRow(board.Id, carol.Id, 1, 999000) }, ct);
+        var currentId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, ct);
+        // More players than one query takes, so the answer has to come back from every chunk.
+        var asked = Enumerable.Range(1_000_000, 600).Append(carol.Id).Append(alice.Id).ToArray();
+
+        var seen = await snapshots.GetSeenPlayerIds(MixEnum.Phoenix2, currentId, PlacementScope.OfficialOnly,
+            asked, ct);
+
+        // Bob placed in the finished week too, but nobody asked about him.
+        Assert.Equal(new[] { alice.Id }, seen);
+    }
+
+    [Fact]
     public async Task ChartBoardDepthsCountOneSnapshotsRowsInTheirScopeBoardByBoard()
     {
         var snapshots = Snapshots();
