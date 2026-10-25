@@ -3291,6 +3291,12 @@
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
   </data>
+  <data name="Finish queued - watch the runs table" xml:space="preserve">
+    <value>仕上げをキューに追加しました - 実行履歴テーブルを確認してください</value>
+  </data>
+  <data name="Finish run" xml:space="preserve">
+    <value>実行を仕上げる</value>
+  </data>
   <data name="Finished" xml:space="preserve">
     <value>完了</value>
   </data>
