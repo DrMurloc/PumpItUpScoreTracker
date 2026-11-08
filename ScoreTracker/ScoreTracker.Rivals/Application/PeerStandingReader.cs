@@ -164,12 +164,13 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         var me = _currentUser.User.Id;
         var selection = await ReadSelection(me, cancellationToken);
         var myStats = await _stats.GetStats(request.Mix, me, cancellationToken);
-        var myLevel = LevelOn(myStats, request.Dimension);
+        var dimension = OnMix(request.Mix, request.Dimension);
+        var myLevel = LevelOn(myStats, dimension);
         if (!selection.Any) return new PeerList(Array.Empty<PeerListEntry>(), Array.Empty<RivalSubject>(), 0, myLevel);
 
         // The list is sorted on one dimension, so its band is that dimension's; the combined level
         // has no PUMBILITY pool of its own, so Combined draws both types' peers.
-        var peers = await ResolvePeers(me, request.Mix, request.Dimension, selection, cancellationToken,
+        var peers = await ResolvePeers(me, request.Mix, dimension, selection, cancellationToken,
             forRoster: true);
         // The two bulk reads — every peer's account and stats — are the widget's whole cost and
         // ran on every dashboard load. Read with the viewer put back and cached by the peer set
@@ -195,7 +196,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
 
         var rows = visible
             .Select(u => new PeerListEntry(u,
-                levels.TryGetValue(u.Id, out var s) ? LevelOn(s, request.Dimension) : 0,
+                levels.TryGetValue(u.Id, out var s) ? LevelOn(s, dimension) : 0,
                 peers.Has(PeerSourceKind.Rivals, u.Id),
                 peers.CommunityNames(u.Id),
                 peers.Has(PeerSourceKind.CompetitiveLevel, u.Id),
@@ -227,14 +228,19 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
 
         var stats = await _stats.GetStats(request.Mix, me, cancellationToken);
         options.Add(new PeerSourceOption(PeerSourceKind.CompetitiveLevel, null, string.Empty, false, false, true,
-            await CompetitiveBand(request.Mix, ChartType.Single, stats, me, cancellationToken),
-            await CompetitiveBand(request.Mix, ChartType.Double, stats, me, cancellationToken), 0));
+            await CompetitiveBand(request.Mix, PumbilityPools.SinglesOn(request.Mix), stats, me, cancellationToken),
+            await CompetitiveBand(request.Mix, PumbilityPools.DoublesOn(request.Mix), stats, me, cancellationToken),
+            0));
 
-        var pumbilityAvailable = request.Mix == MixEnum.Phoenix2;
+        var pumbilityAvailable = request.Mix.UsesPhoenix2Pumbility();
         options.Add(new PeerSourceOption(PeerSourceKind.Pumbility, null, string.Empty, false, false,
             pumbilityAvailable,
-            pumbilityAvailable ? await PumbilityPeers(request.Mix, ChartType.Single, me, cancellationToken) : NoIds,
-            pumbilityAvailable ? await PumbilityPeers(request.Mix, ChartType.Double, me, cancellationToken) : NoIds,
+            pumbilityAvailable
+                ? await PumbilityPeers(request.Mix, PumbilityPools.SinglesOn(request.Mix), me, cancellationToken)
+                : NoIds,
+            pumbilityAvailable
+                ? await PumbilityPeers(request.Mix, PumbilityPools.DoublesOn(request.Mix), me, cancellationToken)
+                : NoIds,
             0));
 
         foreach (var community in (await _communities.GetUserCommunities(me, cancellationToken))
@@ -329,7 +335,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                     community.CommunityName.ToString(), community.IsRegional, IsWorld(community),
                     await CommunityMembers(community, userId, cancellationToken)));
 
-        var bandType = forRoster ? chartType : BandTypeFor(chartType);
+        var bandType = forRoster ? chartType : BandTypeFor(mix, chartType);
         var hasBand = forRoster || bandType != null;
         if (selection.CompetitiveLevel && hasBand)
         {
@@ -340,11 +346,11 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
 
         // The PUMBILITY read is the viewer's own sweep (D31 leaves them out already), so it only
         // answers for the current user — which every caller that ticks it is.
-        if (selection.Pumbility && mix == MixEnum.Phoenix2 && _currentUser.IsLoggedIn &&
+        if (selection.Pumbility && mix.UsesPhoenix2Pumbility() && _currentUser.IsLoggedIn &&
             _currentUser.User.Id == userId && (forRoster || bandType != null))
         {
             var ids = new HashSet<PeerVoice>();
-            foreach (var type in bandType is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+            foreach (var type in bandType is { } one ? new[] { one } : PumbilityPools.TypesOn(mix))
                 ids.UnionWith(await PumbilityPeers(mix, type, userId, cancellationToken));
             peers.Add(new PeerStandingCalculator.SourceMembers(PeerSourceKind.Pumbility, null, null, false, false,
                 ids));
@@ -353,20 +359,31 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return peers;
     }
 
-    private static ChartType? BandTypeFor(ChartType? chartType) => chartType switch
+    /// <summary>
+    ///     The band a chart of this type is placed in: the mix's own Singles or Doubles type, so a
+    ///     RISE half-double meets its doubles peers. Any other type has no band.
+    /// </summary>
+    private static ChartType? BandTypeFor(MixEnum mix, ChartType? chartType) =>
+        chartType == PumbilityPools.SinglesOn(mix) || chartType == PumbilityPools.DoublesOn(mix) ? chartType : null;
+
+    /// <summary>
+    ///     A dimension a caller names as the mix fills that folder: a Singles- or Doubles-folder
+    ///     type answers the mix's own, so a roster asked for Doubles on RISE reads its half-doubles.
+    /// </summary>
+    private static ChartType? OnMix(MixEnum mix, ChartType? type) => type?.Category() switch
     {
-        ChartType.Single => ChartType.Single,
-        ChartType.Double => ChartType.Double,
-        _ => null
+        ChartTypeCategory.Single => PumbilityPools.SinglesOn(mix),
+        ChartTypeCategory.Double => PumbilityPools.DoublesOn(mix),
+        _ => type
     };
 
     private static bool IsWorld(CommunityOverviewRecord community) =>
         community.CommunityName.ToString().Equals(WorldCommunity, StringComparison.OrdinalIgnoreCase);
 
-    private static double LevelOn(PlayerStatsRecord stats, ChartType? dimension) => dimension switch
+    private static double LevelOn(PlayerStatsRecord stats, ChartType? dimension) => dimension?.Category() switch
     {
-        ChartType.Single => stats.SinglesCompetitiveLevel,
-        ChartType.Double => stats.DoublesCompetitiveLevel,
+        ChartTypeCategory.Single => stats.SinglesCompetitiveLevel,
+        ChartTypeCategory.Double => stats.DoublesCompetitiveLevel,
         _ => stats.CompetitiveLevel
     };
 
