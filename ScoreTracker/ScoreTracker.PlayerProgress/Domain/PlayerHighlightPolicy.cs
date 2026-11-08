@@ -59,13 +59,14 @@ internal static class PlayerHighlightPolicy
     private const string PerfectGamePlate = "Perfect Game";
     private const string DefaultTitleDescription = "Default title";
 
-    // Name → rung for the three Phoenix 2 PUMBILITY pool ladders ([S], [D], [P.B] total) — the
+    // Name → rung for each mix's three PUMBILITY pool ladders ([S], [D], [P.B] total) — the
     // only titles that roll up (owner, 2026-08-14: "specifically only the pumbility titles").
     // Phoenix 1 has no pool ladders; its difficulty titles print one row per rung like every
     // other family.
-    private static readonly IReadOnlyDictionary<string, Phoenix2PumbilityTitle> Phoenix2PumbilityRungs =
-        Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
-            .ToDictionary(t => t.Name.ToString(), t => t, StringComparer.OrdinalIgnoreCase);
+    private static readonly IReadOnlyDictionary<MixEnum, IReadOnlyDictionary<string, Phoenix2PumbilityTitle>>
+        PumbilityRungs = Enum.GetValues<MixEnum>().Where(m => m.UsesPhoenix2Pumbility())
+            .ToDictionary(m => m, m => (IReadOnlyDictionary<string, Phoenix2PumbilityTitle>)PumbilityLadders.For(m)
+                .ToDictionary(t => t.Name.ToString(), t => t, StringComparer.OrdinalIgnoreCase));
 
     private static readonly IReadOnlyDictionary<string, Phoenix2PumbilityTitle> NoPumbilityRungs =
         new Dictionary<string, Phoenix2PumbilityTitle>(StringComparer.OrdinalIgnoreCase);
@@ -183,7 +184,7 @@ internal static class PlayerHighlightPolicy
             .Where(t => !DefaultTitleNames.Contains(t))
             .ToArray();
 
-        var rungs = mix == MixEnum.Phoenix2 ? Phoenix2PumbilityRungs : NoPumbilityRungs;
+        var rungs = PumbilityRungs.GetValueOrDefault(mix) ?? NoPumbilityRungs;
 
         // The ladder story leads: one span per pool whose rungs order by threshold, a lone rung
         // staying a plain title row.

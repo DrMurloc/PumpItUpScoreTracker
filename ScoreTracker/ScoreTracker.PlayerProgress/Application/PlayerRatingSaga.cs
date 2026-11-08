@@ -113,13 +113,13 @@ internal sealed class PlayerRatingSaga :
             .ToDictionary(c => c.Id);
         var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
 
-        // Phoenix 2 prices plates into the ranking; Phoenix keeps its historical plate-blind
+        // Phoenix 2's rules price plates into the ranking; Phoenix keeps its historical plate-blind
         // ordering byte-identical. Stage breaks never reach here — the filter below drops
         // them, which is why this may not pass IsBroken on the Phoenix branch: the argument
         // is positional, so supplying it would drag the plate in with it.
         double Rank(RecordedPhoenixScore s)
         {
-            return request.Mix == MixEnum.Phoenix2
+            return request.Mix.UsesPhoenix2Pumbility()
                 ? scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value,
                     s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)
                 : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
@@ -338,12 +338,12 @@ internal sealed class PlayerRatingSaga :
             ? await _scores.GetBestScores(mix, request.UserId, cancellationToken)
             : await _scores.GetBestScores(mix, request.UserId, season, cancellationToken)).ToArray();
 
-        // Phoenix 2's formula prices the plate (and zeroes stage breaks); Phoenix keeps its
+        // Phoenix 2's rules price the plate (and zero stage breaks); Phoenix keeps its
         // historical plate-blind rating byte-identical.
         double Rate(RecordedPhoenixScore s)
         {
             if (scoring == null) return 0;
-            return mix == MixEnum.Phoenix2
+            return mix.UsesPhoenix2Pumbility()
                 ? scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value,
                     s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)
                 : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
@@ -368,11 +368,12 @@ internal sealed class PlayerRatingSaga :
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Singles = pooled.Where(s => !s.IsBroken && s.Type == ChartType.Single)
+        // Each pool is the mix's own type for its folder, so RISE's half-doubles are its doubles.
+        var top50Singles = pooled.Where(s => !s.IsBroken && s.Type == PumbilityPools.SinglesOn(mix))
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Doubles = pooled.Where(s => !s.IsBroken && s.Type == ChartType.Double)
+        var top50Doubles = pooled.Where(s => !s.IsBroken && s.Type == PumbilityPools.DoublesOn(mix))
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
@@ -553,20 +554,23 @@ internal sealed class PlayerRatingSaga :
         CancellationToken cancellationToken)
     {
         var milestones = new List<PlayerMilestoneWrite>();
-        if (newStats.SkillRating > oldStats.SkillRating)
+        var pumbilityBefore = await IsPumbilityDebut(request, cancellationToken)
+            ? oldStats with { SkillRating = 0, SinglesRating = 0, DoublesRating = 0 }
+            : oldStats;
+        if (newStats.SkillRating > pumbilityBefore.SkillRating)
             milestones.Add(new PlayerMilestoneWrite(MilestoneKind.PumbilityGain, request.SessionId, _dateTime.Now,
-                oldStats.SkillRating, newStats.SkillRating));
-        // Phoenix 2's separate Singles/Doubles PUMBILITY pools mint their own milestones —
-        // the P2 title ladder gates on them. Phoenix stays total-only: its S/D ratings
-        // exist too, but pre-P2 sessions never minted them and shouldn't start now.
-        if (request.Mix == MixEnum.Phoenix2)
+                pumbilityBefore.SkillRating, newStats.SkillRating));
+        // Phoenix 2's rules keep separate Singles/Doubles PUMBILITY pools, and they mint their own
+        // milestones — the title ladders gate on them. Phoenix stays total-only: its S/D ratings
+        // exist too, but its sessions never minted them and shouldn't start now.
+        if (request.Mix.UsesPhoenix2Pumbility())
         {
-            if (newStats.SinglesRating > oldStats.SinglesRating)
+            if (newStats.SinglesRating > pumbilityBefore.SinglesRating)
                 milestones.Add(new PlayerMilestoneWrite(MilestoneKind.SinglesPumbilityGain, request.SessionId,
-                    _dateTime.Now, oldStats.SinglesRating, newStats.SinglesRating));
-            if (newStats.DoublesRating > oldStats.DoublesRating)
+                    _dateTime.Now, pumbilityBefore.SinglesRating, newStats.SinglesRating));
+            if (newStats.DoublesRating > pumbilityBefore.DoublesRating)
                 milestones.Add(new PlayerMilestoneWrite(MilestoneKind.DoublesPumbilityGain, request.SessionId,
-                    _dateTime.Now, oldStats.DoublesRating, newStats.DoublesRating));
+                    _dateTime.Now, pumbilityBefore.DoublesRating, newStats.DoublesRating));
         }
 
         // Official rank improves DOWNWARD, and only an improvement mints. An undo republishes
@@ -598,6 +602,20 @@ internal sealed class PlayerRatingSaga :
             .Select(m => new PlayerMilestoneRecord(m.Kind, m.SessionId, m.OccurredAt, m.OldValue, m.NewValue,
                 m.Title, m.Detail))
             .ToArray();
+    }
+
+    /// <summary>
+    ///     Whether this announcement is the player's first PUMBILITY on the mix, which reads from
+    ///     zero whatever the stored number says. Only on a mix with no official site: there the site
+    ///     is the only place a player's PUMBILITY has ever been shown, so no PUMBILITY milestone yet
+    ///     means none was ever announced, while a quiet re-price may already have stored the number
+    ///     (docs/design/rise.md D32). On a mix with a site, piugame showed the number first.
+    /// </summary>
+    private async Task<bool> IsPumbilityDebut(RecalculateStatsCommand request, CancellationToken cancellationToken)
+    {
+        return request.Mix.HasPumbility() && !request.Mix.HasOfficialSite() &&
+               !await _milestones.HasMilestone(request.Mix, request.UserId, MilestoneKind.PumbilityGain,
+                   cancellationToken);
     }
 
     // The revision-2 noise floor (owner call): competitive micro-gains under a
@@ -697,7 +715,7 @@ internal sealed class PlayerRatingSaga :
         double PriceAt(Guid chartId, int score)
         {
             var chart = charts[chartId];
-            if (mix != MixEnum.Phoenix2)
+            if (!mix.UsesPhoenix2Pumbility())
                 return scoring.GetScore(chart.Type, chart.Level, PhoenixScore.From(score));
 
             var plate = bests.TryGetValue(chartId, out var best) ? best.Plate : null;

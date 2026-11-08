@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -230,6 +231,87 @@ public sealed class TitleSagaTests
             .ToArray();
         Assert.Equal(expected, pumbilityRungs);
     }
+
+    [Fact]
+    public async Task ARisePlayersFirstTitleCardNamesTheHighestRungOfEachLadderTheyHold()
+    {
+        // Fifty level-20 half-doubles at 990,000 hold [D] ADVANCED LV.8 and [P.B] DIAMOND. The batch
+        // itself crosses nothing; the site has simply never awarded this player a RISE title.
+        var halfDoubles = RiseHalfDoubles(50);
+        var ctx = new SagaContext(MixEnum.Rise, halfDoubles);
+        ctx.GivenBestScores(halfDoubles.Select(c => Score(c.Id, 990000)).ToArray());
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Rise,
+                Guid.NewGuid(),
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(halfDoubles[0].Id, false, 989000, 990000,
+                    "SuperbGame", false) }),
+            CancellationToken.None);
+
+        Assert.Equal(new[] { "[P.B] DIAMOND", "[D] ADVANCED LV.8" },
+            result.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).Select(m => m.Title));
+        // The rungs below them were earned on the way and are minted nowhere, card or table.
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Rise, ctx.UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Count(x => x.Kind == MilestoneKind.TitleCompleted) == 2),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AfterTheFirstRiseTitleCardOnlyTheRungsTheBatchCrossesAnnounce()
+    {
+        // The batch lifts every chart from 990,000 to a Perfect Game: [D] ADVANCED LV.9 crosses at
+        // 17,400. Everything held before it was awarded on an earlier card.
+        var halfDoubles = RiseHalfDoubles(50);
+        var charts = halfDoubles.ToDictionary(c => c.Id);
+        var ctx = new SagaContext(MixEnum.Rise, halfDoubles);
+        ctx.GivenBestScores(halfDoubles.Select(c => PerfectGame(c.Id)).ToArray());
+        var before = halfDoubles.Select(c => PerfectGame(c.Id) with { Score = 990000 });
+        var awarded = TitleLists.For(MixEnum.Rise)!.BuildProgress(charts, before, new HashSet<Name>())
+            .Where(t => t.IsComplete)
+            .Select(t => new TitleAchievedRecord(ctx.UserId, t.Title.Name, ParagonLevel.None))
+            .ToArray();
+        ctx.Titles.Setup(t => t.GetCompletedTitles(MixEnum.Rise, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(awarded);
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Rise,
+                Guid.NewGuid(),
+                halfDoubles.Select(c => new PlayerScoresUpdatedEvent.ScoreChange(c.Id, false, 990000, 1000000,
+                    "PerfectGame", false)).ToArray()),
+            CancellationToken.None);
+
+        Assert.NotEmpty(awarded);
+        Assert.Equal(new[] { "[D] ADVANCED LV.9" },
+            result.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).Select(m => m.Title));
+    }
+
+    [Fact]
+    public async Task APhoenix2CardStillAnnouncesOnlyWhatTheBatchCrossed()
+    {
+        // Phoenix 2's titles come from piugame first, so a held rung missing from the saved set says
+        // nothing about what the player has seen: the batch's own crossings are all that announce.
+        var doubles = Enumerable.Range(0, 50)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build())
+            .ToArray();
+        var ctx = new SagaContext(MixEnum.Phoenix2, doubles);
+        ctx.GivenBestScores(doubles.Select(c => Score(c.Id, 990000)).ToArray());
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix2,
+                Guid.NewGuid(),
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(doubles[0].Id, false, 989000, 990000,
+                    "SuperbGame", false) }),
+            CancellationToken.None);
+
+        Assert.DoesNotContain(result.Milestones, m => m.Kind == MilestoneKind.TitleCompleted);
+    }
+
+    private static Chart[] RiseHalfDoubles(int count) =>
+        Enumerable.Range(0, count)
+            .Select(_ => new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build())
+            .ToArray();
+
+    private static RecordedPhoenixScore PerfectGame(Guid chartId) =>
+        new(chartId, 1000000, PhoenixPlate.PerfectGame, false,
+            new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
     // Strip a trailing "LV.N" / "Lv. N" rung number so sibling rungs collapse to one ladder key.
     private static string LadderBase(TitleProgressDelta delta) =>

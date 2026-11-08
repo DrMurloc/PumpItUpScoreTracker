@@ -56,6 +56,16 @@ internal sealed class EFPlayerMilestoneRepository : IPlayerMilestoneRepository
             .Cast<PlayerMilestoneRecord>();
     }
 
+    public async Task<bool> HasMilestone(MixEnum mix, Guid userId, MilestoneKind kind,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        var kindName = kind.ToString();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<PlayerMilestoneEntity>()
+            .AnyAsync(e => e.UserId == userId && e.MixId == mixId && e.Kind == kindName, cancellationToken);
+    }
+
     public async Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId,
         IEnumerable<Guid> sessionIds, CancellationToken cancellationToken)
     {

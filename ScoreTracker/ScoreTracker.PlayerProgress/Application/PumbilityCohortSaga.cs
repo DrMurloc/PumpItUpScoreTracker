@@ -85,7 +85,7 @@ namespace ScoreTracker.PlayerProgress.Application
         {
             // Phoenix 1 has no ladder to band a pool on: a difficulty title is rating earned on one
             // level, which no total can be banded into, and the highest one is already stored.
-            if (mix != MixEnum.Phoenix2)
+            if (!mix.UsesPhoenix2Pumbility())
             {
                 var mine = chosen ?? await _titles.GetHighestTitle(mix, userId, cancellationToken);
                 if (mine is not { } title) return (null, Empty);
@@ -141,7 +141,7 @@ namespace ScoreTracker.PlayerProgress.Application
             // No request token: a band's reading outlives the request that first asked for it, and
             // cancelling it would fault the cached task for everyone else waiting on the same one.
             var token = CancellationToken.None;
-            var types = TypesOf(pool);
+            var types = TypesOf(mix, pool);
             var holders = band == null
                 ? (await _titles.GetUserIdsWithHighestTitle(mix, title, token)).ToHashSet()
                 : (await _stats.GetPlayersInPoolBand(mix, pool, band.Floor, band.Ceiling, token)).ToHashSet();
@@ -244,7 +244,7 @@ namespace ScoreTracker.PlayerProgress.Application
             PumbilityPool pool, Guid userId, IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
             CancellationToken cancellationToken)
         {
-            var types = TypesOf(pool);
+            var types = TypesOf(mix, pool);
             // One definition of the viewer's fifty, carried out with its scores as well as its
             // charts: the level spread counts the charts and the archetype bands the scores, and
             // the two describing different fifties is exactly the disagreement to avoid.
@@ -264,13 +264,13 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     The chart types a pool is made of. The merged pool holds both, and its fifty is one
         ///     fifty drawn across them — never a singles fifty added to a doubles one.
         /// </summary>
-        private static IReadOnlyList<ChartType> TypesOf(PumbilityPool pool)
+        private static IReadOnlyList<ChartType> TypesOf(MixEnum mix, PumbilityPool pool)
         {
             return pool switch
             {
-                PumbilityPool.Singles => new[] { ChartType.Single },
-                PumbilityPool.Doubles => new[] { ChartType.Double },
-                _ => new[] { ChartType.Single, ChartType.Double }
+                PumbilityPool.Singles => new[] { PumbilityPools.SinglesOn(mix) },
+                PumbilityPool.Doubles => new[] { PumbilityPools.DoublesOn(mix) },
+                _ => PumbilityPools.TypesOn(mix)
             };
         }
     }
