@@ -185,14 +185,14 @@
     private string DownloadFileName =>
         ShareCardTitles.PoolFileName(Page.Mix, Page.Pool_?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
 
-    /// <summary>Which pool the fifty are — said only on Phoenix 2, where pools are per type.</summary>
-    private string? SharePoolLabel => Page.Mix != MixEnum.Phoenix2 ? null :
-        Page.Pool_ switch
+    /// <summary>Which pool the fifty are — said only on Phoenix 2's rules, where pools are per type.</summary>
+    private string? SharePoolLabel => !Page.Mix.UsesPhoenix2Pumbility() ? null :
+        Page.Pool_?.Category() switch
         {
             null => L["All pools"],
-            ChartType.Single => L["Singles pool"],
-            ChartType.Double => L["Doubles pool"],
-            var other => other.ToString()
+            ChartTypeCategory.Single => L["Singles pool"],
+            ChartTypeCategory.Double => L["Doubles pool"],
+            _ => Page.Pool_.ToString()
         };
 
     /// <summary>The page and the block name the rows; no Energy, because nothing on this page reads one (§3.11).</summary>

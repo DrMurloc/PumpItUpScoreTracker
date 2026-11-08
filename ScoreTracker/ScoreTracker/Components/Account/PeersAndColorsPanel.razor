@@ -356,7 +356,7 @@
     {
         PeerSourceKind.Rivals => L["Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes."],
         PeerSourceKind.CompetitiveLevel => L["Players within half a level of you, per chart type — today's definition."],
-        _ => L["Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty."]
+        _ => L["Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty."]
     };
 
     private string SourceCount(PeerSourceOption option) => option.Kind switch
@@ -364,7 +364,7 @@
         PeerSourceKind.Rivals => option.BoardOnlyRivals > 0
             ? L["{0} players · {1} board-only", option.SinglesMembers.Count + option.BoardOnlyRivals, option.BoardOnlyRivals]
             : L["{0} players (rivals)", option.SinglesMembers.Count],
-        PeerSourceKind.Pumbility when !option.Available => L["Phoenix 2 only"],
+        PeerSourceKind.Pumbility when !option.Available => L["Not on this mix"],
         _ => L["{0} singles · {1} doubles", option.SinglesMembers.Count, option.DoublesMembers.Count]
     };
 

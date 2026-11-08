@@ -124,7 +124,9 @@
       "defaultSize": "1x2",
       "supportedMixes": [
         "Phoenix",
-        "Phoenix2"
+        "Phoenix2",
+        "Rise",
+        "RiseArcade"
       ],
       "configSchema": {
         "type": "object",

@@ -110,7 +110,7 @@
                         Lowest!.AverageLevel.ToString("0.0"), Highest!.AverageLevel.ToString("0.0"), SOrBetter(Lowest!).ToString("0"), SOrBetter(Highest!).ToString("0"),
                         Math.Round(PumbilityLevelEquivalence.LevelsBought(Model.Scoring, ChartType.Double, 20, PhoenixLetterGrade.SSSPlus)).ToString("0")]
                 }
-                @if (Composition!.PoolsCounted < 100)
+                @if (Composition!.PoolsCounted < PumbilityPoolCompositionRecord.EarlyDaysPools)
                 {
                     <span class="pc-muted"> @L["Early days: {0} full pools.", Composition.PoolsCounted]</span>
                 }

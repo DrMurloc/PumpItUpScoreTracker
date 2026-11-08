@@ -171,7 +171,7 @@ else
     @* The context caption: the one chip that is a warning, and who the personalized list
        ranked you against — a note under the controls, not a headline. The lens-naming
        chips died with the Advanced drawer: the selects are visible at every width now. *@
-    @if (_isProvisionalFallback || (PersonalizedActive && _peerCount > 0))
+    @if (_isProvisionalFallback || (PersonalizedActive && _peerCount > 0) || IsEarlyDays)
     {
         <div class="tier-context-line">
             @if (_isProvisionalFallback)
@@ -183,10 +183,16 @@ else
                too (D23, D55): the players whose pool of the type sits within the window around
                yours (D53) — while Phoenix 1 keeps the difficulty-title level on PUMBILITY and the
                competitive band on Score. *@
+            @if (IsEarlyDays)
+            {
+                <span data-testid="tier-early-days">
+                    @L["Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs.", _peerCount]
+                </span>
+            }
             @if (PersonalizedActive && _peerCount > 0)
             {
                 <span>
-                    @(_currentMix == MixEnum.Phoenix2
+                    @(_currentMix.UsesPhoenix2Pumbility()
                         ? L["Ranked against {0} PUMBILITY peers whose pool sits within {1} below and {2} above yours", _peerCount,
                             PeerGroup.PumbilityWindowBelow.ToString("N0"), PeerGroup.PumbilityWindowAbove.ToString("N0")]
                         : _tierListType == "PUMBILITY"
@@ -274,9 +280,10 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend ShowOtherMix="_settings.ShowOtherMixPasses"></BorderLegend>
-                @* Phoenix's difficulty-title bars. Phoenix 2 tracks titles on the PUMBILITY page
-                   and the tier list only points there, so they're skipped for it. *@
-                @if (!IsLegacy && _currentMix != MixEnum.Phoenix2)
+                @* Phoenix's difficulty-title bars, on a mix that has difficulty titles. A mix on
+                   Phoenix 2's rules tracks titles on the PUMBILITY page and the tier list only points
+                   there, so they're skipped for it. *@
+                @if (!IsLegacy && TitleLists.HasDifficultyTitles(_currentMix))
                 {
                     <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
                     <MudGrid>
@@ -1806,6 +1813,9 @@ else
     ///     nothing at that size. Null when the personalized blend has not run or cleared the bar.
     /// </summary>
     private int? _thinCohort;
+
+    /// <summary>The community PUMBILITY list read off a thin population (docs/design/rise.md D33).</summary>
+    private bool IsEarlyDays => PumbilityEarlyDays.Applies(PersonalizedActive, _tierListType, _peerCount);
 
     private const int MinCohortPeers = 3;
 

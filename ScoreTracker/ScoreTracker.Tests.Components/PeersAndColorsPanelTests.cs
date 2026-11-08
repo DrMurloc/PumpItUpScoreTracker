@@ -87,7 +87,7 @@ public sealed class PeersAndColorsPanelTests : ComponentTestBase
         {
             Assert.Contains("3 players · 1 board-only", cut.Markup);
             Assert.Contains("3 singles · 1 doubles", cut.Markup);
-            Assert.Contains("Phoenix 2 only", cut.Markup);
+            Assert.Contains("Not on this mix", cut.Markup);
             Assert.Contains("NorCal Pump", cut.Markup);
             Assert.Contains("United States", cut.Markup);
             Assert.Contains("pcd-opt-off", cut.Find("[data-testid='pcd-source-Pumbility']").ClassName);

@@ -7,7 +7,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Web.Services;
 
 /// <summary>
-///     Whether a Phoenix 2 folder has title progress for you — the gate behind the tier-list page's
+///     Whether a folder on Phoenix 2's rules has title progress for you — the gate behind the tier-list page's
 ///     pointer to the PUMBILITY page (pure, no I/O — unit-tested in ScoreTracker.Tests.Components).
 ///     It is exactly the test the retired folder-title track applied before drawing its bar
 ///     (docs/design/pumbility-title-track.md), kept so the pointer appears only where the bar did:
@@ -31,21 +31,19 @@ public static class FolderTitleTrack
         IDictionary<Guid, Chart> allCharts,
         IDictionary<Guid, RecordedPhoenixScore> scores)
     {
-        // Phoenix 2 PUMBILITY titles only, and only the two pooled types — co-op never counts.
-        if (mix != MixEnum.Phoenix2) return false;
-        if (folderType is not (ChartType.Single or ChartType.Double)) return false;
+        // PUMBILITY titles on Phoenix 2's rules only, and only the mix's two pooled types — co-op
+        // never counts.
+        if (!mix.UsesPhoenix2Pumbility()) return false;
+        if (folderType != PumbilityPools.SinglesOn(mix) && folderType != PumbilityPools.DoublesOn(mix)) return false;
         // Charts below level 10 price at zero in Phoenix 2 (ScoringConfiguration line 167), so a
         // sub-10 folder contributes nothing to the pool — there's no title progress to point at.
         if ((int)folderLevel < 10) return false;
 
-        var pool = folderType == ChartType.Single ? PumbilityPool.Singles : PumbilityPool.Doubles;
-        var ladder = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
-            .Where(t => t.Pool == pool)
-            .OrderBy(t => t.CompletionRequired)
-            .ToArray();
-        if (ladder.Length == 0) return false;
+        var pool = folderType == PumbilityPools.SinglesOn(mix) ? PumbilityPool.Singles : PumbilityPool.Doubles;
+        var ladder = PumbilityLadders.For(mix, pool);
+        if (ladder.Count == 0) return false;
 
-        var config = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var config = ScoringConfiguration.PumbilityScoring(mix, false);
 
         // Your per-chart contributions for this type. The pool is the best fifty and the floor is
         // the fiftieth — a chart helps only if it beats the floor.

@@ -101,7 +101,7 @@
             var ghost = i >= Page.Pool.Count;
             var isBar = Page.Bar != null && i == Page.Pool.Count - 1;
             var isDouble = Charts.TryGetValue(entry.ChartId, out var chart) &&
-                           chart.Type == ChartType.Double;
+                           chart.Type.Category() == ChartTypeCategory.Double;
             var name = Charts.TryGetValue(entry.ChartId, out var c) ? c.Song.Name.ToString() : string.Empty;
             return new Bar(Math.Clamp((entry.Value - _floor) / _span * 100, 2, 100), isDouble, ghost, isBar,
                 $"#{entry.Place} {name} — {entry.Value:N2}");

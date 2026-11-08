@@ -647,7 +647,7 @@ else
         // Phoenix 2, signed in, not co-op. Whether the viewer actually HAS peers of the type
         // is learned on selection, not on every chart view (see _pumbilityPeers) — a viewer
         // whose pool is short gets the empty state naming what lights it up.
-        LeaderboardScope.PumbilityPeers => Mix == MixEnum.Phoenix2 && CurrentUser.IsLoggedIn &&
+        LeaderboardScope.PumbilityPeers => Mix.UsesPhoenix2Pumbility() && CurrentUser.IsLoggedIn &&
                                            _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
         // Always lit: knowing whether a board exists costs a query, and paying it on every
         // chart view to grey one chip is not a trade worth making (see LoadChartAsync). A chart

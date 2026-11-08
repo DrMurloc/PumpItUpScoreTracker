@@ -333,8 +333,8 @@
             ? _peerOnlyGains
             : Shown.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
 
-    /// <summary>Who a peer is: PUMBILITY peers on Phoenix 2 (D53), the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
-    private bool HasPumbilityPeers => Page.Mix == MixEnum.Phoenix2;
+    /// <summary>Who a peer is: PUMBILITY peers on Phoenix 2's rules (D53), the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
+    private bool HasPumbilityPeers => Page.Mix.UsesPhoenix2Pumbility();
 
     /// <summary>The window's two reaches, whole, for the ledes that name it — a threshold, not a measurement.</summary>
     private static string WindowBelow => PeerGroup.PumbilityWindowBelow.ToString("N0");
@@ -377,7 +377,7 @@
     /// <summary>The PUMBILITY peer groups actually serving this view — one per lit type in the pool's scope.</summary>
     private PeerGroup[] Lit => !HasPumbilityPeers || Shown.Peers is not { } groups
         ? Array.Empty<PeerGroup>()
-        : (ShownPool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+        : (ShownPool is { } one ? new[] { one } : PumbilityPools.TypesOn(Page.Mix).ToArray())
         .Where(t => groups.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
         .Select(t => groups[t])
         .ToArray();
@@ -420,7 +420,7 @@
         {
             var peers = _peers;
             if (peers == null) return string.Empty;
-            var ranges = (ShownPool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+            var ranges = (ShownPool is { } one ? new[] { one } : PumbilityPools.TypesOn(Page.Mix).ToArray())
                 .Where(type => peers.LevelsInReach.TryGetValue(type, out var levels) && levels.Count > 0)
                 .Select(type => RangeOf(type, peers.LevelsInReach[type]))
                 .ToArray();
@@ -431,7 +431,7 @@
     /// <summary>A type's levels the way a folder is written: a run as "S20–S23", a gap spelled out level by level.</summary>
     private static string RangeOf(ChartType type, IReadOnlyList<int> levels)
     {
-        var letter = type == ChartType.Double ? "D" : "S";
+        var letter = type.GetShortHand();
         if (levels.Count == 1) return $"{letter}{levels[0]}";
         var contiguous = levels.Zip(levels.Skip(1), (low, high) => high - low).All(step => step == 1);
         return contiguous
@@ -586,14 +586,14 @@
     private string DownloadFileName => ShareCardTitles.TargetsFileName(Shown.Mix, _groupBy.ToString(),
         Shown.Energy.ToString(), ShownPool?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
 
-    /// <summary>Which pool the list is scoped to — said only on Phoenix 2, where pools are per type.</summary>
-    private string? SharePoolLabel => Shown.Mix != MixEnum.Phoenix2 ? null :
-        ShownPool switch
+    /// <summary>Which pool the list is scoped to — said only on Phoenix 2's rules, where pools are per type.</summary>
+    private string? SharePoolLabel => !Shown.Mix.UsesPhoenix2Pumbility() ? null :
+        ShownPool?.Category() switch
         {
             null => L["All pools"],
-            ChartType.Single => L["Singles pool"],
-            ChartType.Double => L["Doubles pool"],
-            var other => other.ToString()
+            ChartTypeCategory.Single => L["Singles pool"],
+            ChartTypeCategory.Double => L["Doubles pool"],
+            _ => ShownPool.ToString()
         };
 
     /// <summary>

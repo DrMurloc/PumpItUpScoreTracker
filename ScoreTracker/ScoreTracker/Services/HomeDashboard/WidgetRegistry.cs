@@ -39,7 +39,7 @@ public static class WidgetRegistry
             Icons.Material.Filled.Leaderboard,
             new[] { SizePreset.OneByOne, SizePreset.OneByTwo, SizePreset.OneByThree },
             SizePreset.OneByTwo,
-            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            Enum.GetValues<MixEnum>().Where(m => m.HasPumbility()).ToArray(),
             typeof(PumbilityWidget),
             typeof(PumbilityConfigPanel),
             typeof(PumbilityConfig),

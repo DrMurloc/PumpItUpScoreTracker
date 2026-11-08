@@ -268,6 +268,34 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".tier-section-body"));
     }
 
+    [Fact]
+    public void ARiseListReadOffFewerThanFivePeersSaysSoUnderTheLede()
+    {
+        // RISE plays by Phoenix 2's rules, so its peers are PUMBILITY peers, and a run that fell
+        // back below the five-peer floor says how few they are (docs/design/rise.md D33).
+        var halfDouble = new Chart(Guid.NewGuid(), MixEnum.Rise,
+            new Song("Song", SongType.Arcade, new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
+            ChartType.HalfDouble, 21, MixEnum.Rise, null, null);
+        var group = PeerGroup.Pumbility(17_600, 3, 50) with { AnsweredBelowFloor = true };
+        var page = new PumbilityPageRecord(MixEnum.Rise, null, 17_600, 300, null, Array.Empty<PoolEntry>(),
+            Array.Empty<PoolEntry>(),
+            new[] { new PumbilityTarget(halfDouble.Id, PhoenixScore.From(980_000), 12.3, null, false, null) },
+            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.HalfDouble] = group }, Energy: Energy.Great);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PumbilityPeersPageRecord.Empty(MixEnum.Rise, null) with
+            {
+                Peers = new Dictionary<ChartType, PeerGroup> { [ChartType.HalfDouble] = group }
+            });
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, page)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [halfDouble.Id] = halfDouble })
+            .Add(x => x.Energy, Energy.Great));
+
+        cut.WaitForAssertion(() => Assert.Contains("Players at your level with a full pool: 3.",
+            cut.Find("[data-testid=peers-thin-note]").TextContent));
+    }
+
     private IRenderedComponent<PeersSection> Render(Energy energy)
     {
         return RenderComponent<PeersSection>(p => p

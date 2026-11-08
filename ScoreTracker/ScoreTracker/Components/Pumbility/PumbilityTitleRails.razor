@@ -145,7 +145,7 @@
     };
 
     private static string Bubble(AskExample example) =>
-        (example.Type == ChartType.Double ? "D" : "S") + (int)example.Level;
+        example.Type.GetShortHand() + (int)example.Level;
 
     // The pool prefix is redundant on a rail already labelled by its pool: "[S] EXPERT LV.4"
     // reads as "EXPERT LV.4" beside a Singles chip. The merged gems and the two MASTER

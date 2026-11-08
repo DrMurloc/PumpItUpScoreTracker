@@ -68,7 +68,7 @@
    change leaves stale is the STORED ratings and per-chart values, which otherwise refresh
    only when that player next imports. Deliberately silent — no milestones, no history rows,
    no Discord — because a formula moving is not something a player did. Safe to re-run. *@
-@foreach (var mix in RepriceableMixes)
+@foreach (var mix in PumbilityMixes)
 {
     <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RepriceRatings(mix))"
                data-testid="@($"reprice-ratings-{mix}")">@L["Re-price {0} ratings", mix.GetName()]</MudButton>
@@ -77,7 +77,7 @@
 @* The PUMBILITY lens reads a nightly count, so a fresh deploy shows nothing until the job
    first runs — and locally PreventRecurringJobs parks it on a yearly cron, where the Hangfire
    dashboard cannot trigger it either. Safe to re-run: the job rewrites each folder wholesale. *@
-@foreach (var mix in RepriceableMixes)
+@foreach (var mix in PumbilityMixes)
 {
     <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RebuildPumbilityTierLists(mix))"
                data-testid="@($"rebuild-pumbility-tier-lists-{mix}")">@L["Rebuild {0} PUMBILITY tier lists", mix.GetName()]</MudButton>
@@ -91,7 +91,7 @@
 
 @* Speed bands a folder against its own notes-per-second spread, so it only moves when the
    banked step analysis does — an ingestion rebuilds it on its own, and this is the force. *@
-@foreach (var mix in RepriceableMixes)
+@foreach (var mix in SpeedMixes)
 {
     <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RebuildSpeedTierList(mix))"
                data-testid="@($"rebuild-speed-tier-list-{mix}")">@L["Rebuild {0} Speed tier list", mix.GetName()]</MudButton>
@@ -303,7 +303,11 @@
     }
 
     // The two mixes with a PUMBILITY formula. A legacy mix has no stored rating to re-price.
-    private static readonly MixEnum[] RepriceableMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    // Every mix with a PUMBILITY formula re-prices and rebuilds its PUMBILITY tier lists.
+    private static readonly MixEnum[] PumbilityMixes = Enum.GetValues<MixEnum>().Where(m => m.HasPumbility()).ToArray();
+
+    // Speed bands a folder by notes per second, which Phoenix 1 and 2's step analysis supplies.
+    private static readonly MixEnum[] SpeedMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     private async Task RepriceRatings(MixEnum mix)
     {

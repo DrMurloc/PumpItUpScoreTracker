@@ -164,7 +164,7 @@ else
     [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
 
     private const int MatchCount = 25;   // the closest N shown (owner)
-    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    private static readonly MixEnum[] Supported = Enum.GetValues<MixEnum>().Where(m => m.HasPumbility()).ToArray();
 
     private sealed record Tag(string Text, string Title, string Class);
 
@@ -222,7 +222,7 @@ else
             _showMatches = size is { Columns: 1, Rows: > 1 };
 
             var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
-            // Follow current mix, but Phoenix-eras only — pre-Phoenix mixes fall to Phoenix 2.
+            // Follow current mix, but only a mix with PUMBILITY — every other falls to Phoenix 2.
             _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
                 : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix2;
             _dimension = config.MatchDimension;

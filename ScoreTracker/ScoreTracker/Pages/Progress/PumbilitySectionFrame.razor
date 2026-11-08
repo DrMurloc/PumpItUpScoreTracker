@@ -138,7 +138,7 @@ else if (_mixKnown)
     private ChartType? _pool;
     private Energy _energy = Energy.Great;
 
-    private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+    private string MixName => _currentMix.GetName();
 
     private string ActiveLabel => AllLinks.First(l => l.Key == Active).Label;
 
@@ -169,12 +169,17 @@ else if (_mixKnown)
             return;
         }
 
-        // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
-        // so the selector is real there and would invent a stat on Phoenix 1.
-        if (_currentMix == MixEnum.Phoenix2 &&
-            Enum.TryParse<ChartType>(await UiSettings.GetSetting(PoolSettingKey), out var stored) &&
-            stored is ChartType.Single or ChartType.Double)
-            _pool = stored;
+        // Phoenix 2's rules keep Singles and Doubles as independent pools alongside the merged one,
+        // so the selector is real there and would invent a stat on Phoenix 1. A saved pool is read
+        // as its folder on this mix, so a Doubles choice made on Phoenix 2 reads RISE's half-doubles.
+        if (_currentMix.UsesPhoenix2Pumbility() &&
+            Enum.TryParse<ChartType>(await UiSettings.GetSetting(PoolSettingKey), out var stored))
+            _pool = stored.Category() switch
+            {
+                ChartTypeCategory.Single => PumbilityPools.SinglesOn(_currentMix),
+                ChartTypeCategory.Double => PumbilityPools.DoublesOn(_currentMix),
+                _ => null
+            };
 
         if (Enum.TryParse<Energy>(await UiSettings.GetSetting(EnergySettingKey), out var energy)) _energy = energy;
 
@@ -196,8 +201,10 @@ else if (_mixKnown)
             : new[]
             {
                 new PumbilityPoolPicker.PoolOption(null, L["All"], _page.Totals.All),
-                new PumbilityPoolPicker.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
-                new PumbilityPoolPicker.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
+                new PumbilityPoolPicker.PoolOption(PumbilityPools.SinglesOn(_currentMix), L["Singles"],
+                    _page.Totals.Singles),
+                new PumbilityPoolPicker.PoolOption(PumbilityPools.DoublesOn(_currentMix), L["Doubles"],
+                    _page.Totals.Doubles)
             };
     }
 

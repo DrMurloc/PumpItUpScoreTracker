@@ -267,10 +267,10 @@
     }
 
     /// <summary>The ladder a pool reads: the merged one, or the [S] / [D] rungs.</summary>
-    private static PumbilityPool PoolOf(ChartType? pool) => pool switch
+    private static PumbilityPool PoolOf(ChartType? pool) => pool?.Category() switch
     {
-        ChartType.Single => PumbilityPool.Singles,
-        ChartType.Double => PumbilityPool.Doubles,
+        ChartTypeCategory.Single => PumbilityPool.Singles,
+        ChartTypeCategory.Double => PumbilityPool.Doubles,
         _ => PumbilityPool.Total
     };
 

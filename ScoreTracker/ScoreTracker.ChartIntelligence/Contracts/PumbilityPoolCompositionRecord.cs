@@ -41,6 +41,12 @@ public sealed record PumbilityPoolCompositionRecord(MixEnum Mix, DateTimeOffset 
     /// </summary>
     public const int MinimumPlayersToDraw = 5;
 
+    /// <summary>
+    ///     Fewer full pools than this and a PUMBILITY population is still filling in: the pages it
+    ///     feeds say how many players are behind them. No Phoenix population is ever this thin.
+    /// </summary>
+    public const int EarlyDaysPools = 100;
+
     /// <summary>The bands with enough players to draw, lowest first.</summary>
     public IEnumerable<PumbilityPoolBandRecord> Drawable => Bands.Where(b => b.Players >= MinimumPlayersToDraw);
 }
