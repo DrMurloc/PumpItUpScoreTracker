@@ -22,7 +22,20 @@ public static class MixCapabilities
     /// <summary>PUMBILITY prices a 1,000,000-scale score with a formula the mix has; no older mix has one.</summary>
     public static bool HasPumbility(this MixEnum mix)
     {
-        return MixProfiles.For(mix).Features.Pumbility;
+        return MixProfiles.For(mix).Pumbility != PumbilityRules.None;
+    }
+
+    /// <summary>
+    ///     Whether the mix reads its PUMBILITY by Phoenix 2's rules: plates price into a chart's value,
+    ///     the Singles and Doubles pools are boards with their own milestones and title ladders, a gem
+    ///     ladder levels the total, and a player's PUMBILITY peers are drawn on the pool of a type
+    ///     rather than on competitive level. Phoenix 2 and both RISE mixes (docs/design/rise.md D30).
+    ///     A feature that belongs to Phoenix 2 itself — Hardmode, seasons, the official boards — asks
+    ///     its own question instead.
+    /// </summary>
+    public static bool UsesPhoenix2Pumbility(this MixEnum mix)
+    {
+        return MixProfiles.For(mix).Pumbility == PumbilityRules.Phoenix2;
     }
 
     /// <summary>The season recap is computed from Phoenix 1 data only, for now (owner, 2026-08-10).</summary>

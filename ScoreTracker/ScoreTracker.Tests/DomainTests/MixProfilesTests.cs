@@ -75,7 +75,7 @@ public sealed class MixProfilesTests
     [Theory]
     [InlineData(MixEnum.Rise)]
     [InlineData(MixEnum.RiseArcade)]
-    public void ARiseMixIsPhoenixScoredOnAKeyboardWithNoSiteAndNoPhoenixFeature(MixEnum mix)
+    public void ARiseMixIsPhoenixScoredOnAKeyboardWithNoSiteAndNoPhoenixFeatureButPumbility(MixEnum mix)
     {
         var profile = MixProfiles.For(mix);
 
@@ -85,7 +85,8 @@ public sealed class MixProfilesTests
         Assert.Null(profile.OfficialSite);
         Assert.False(mix.HasOfficialSite());
         Assert.False(profile.HasLifebarModel);
-        Assert.False(mix.HasPumbility());
+        Assert.True(mix.HasPumbility());
+        Assert.True(mix.UsesPhoenix2Pumbility());
         Assert.False(mix.HasOfficialBoards());
         Assert.False(mix.HasWeeklyBoard());
         Assert.False(mix.HasMarchOfMurlocs());
