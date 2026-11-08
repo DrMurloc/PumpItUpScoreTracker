@@ -359,7 +359,7 @@ public sealed class PumbilityProjectionBacktestTests
         var wanted = charts.Values.Where(c => c.Song.Name.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase)
                                               && c.Type is ChartType.Single or ChartType.Double).ToArray();
         var mine = await stats.GetStats(MixEnum.Phoenix2, userId, CancellationToken.None);
-        var myRung = Phoenix2PumbilityLevel.From(mine.SkillRating);
+        var myRung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, mine.SkillRating);
         _output.WriteLine($"viewer {userId}: total {mine.SkillRating:F0} → rung {Rung(myRung)}; competitive S {mine.SinglesCompetitiveLevel:F2} / D {mine.DoublesCompetitiveLevel:F2}");
 
         foreach (var type in new[] { ChartType.Single, ChartType.Double })
@@ -381,7 +381,7 @@ public sealed class PumbilityProjectionBacktestTests
             var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers, targets.Select(c => c.Id), CancellationToken.None))
                 .Where(v => !v.IsBroken).GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.ToArray());
             _output.WriteLine($"=== {type}: {peers.Length} PUMBILITY peers, pools {projection.Group?.Lowest:F0}..{projection.Group?.Highest:F0} around your {type} pool {projection.Group?.Center:F0} (D53) ===");
-            var bandRungs = peers.Select(p => Phoenix2PumbilityLevel.From(peerStats[p].SkillRating).Index - myRung.Index)
+            var bandRungs = peers.Select(p => Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, peerStats[p].SkillRating).Index - myRung.Index)
                 .GroupBy(o => o).OrderBy(g => g.Key).Select(g => $"{g.Key:+0;-0;0}:{g.Count()}");
             _output.WriteLine($"  the band by rung offset from you (offset:count): {string.Join("  ", bandRungs)}");
 
@@ -402,7 +402,7 @@ public sealed class PumbilityProjectionBacktestTests
                 foreach (var v in rows.OrderByDescending(v => (int)v.Score))
                 {
                     var st = peerStats[v.UserId];
-                    var rung = Phoenix2PumbilityLevel.From(st.SkillRating);
+                    var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, st.SkillRating);
                     var offset = rung.Index - myRung.Index;
                     offsets.Add(offset);
                     var level = type == ChartType.Single ? st.SinglesCompetitiveLevel : st.DoublesCompetitiveLevel;
@@ -451,7 +451,7 @@ public sealed class PumbilityProjectionBacktestTests
                 .Where(s => s is { Score: not null, IsBroken: false } && charts.ContainsKey(s.ChartId))
                 .ToArray();
             var playerStats = await stats.GetStats(MixEnum.Phoenix2, player, CancellationToken.None);
-            var myRung = Phoenix2PumbilityLevel.From(playerStats.SkillRating).Index;
+            var myRung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, playerStats.SkillRating).Index;
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
                 var level = chartType == ChartType.Single ? playerStats.SinglesCompetitiveLevel : playerStats.DoublesCompetitiveLevel;
@@ -468,7 +468,7 @@ public sealed class PumbilityProjectionBacktestTests
                 var peers = projection.PeerPools.Peers.Where(v => v.UserId != null)
                 .Select(v => v.UserId!.Value).ToArray();
                 var peerRung = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None))
-                    .ToDictionary(p => p.UserId, p => Phoenix2PumbilityLevel.From(p.SkillRating).Index - myRung);
+                    .ToDictionary(p => p.UserId, p => Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, p.SkillRating).Index - myRung);
                 var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers,
                         held.Where(s => projection.Ladders.ContainsKey(s.ChartId)).Select(s => s.ChartId), CancellationToken.None))
                     .Where(v => !v.IsBroken && peerRung.ContainsKey(v.UserId))

@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
@@ -12,12 +13,14 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
 ///         Thirty-seven rungs: index 0 for a pool that has not reached BRONZE, five levels inside
 ///         each of the seven gems, then the capstone. A gem's five levels split its span evenly —
 ///         200 across a 1,000-wide gem, 500 across the 2,500-wide BRONZE and SILVER — so the rungs
-///         are derived from <see cref="Gems" /> rather than listed, and a gem cannot gain a rung
+///         are derived from the mix's [P.B] titles rather than listed, and a gem cannot gain a rung
 ///         without gaining a threshold.
 ///     </para>
 ///     <para>
-///         Phoenix 2 only. Phoenix has no gem ladder, so callers gate on the mix before asking;
-///         there is deliberately no <c>MixEnum</c> parameter to make that gate look optional.
+///         Per mix, for the mixes on Phoenix 2's PUMBILITY rules: the gems are the mix's own [P.B]
+///         rungs (<see cref="PumbilityLadders" />), so Rise's raised ALEXANDRITE and ABYSS ABSOLUTE
+///         move its levels with them. Asking for a mix without the ladder throws, so a caller cannot
+///         skip the gate on the mix.
 ///     </para>
 ///     <para>
 ///         Evidence, and where it runs out: indices 21–36 are observed — 1,000 rows of the live
@@ -36,25 +39,8 @@ public readonly record struct Phoenix2PumbilityLevel
     /// <summary>The badge index of the capstone, and so the top of the ladder.</summary>
     public const int CapstoneIndex = 36;
 
-    /// <summary>
-    ///     Each gem, the badge index its first level takes, and the pool it starts at. The
-    ///     thresholds are the ones on the [P.B] titles themselves — <c>Phoenix2PumbilityLevelTests</c>
-    ///     asserts the two agree, because a gem that moved here and not there would put every player
-    ///     on the wrong rung silently.
-    /// </summary>
-    private static readonly (string Gem, int FirstIndex, int Threshold)[] Gems =
-    {
-        ("[P.B] BRONZE", 1, 10000),
-        ("[P.B] SILVER", 6, 12500),
-        ("[P.B] GOLD", 11, 15000),
-        ("[P.B] PLATINUM", 16, 16000),
-        ("[P.B] DIAMOND", 21, 17000),
-        ("[P.B] RED BERYL", 26, 18000),
-        ("[P.B] ALEXANDRITE", 31, 19000),
-        ("ABYSS ABSOLUTE", CapstoneIndex, 20000)
-    };
-
-    private static readonly Phoenix2PumbilityLevel[] Rungs = BuildRungs();
+    private static readonly IReadOnlyDictionary<MixEnum, Phoenix2PumbilityLevel[]> RungsByMix =
+        Enum.GetValues<MixEnum>().Where(m => m.UsesPhoenix2Pumbility()).ToDictionary(m => m, BuildRungs);
 
     private Phoenix2PumbilityLevel(int index, Name? gem, int? level, int threshold, int? nextThreshold)
     {
@@ -88,29 +74,33 @@ public readonly record struct Phoenix2PumbilityLevel
 
     public bool IsCapstone => Index == CapstoneIndex;
 
-    /// <summary>Every rung, weakest first. Index 0 is the first entry, the capstone the last.</summary>
-    public static IReadOnlyList<Phoenix2PumbilityLevel> All => Rungs;
+    /// <summary>Every rung of the mix's ladder, weakest first. Index 0 is the first entry, the capstone the last.</summary>
+    public static IReadOnlyList<Phoenix2PumbilityLevel> All(MixEnum mix) => RungsOf(mix);
 
     /// <summary>
     ///     The rung a total PUMBILITY pool stands on. Takes the raw pool and never rounds it: a pool
     ///     is fifty fractional contributions, and rounding one before the compare promotes a player
     ///     to a rung they have not reached.
     /// </summary>
-    public static Phoenix2PumbilityLevel From(double totalPumbility)
+    public static Phoenix2PumbilityLevel From(MixEnum mix, double totalPumbility)
     {
-        for (var i = Rungs.Length - 1; i >= 0; i--)
-            if (totalPumbility >= Rungs[i].Threshold)
-                return Rungs[i];
-        return Rungs[0];
+        var rungs = RungsOf(mix);
+        for (var i = rungs.Length - 1; i >= 0; i--)
+            if (totalPumbility >= rungs[i].Threshold)
+                return rungs[i];
+        return rungs[0];
     }
 
     /// <summary>The rung at a badge index, or null when the index is off the ladder.</summary>
-    public static Phoenix2PumbilityLevel? FromIndex(int index) =>
-        index >= 0 && index < Rungs.Length ? Rungs[index] : null;
+    public static Phoenix2PumbilityLevel? FromIndex(MixEnum mix, int index)
+    {
+        var rungs = RungsOf(mix);
+        return index >= 0 && index < rungs.Length ? rungs[index] : null;
+    }
 
     /// <summary>A gem's five levels, weakest first — the capstone's single rung for the capstone.</summary>
-    public static IReadOnlyList<Phoenix2PumbilityLevel> LevelsOf(Name gem) =>
-        Rungs.Where(r => r.Gem is { } g && g == gem).ToArray();
+    public static IReadOnlyList<Phoenix2PumbilityLevel> LevelsOf(MixEnum mix, Name gem) =>
+        RungsOf(mix).Where(r => r.Gem is { } g && g == gem).ToArray();
 
     /// <summary>
     ///     What this pool still owes the next rung, or null at the capstone. Never negative — a pool
@@ -119,18 +109,35 @@ public readonly record struct Phoenix2PumbilityLevel
     public double? ToNext(double totalPumbility) =>
         NextThreshold is { } next ? Math.Max(0, next - totalPumbility) : null;
 
-    private static Phoenix2PumbilityLevel[] BuildRungs()
+    private static Phoenix2PumbilityLevel[] RungsOf(MixEnum mix)
     {
+        return RungsByMix.TryGetValue(mix, out var rungs)
+            ? rungs
+            : throw new ArgumentOutOfRangeException(nameof(mix), mix, "This mix has no PUMBILITY level ladder");
+    }
+
+    /// <summary>
+    ///     Each gem of the mix, weakest first, with the badge index its first level takes and the pool
+    ///     it starts at: the thresholds on the mix's own [P.B] titles.
+    /// </summary>
+    private static Phoenix2PumbilityLevel[] BuildRungs(MixEnum mix)
+    {
+        var gems = PumbilityLadders.For(mix, PumbilityPool.Total)
+            .Select((title, i) => (Gem: title.Name, FirstIndex: 1 + i * LevelsPerGem, Threshold: title.CompletionRequired))
+            .ToArray();
+        if (gems[^1].FirstIndex != CapstoneIndex)
+            throw new InvalidOperationException($"{mix}'s gem ladder does not end on the capstone badge");
+
         var rungs = new List<Phoenix2PumbilityLevel>
         {
             // Index 0 is a rung, not an absence: the site draws a blank grey sphere for it.
-            new(0, null, null, 0, Gems[0].Threshold)
+            new(0, null, null, 0, gems[0].Threshold)
         };
 
-        for (var g = 0; g < Gems.Length; g++)
+        for (var g = 0; g < gems.Length; g++)
         {
-            var (gem, firstIndex, threshold) = Gems[g];
-            var isCapstone = g == Gems.Length - 1;
+            var (gem, firstIndex, threshold) = gems[g];
+            var isCapstone = g == gems.Length - 1;
             if (isCapstone)
             {
                 rungs.Add(new Phoenix2PumbilityLevel(firstIndex, gem, null, threshold, null));
@@ -139,7 +146,7 @@ public readonly record struct Phoenix2PumbilityLevel
 
             // The gem's span split five ways. Integer arithmetic throughout: every span is a
             // multiple of five (ratcheted), so no rung threshold is ever a fraction.
-            var span = Gems[g + 1].Threshold - threshold;
+            var span = gems[g + 1].Threshold - threshold;
             for (var level = 1; level <= LevelsPerGem; level++)
             {
                 var start = threshold + span * (level - 1) / LevelsPerGem;

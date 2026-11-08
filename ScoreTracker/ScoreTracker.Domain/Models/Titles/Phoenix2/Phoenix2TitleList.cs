@@ -352,25 +352,34 @@ public static class Phoenix2TitleList
 
     static Phoenix2TitleList()
     {
-        // A pool's whole ladder is linked — [S] INTERMEDIATE LV.2 reads the same singles
-        // PUMBILITY as LV.1, at a higher threshold — so each rung's progress starts where
-        // the rung below it finished. The [CO-OP] ladder reads one CO-OP Rating the same way.
-        TitleHelpers.LinkLadder(Titles.OfType<Phoenix2PumbilityTitle>(), t => t.Pool);
+        LinkAndRail(Titles.OfType<Phoenix2PumbilityTitle>());
+        // The [CO-OP] ladder reads one CO-OP Rating the way a pool's rungs read one pool.
         TitleHelpers.LinkLadder(Titles.OfType<Phoenix2CoOpTitle>(), _ => 0);
 
-        // Display rails. A pool is one rail here and one ladder above, which is the exception
-        // rather than the rule — see Title.Ladder. A skill track's ten chart-grade rungs and
-        // its EXPERT capstone share a Category, so one pass rails both; boss-breaker and basic
-        // titles take their rail at construction.
-        // A pool's thirty-one rungs are three bands of ten and a capstone, so each band is its
-        // own rail and the numbers restart at 1 — one long row of 31 reads as nothing. The
-        // merged [P.B] ladder has no bands and stays a single rail of gems.
-        TitleHelpers.Rail(Titles.OfType<Phoenix2PumbilityTitle>(),
-            t => t.Tier == null ? (Name?)PoolRail(t.Pool) : (Name?)$"{PoolRail(t.Pool)} {t.Tier}");
+        // Display rails. A skill track's ten chart-grade rungs and its EXPERT capstone share a
+        // Category, so one pass rails both; boss-breaker and basic titles take their rail at
+        // construction.
         TitleHelpers.Rail(Titles.Where(t => SkillCategories.Contains(t.Category)),
             t => (Name?)t.Category);
         TitleHelpers.Rail(Titles.OfType<Phoenix2ChartClearTitle>(), t => t.Mix,
             t => t.Type == ChartType.Single ? 0 : 1);
+    }
+
+    /// <summary>
+    ///     Links and rails a set of PUMBILITY rungs — this list's, or another mix's copy of them
+    ///     (<see cref="PumbilityLadders" />). A pool's whole ladder is linked — [S] INTERMEDIATE LV.2
+    ///     reads the same singles PUMBILITY as LV.1, at a higher threshold — so each rung's progress
+    ///     starts where the rung below it finished. A pool is one rail here and one ladder there, the
+    ///     exception rather than the rule (see Title.Ladder): its thirty-one rungs are three bands of
+    ///     ten and a capstone, so each band is its own rail and the numbers restart at 1, while the
+    ///     merged [P.B] ladder has no bands and stays a single rail of gems.
+    /// </summary>
+    internal static void LinkAndRail(IEnumerable<Phoenix2PumbilityTitle> rungs)
+    {
+        var titles = rungs as IReadOnlyCollection<Phoenix2PumbilityTitle> ?? rungs.ToArray();
+        TitleHelpers.LinkLadder(titles, t => t.Pool);
+        TitleHelpers.Rail(titles,
+            t => t.Tier == null ? (Name?)PoolRail(t.Pool) : (Name?)$"{PoolRail(t.Pool)} {t.Tier}");
     }
 
     /// <summary>The rail name for a pool — the prefix its titles already wear.</summary>
@@ -405,31 +414,7 @@ public static class Phoenix2TitleList
         foreach (var title in progress)
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
 
-        // Each contribution is Base x (grade + plate). [S] and [D] gate on the top 50 of
-        // their own type; Total gates on the top 50 across both types.
-        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
-        var contributions = attemptList
-            .Where(a => a.Score != null && charts.ContainsKey(a.ChartId))
-            .Select(a => (charts[a.ChartId].Type, Value: scoring.GetScore(charts[a.ChartId].Type,
-                charts[a.ChartId].Level, a.Score!.Value, a.Plate ?? PhoenixPlate.RoughGame, a.IsBroken)))
-            .ToArray();
-        // Unrounded: a ladder gates on the pool the player actually holds, and a rung sitting
-        // inside the discarded fraction would read as unreached on one screen and earned on
-        // another.
-        var singles = contributions.Where(c => c.Type == ChartType.Single)
-            .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        var doubles = contributions.Where(c => c.Type == ChartType.Double)
-            .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        var total = contributions
-            .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        foreach (var title in progress)
-            if (title.PhoenixTitle is Phoenix2PumbilityTitle pumbility)
-                title.ApplyDirectProgress(pumbility.Pool switch
-                {
-                    PumbilityPool.Singles => singles,
-                    PumbilityPool.Doubles => doubles,
-                    _ => total
-                });
+        PumbilityLadderProgress.Apply(MixEnum.Phoenix2, progress, charts, attemptList);
 
         foreach (var title in progress)
             if (completedTitles.Contains(title.Title.Name))

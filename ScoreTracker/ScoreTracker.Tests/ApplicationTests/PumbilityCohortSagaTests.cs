@@ -47,7 +47,7 @@ public sealed class PumbilityCohortSagaTests
 
         var record = await ctx.Handle();
 
-        Assert.Equal(PumbilityBand.LevelOf(PumbilityPool.Total, Diamond)!.Name, record.Band);
+        Assert.Equal(PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Total, Diamond)!.Name, record.Band);
         Assert.Equal(26, record.Holders);
         Assert.Equal(0, record.BoardHolders);
         var column = Assert.Single(record.Spread.Columns, c => c is { Level: 21, Type: ChartType.Single });
@@ -66,7 +66,7 @@ public sealed class PumbilityCohortSagaTests
     [Fact]
     public async Task ABoardPlayerStandsInTheCohortBesideTheSiteAccounts()
     {
-        var gem = PumbilityBand.GemOf(Diamond)!;
+        var gem = PumbilityBand.GemOf(MixEnum.Phoenix2, Diamond)!;
         var ctx = new CohortContext()
             .WithChart(out var staple, ChartType.Single, 21)
             .WithOwnPool(Diamond)
@@ -87,9 +87,9 @@ public sealed class PumbilityCohortSagaTests
         var ctx = new CohortContext()
             .WithChart(out var staple, ChartType.Single, 21)
             .WithOwnPool(Diamond);
-        var level = PumbilityBand.LevelOf(PumbilityPool.Total, Diamond)!;
-        var gem = PumbilityBand.GemOf(Diamond)!;
-        var neighbour = PumbilityBand.Levels(PumbilityPool.Total)
+        var level = PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Total, Diamond)!;
+        var gem = PumbilityBand.GemOf(MixEnum.Phoenix2, Diamond)!;
+        var neighbour = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Total)
             .First(b => b.Gem == gem.Name && b.Name != level.Name);
         // Twenty-four on the viewer's own level — one short of the twenty-five a level owes — and
         // thirty more elsewhere in the gem it sits in, which is what the card ends up reading.
@@ -107,7 +107,7 @@ public sealed class PumbilityCohortSagaTests
     {
         // There is nothing coarser inside a [S] ladder to fall back to, so a rung of six reads as a
         // rung of six rather than widening into something it is not.
-        var rung = PumbilityBand.Levels(PumbilityPool.Singles)[10];
+        var rung = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Singles)[10];
         var ctx = new CohortContext()
             .WithChart(out var staple, ChartType.Single, 21)
             .WithOwnPool(Diamond, rung.Floor);
@@ -148,7 +148,7 @@ public sealed class PumbilityCohortSagaTests
         // One holder with a full merged fifty — twenty-eight singles and twenty-two doubles, drawn
         // across both types as one fifty rather than two. Only a full fifty averages honestly, so a
         // holder short of one is counted nowhere in the split.
-        var gem = PumbilityBand.GemOf(Diamond)!;
+        var gem = PumbilityBand.GemOf(MixEnum.Phoenix2, Diamond)!;
         var ctx = new CohortContext().WithOwnPool(Diamond);
         var pool = new List<(Chart Chart, int Score)>();
         for (var i = 0; i < 28; i++)
@@ -192,7 +192,7 @@ public sealed class PumbilityCohortSagaTests
         var ctx = new CohortContext()
             .WithChart(out var staple, ChartType.Single, 21)
             .WithOwnPool(Diamond);
-        var bronze = PumbilityBand.Gems().First();
+        var bronze = PumbilityBand.Gems(MixEnum.Phoenix2).First();
         ctx.WithHolder(out _, bronze, (staple, 950_000));
 
         var record = await ctx.Handle(band: bronze.Name);
@@ -283,7 +283,7 @@ public sealed class PumbilityCohortSagaTests
         var ctx = new CohortContext()
             .WithChart(out var staple, ChartType.Single, 21)
             .WithOwnPool(Diamond, singles: Diamond);
-        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, PumbilityBand.LevelOf(PumbilityPool.Singles, Diamond)!,
+        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Singles, Diamond)!,
             (staple, 982_000));
         ctx.WithOwnScore(staple, 982_000);
 
@@ -405,7 +405,7 @@ public sealed class PumbilityCohortSagaTests
         /// <summary>A player seated on the viewer's own band, holding the scores given.</summary>
         public CohortContext WithHolder(out Guid holder, params (Chart Chart, int Score)[] scores)
         {
-            return WithHolder(out holder, PumbilityBand.LevelOf(PumbilityPool.Total, _total)!, scores);
+            return WithHolder(out holder, PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Total, _total)!, scores);
         }
 
         public CohortContext WithHolder(out Guid holder, PumbilityBand band, params (Chart Chart, int Score)[] scores)
@@ -461,7 +461,7 @@ public sealed class PumbilityCohortSagaTests
 
         private static bool Match(PumbilityPool pool, string band, double floor, double? ceiling)
         {
-            var seated = PumbilityBand.ByName(pool, Name.From(band))!;
+            var seated = PumbilityBand.ByName(MixEnum.Phoenix2, pool, Name.From(band))!;
             return seated.Floor >= floor && (ceiling is not { } top || seated.Floor < top);
         }
 

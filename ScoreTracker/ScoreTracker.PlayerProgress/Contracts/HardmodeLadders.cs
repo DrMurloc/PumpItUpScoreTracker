@@ -60,8 +60,8 @@ public static class HardmodeLadders
         var records = milestones as IReadOnlyCollection<PlayerMilestoneRecord> ?? milestones.ToArray();
         if (Span(records, MilestoneKind.HardmodePumbilityGain) is not { } move) return null;
 
-        var from = Phoenix2PumbilityLevel.From(move.Old);
-        var to = Phoenix2PumbilityLevel.From(move.New);
+        var from = Phoenix2PumbilityLevel.From(mix, move.Old);
+        var to = Phoenix2PumbilityLevel.From(mix, move.New);
         if (to.Index <= from.Index) return null;
 
         return RungsCrossed(mix, records).Any(r => r.Pool == PumbilityPool.Total)

@@ -163,10 +163,12 @@ else
     private static string Bracket(string? title) =>
         string.IsNullOrEmpty(title) ? "" : title.StartsWith('[') ? title : $"[{title}]";
 
-    // The gem is the game's own proper noun and never localizes.
+    // The gem is the game's own proper noun and never localizes. An index names the same gem and
+    // level on every mix with the ladder; only the thresholds differ, and nothing here reads one.
     private string LevelName(SignificantWin win) =>
         win.Rank is { } index &&
-        ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(index) is { } level &&
+        ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(ScoreTracker.SharedKernel.Enums.MixEnum.Phoenix2, index) is
+            { } level &&
         PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
             ? label
             : L["Level Up"];

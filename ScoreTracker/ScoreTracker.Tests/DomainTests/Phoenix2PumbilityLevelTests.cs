@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
@@ -28,7 +30,7 @@ public sealed class Phoenix2PumbilityLevelTests
             .OrderBy(t => t.CompletionRequired)
             .ToArray();
 
-        var firstLevels = Phoenix2PumbilityLevel.All
+        var firstLevels = Phoenix2PumbilityLevel.All(MixEnum.Phoenix2)
             .Where(r => r.IsRanked && r.Level is null or 1)
             .OrderBy(r => r.Index)
             .ToArray();
@@ -44,14 +46,14 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void TheLadderRunsZeroToThirtySixWithoutAGap()
     {
-        Assert.Equal(37, Phoenix2PumbilityLevel.All.Count);
-        Assert.Equal(Enumerable.Range(0, 37), Phoenix2PumbilityLevel.All.Select(r => r.Index));
+        Assert.Equal(37, Phoenix2PumbilityLevel.All(MixEnum.Phoenix2).Count);
+        Assert.Equal(Enumerable.Range(0, 37), Phoenix2PumbilityLevel.All(MixEnum.Phoenix2).Select(r => r.Index));
     }
 
     [Fact]
     public void EveryGemHasFiveLevelsExceptTheCapstone()
     {
-        var byGem = Phoenix2PumbilityLevel.All
+        var byGem = Phoenix2PumbilityLevel.All(MixEnum.Phoenix2)
             .Where(r => r.IsRanked)
             .GroupBy(r => r.Gem!.Value.ToString())
             .ToArray();
@@ -71,7 +73,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void EveryRungLandsOnAWholeStepOfItsGem()
     {
-        foreach (var gem in Phoenix2PumbilityLevel.All.Where(r => r.Level is not null)
+        foreach (var gem in Phoenix2PumbilityLevel.All(MixEnum.Phoenix2).Where(r => r.Level is not null)
                      .GroupBy(r => r.Gem!.Value.ToString()))
         {
             var rungs = gem.OrderBy(r => r.Level).ToArray();
@@ -84,8 +86,8 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void EveryThresholdRoundTripsToItsOwnRung()
     {
-        foreach (var rung in Phoenix2PumbilityLevel.All)
-            Assert.Equal(rung.Index, Phoenix2PumbilityLevel.From(rung.Threshold).Index);
+        foreach (var rung in Phoenix2PumbilityLevel.All(MixEnum.Phoenix2))
+            Assert.Equal(rung.Index, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, rung.Threshold).Index);
     }
 
     /// <summary>
@@ -95,8 +97,8 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void AHairUnderAThresholdIsStillTheRungBeneath()
     {
-        foreach (var rung in Phoenix2PumbilityLevel.All.Where(r => r.Index > 0))
-            Assert.Equal(rung.Index - 1, Phoenix2PumbilityLevel.From(rung.Threshold - 0.01).Index);
+        foreach (var rung in Phoenix2PumbilityLevel.All(MixEnum.Phoenix2).Where(r => r.Index > 0))
+            Assert.Equal(rung.Index - 1, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, rung.Threshold - 0.01).Index);
     }
 
     [Theory]
@@ -106,7 +108,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [InlineData(17602.69, 4)] // the account this ladder was decoded from
     public void APoolIsNeverRoundedIntoTheRungAbove(double pool, int expectedLevel)
     {
-        var rung = Phoenix2PumbilityLevel.From(pool);
+        var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, pool);
         Assert.Equal("[P.B] DIAMOND", rung.Gem!.Value.ToString());
         Assert.Equal(expectedLevel, rung.Level);
     }
@@ -117,7 +119,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [InlineData(9_999.99)]
     public void ABelowBronzePoolIsUnrankedAndHoldsNoGem(double pool)
     {
-        var rung = Phoenix2PumbilityLevel.From(pool);
+        var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, pool);
         Assert.Equal(0, rung.Index);
         Assert.False(rung.IsRanked);
         Assert.Null(rung.Gem);
@@ -128,7 +130,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void TheCapstoneIsTheTopAndHasNothingAbove()
     {
-        var rung = Phoenix2PumbilityLevel.From(20_039.72); // the ladder's only holder when this was decoded
+        var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 20_039.72); // the ladder's only holder when this was decoded
         Assert.True(rung.IsCapstone);
         Assert.Equal("ABYSS ABSOLUTE", rung.Gem!.Value.ToString());
         Assert.Null(rung.Level);
@@ -139,7 +141,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void ToNextCountsDownToTheNextRungAndNeverBelowZero()
     {
-        var rung = Phoenix2PumbilityLevel.From(17_602.69);
+        var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 17_602.69);
         Assert.Equal(17_800, rung.NextThreshold);
         Assert.Equal(197.31, rung.ToNext(17_602.69)!.Value, 2);
         // A pool past this rung's own ceiling belongs to the rung above; asked anyway, it owes zero
@@ -150,7 +152,7 @@ public sealed class Phoenix2PumbilityLevelTests
     [Fact]
     public void LevelsOfAGemComeBackWeakestFirst()
     {
-        var diamond = Phoenix2PumbilityLevel.LevelsOf(Name.From("[P.B] DIAMOND"));
+        var diamond = Phoenix2PumbilityLevel.LevelsOf(MixEnum.Phoenix2, Name.From("[P.B] DIAMOND"));
         Assert.Equal(new[] { 1, 2, 3, 4, 5 }, diamond.Select(r => r.Level!.Value));
         Assert.Equal(new[] { 17_000, 17_200, 17_400, 17_600, 17_800 }, diamond.Select(r => r.Threshold));
         Assert.Equal(Enumerable.Range(21, 5), diamond.Select(r => r.Index));
@@ -164,8 +166,46 @@ public sealed class Phoenix2PumbilityLevelTests
     public void TheWideGemsStepFiveHundred()
     {
         Assert.Equal(new[] { 10_000, 10_500, 11_000, 11_500, 12_000 },
-            Phoenix2PumbilityLevel.LevelsOf(Name.From("[P.B] BRONZE")).Select(r => r.Threshold));
+            Phoenix2PumbilityLevel.LevelsOf(MixEnum.Phoenix2, Name.From("[P.B] BRONZE")).Select(r => r.Threshold));
         Assert.Equal(new[] { 12_500, 13_000, 13_500, 14_000, 14_500 },
-            Phoenix2PumbilityLevel.LevelsOf(Name.From("[P.B] SILVER")).Select(r => r.Threshold));
+            Phoenix2PumbilityLevel.LevelsOf(MixEnum.Phoenix2, Name.From("[P.B] SILVER")).Select(r => r.Threshold));
+    }
+
+    /// <summary>Rise's raised ALEXANDRITE and ABYSS ABSOLUTE widen the gems below them (rise.md D27).</summary>
+    [Fact]
+    public void RisesRaisedGemsMoveItsLevelsWithThem()
+    {
+        Assert.Equal(new[] { 18_000, 18_240, 18_480, 18_720, 18_960 },
+            Phoenix2PumbilityLevel.LevelsOf(MixEnum.Rise, Name.From("[P.B] RED BERYL")).Select(r => r.Threshold));
+        Assert.Equal(new[] { 19_200, 19_380, 19_560, 19_740, 19_920 },
+            Phoenix2PumbilityLevel.LevelsOf(MixEnum.Rise, Name.From("[P.B] ALEXANDRITE")).Select(r => r.Threshold));
+        Assert.Equal(20_100, Phoenix2PumbilityLevel.All(MixEnum.Rise)[^1].Threshold);
+        Assert.Equal(37, Phoenix2PumbilityLevel.All(MixEnum.Rise).Count);
+    }
+
+    [Fact]
+    public void OnePoolStandsOnDifferentRungsOnRiseAndPhoenix2()
+    {
+        var rise = Phoenix2PumbilityLevel.From(MixEnum.Rise, 19_100);
+        var phoenix2 = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 19_100);
+
+        Assert.Equal((Name?)Name.From("[P.B] RED BERYL"), rise.Gem);
+        Assert.Equal(5, rise.Level);
+        Assert.Equal((Name?)Name.From("[P.B] ALEXANDRITE"), phoenix2.Gem);
+        Assert.Equal(1, phoenix2.Level);
+        Assert.Equal(rise.Index + 1, phoenix2.Index);
+    }
+
+    [Fact]
+    public void RiseArcadesLadderIsPhoenix2s()
+    {
+        Assert.Equal(Phoenix2PumbilityLevel.All(MixEnum.Phoenix2).Select(r => (r.Index, r.Threshold)),
+            Phoenix2PumbilityLevel.All(MixEnum.RiseArcade).Select(r => (r.Index, r.Threshold)));
+    }
+
+    [Fact]
+    public void AMixWithoutTheLadderCannotAskForARung()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Phoenix2PumbilityLevel.From(MixEnum.Phoenix, 15_000));
     }
 }

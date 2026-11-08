@@ -1,5 +1,6 @@
 using Bunit;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 using Xunit;
 
@@ -18,7 +19,7 @@ public sealed class PumbilityLevelBadgeTests : ComponentTestBase
         // 11,050 sits on BRONZE LV.3 — badge index 3, which the source spells "pumbility_3.png"
         // on nothing and "pumbility_03.png" in its own art folder. Ours is always padded.
         var cut = RenderComponent<PumbilityLevelBadge>(p => p
-            .Add(x => x.Level, Phoenix2PumbilityLevel.From(11_050)));
+            .Add(x => x.Level, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 11_050)));
 
         var img = cut.Find("img");
         Assert.Equal("https://piuimages.arroweclip.se/pumbility/p2/pumbility_03.png",
@@ -29,7 +30,7 @@ public sealed class PumbilityLevelBadgeTests : ComponentTestBase
     public void AHighRungBadgeIsStillTwoDigits()
     {
         var cut = RenderComponent<PumbilityLevelBadge>(p => p
-            .Add(x => x.Level, Phoenix2PumbilityLevel.From(17_602.69)));
+            .Add(x => x.Level, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 17_602.69)));
 
         Assert.Equal("https://piuimages.arroweclip.se/pumbility/p2/pumbility_24.png",
             cut.Find("img").GetAttribute("src"));
@@ -39,7 +40,7 @@ public sealed class PumbilityLevelBadgeTests : ComponentTestBase
     public void TheAltTextNamesTheRung()
     {
         var cut = RenderComponent<PumbilityLevelBadge>(p => p
-            .Add(x => x.Level, Phoenix2PumbilityLevel.From(17_602.69)));
+            .Add(x => x.Level, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 17_602.69)));
 
         Assert.Equal("PUMBILITY level [P.B] DIAMOND LV.4", cut.Find("img").GetAttribute("alt"));
     }
@@ -48,7 +49,7 @@ public sealed class PumbilityLevelBadgeTests : ComponentTestBase
     public void TheCapstoneAltCarriesNoLevelNumber()
     {
         var cut = RenderComponent<PumbilityLevelBadge>(p => p
-            .Add(x => x.Level, Phoenix2PumbilityLevel.From(20_100)));
+            .Add(x => x.Level, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 20_100)));
 
         Assert.Equal("PUMBILITY level ABYSS ABSOLUTE", cut.Find("img").GetAttribute("alt"));
     }
@@ -57,7 +58,7 @@ public sealed class PumbilityLevelBadgeTests : ComponentTestBase
     public void AMissingFileHidesTheImageInsteadOfBreakingIt()
     {
         var cut = RenderComponent<PumbilityLevelBadge>(p => p
-            .Add(x => x.Level, Phoenix2PumbilityLevel.From(17_602.69)));
+            .Add(x => x.Level, Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, 17_602.69)));
 
         // The graceful-404 contract rides an inline handler, so its presence IS the behavior
         // a bUnit render can pin — the browser side is just style.display.

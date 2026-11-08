@@ -40,15 +40,20 @@ internal static class PumbilityPoolBands
     public const string Phoenix2Unranked = "unranked";
 
     private static readonly IReadOnlyList<PumbilityPoolBand> PhoenixBands = BuildPhoenixBands();
-    private static readonly IReadOnlyList<PumbilityPoolBand> Phoenix2Bands = BuildPhoenix2Bands();
 
-    /// <summary>The bands for a mix, lowest first. Empty for a mix without a PUMBILITY formula.</summary>
+    private static readonly IReadOnlyDictionary<MixEnum, IReadOnlyList<PumbilityPoolBand>> GemBands =
+        Enum.GetValues<MixEnum>().Where(m => m.UsesPhoenix2Pumbility()).ToDictionary(m => m, BuildGemBands);
+
+    /// <summary>
+    ///     The bands for a mix, lowest first: Phoenix's ten-thousands, or the gems of a mix on Phoenix 2's
+    ///     rules. Empty for a mix without a PUMBILITY formula.
+    /// </summary>
     public static IReadOnlyList<PumbilityPoolBand> For(MixEnum mix)
     {
-        return mix switch
+        return MixProfiles.For(mix).Pumbility switch
         {
-            MixEnum.Phoenix => PhoenixBands,
-            MixEnum.Phoenix2 => Phoenix2Bands,
+            PumbilityRules.Phoenix => PhoenixBands,
+            PumbilityRules.Phoenix2 => GemBands[mix],
             _ => Array.Empty<PumbilityPoolBand>()
         };
     }
@@ -68,10 +73,10 @@ internal static class PumbilityPoolBands
         return bands;
     }
 
-    private static IReadOnlyList<PumbilityPoolBand> BuildPhoenix2Bands()
+    private static IReadOnlyList<PumbilityPoolBand> BuildGemBands(MixEnum mix)
     {
         // A gem starts at its level 1 (the capstone has no levels and starts at its own index).
-        var gems = Phoenix2PumbilityLevel.All
+        var gems = Phoenix2PumbilityLevel.All(mix)
             .Where(r => r.IsRanked && (r.Level == 1 || r.IsCapstone))
             .ToArray();
         var bands = new List<PumbilityPoolBand>

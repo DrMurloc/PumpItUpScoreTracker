@@ -62,9 +62,9 @@ internal static class ChartPresenceCensus
     {
         var standing = pumbility.ToArray();
         var columns = new List<PumbilityBand>();
-        foreach (var gem in PumbilityBand.Gems())
+        foreach (var gem in PumbilityBand.Gems(MixEnum.Phoenix2))
         {
-            var levels = PumbilityBand.Levels(PumbilityPool.Total)
+            var levels = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Total)
                 .Where(band => band.Gem == gem.Name && band.Level != null)
                 .ToArray();
             if (levels.Length > 1 && standing.Count(gem.Holds) >= PlayersToOpenAGem) columns.AddRange(levels);

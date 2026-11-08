@@ -297,7 +297,7 @@
         get
         {
             if (Page == null) return Array.Empty<(string?, IReadOnlyList<(string, string)>)>();
-            if (Page.Mix != MixEnum.Phoenix2)
+            if (!Page.Mix.UsesPhoenix2Pumbility())
                 return new (string?, IReadOnlyList<(string, string)>)[]
                 {
                     (null, PhoenixTitleList.BuildList().OfType<PhoenixDifficultyTitle>()
@@ -305,7 +305,7 @@
                 };
 
             var pool = PoolOf(Page.Pool_);
-            var levels = PumbilityBand.Levels(pool);
+            var levels = PumbilityBand.Levels(Page.Mix, pool);
             if (pool != PumbilityPool.Total)
                 return new (string?, IReadOnlyList<(string, string)>)[]
                 {
@@ -313,7 +313,7 @@
                 };
 
             // The capstone is its own gem and its only level, so its group holds the one line.
-            return PumbilityBand.Gems()
+            return PumbilityBand.Gems(Page.Mix)
                 .Select(gem => ((string?)gem.Name.ToString(),
                     (IReadOnlyList<(string, string)>)new[] { (gem.Name.ToString(), L["All Levels"].Value) }
                     .Concat(levels.Where(l => l.Gem == gem.Name && l.Level is { } level)

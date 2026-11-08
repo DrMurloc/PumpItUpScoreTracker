@@ -44,8 +44,8 @@ public sealed record PumbilityLevelChange(
             m is { Kind: MilestoneKind.PumbilityGain, OldValue: not null, NewValue: not null });
         if (gain == null) return null;
 
-        var from = Phoenix2PumbilityLevel.From(gain.OldValue!.Value);
-        var to = Phoenix2PumbilityLevel.From(gain.NewValue!.Value);
+        var from = Phoenix2PumbilityLevel.From(mix, gain.OldValue!.Value);
+        var to = Phoenix2PumbilityLevel.From(mix, gain.NewValue!.Value);
         if (to.Index <= from.Index) return null;
 
         var completedAGem = records.Any(m =>

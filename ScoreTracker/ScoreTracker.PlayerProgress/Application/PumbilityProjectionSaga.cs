@@ -270,7 +270,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 peerFor.TryGetValue(voice, out var types);
                 // The gem is read off the total on the one mix that has a ladder to read it from.
                 return new PeerRosterEntry(user, total,
-                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null,
+                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(mix, total).Index : null,
                     stat?.SinglesCompetitiveLevel ?? 0, stat?.DoublesCompetitiveLevel ?? 0,
                     types ?? new HashSet<ChartType>(), OverlapOf(voice, types), null);
             }
@@ -285,7 +285,7 @@ namespace ScoreTracker.PlayerProgress.Application
                         .TryGetValue(voice, out var published) ? published : 0d)
                     .DefaultIfEmpty(0d).Max();
                 return new PeerRosterEntry(null, total,
-                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null, 0, 0,
+                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(mix, total).Index : null, 0, 0,
                     types ?? new HashSet<ChartType>(), OverlapOf(voice, types), voice.Tag);
             }
 

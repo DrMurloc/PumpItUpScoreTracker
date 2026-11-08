@@ -94,7 +94,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
             if (chosen is { } picked)
             {
-                var band = PumbilityBand.ByName(pool, picked);
+                var band = PumbilityBand.ByName(mix, pool, picked);
                 if (band == null) return (null, Empty);
                 return (band.Name, await Read(mix, pool, band, band.Name, charts, scoring));
             }
@@ -107,7 +107,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 _ => stats.SkillRating
             };
 
-            var level = PumbilityBand.LevelOf(pool, value);
+            var level = PumbilityBand.LevelOf(mix, pool, value);
             if (level == null) return (null, Empty);
             var reading = await Read(mix, pool, level, level.Name, charts, scoring);
 
@@ -116,7 +116,7 @@ namespace ScoreTracker.PlayerProgress.Application
             if (reading.Spread.Holders >= PumbilityBand.MinimumForLevel || level.Gem is not { } gem)
                 return (level.Name, reading);
 
-            var around = PumbilityBand.ByName(pool, gem);
+            var around = PumbilityBand.ByName(mix, pool, gem);
             if (around == null) return (level.Name, reading);
             return (around.Name, await Read(mix, pool, around, around.Name, charts, scoring));
         }

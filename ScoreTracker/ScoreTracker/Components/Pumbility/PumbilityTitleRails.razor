@@ -47,7 +47,7 @@
                            Pool gate. *@
                         @if (rail.Pool == PumbilityPool.Total && rail.NextThreshold is { } nextThreshold)
                         {
-                            <PumbilityLevelTicks Floor="rail.HeldThreshold" Ceiling="nextThreshold"
+                            <PumbilityLevelTicks Mix="Mix" Floor="rail.HeldThreshold" Ceiling="nextThreshold"
                                                  Pool="rail.Value">
                                 <div class="pmb-rail-bar">
                                     <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
@@ -123,6 +123,9 @@
 
 @code {
     [Parameter] public IReadOnlyList<TitleRail> Rails { get; set; } = Array.Empty<TitleRail>();
+
+    /// <summary>The mix the rails belong to, whose gem ladder the total rail wears.</summary>
+    [Parameter] public MixEnum Mix { get; set; }
 
     private static string Percent(double fraction) =>
         (Math.Clamp(fraction, 0, 1) * 100).ToString("0.#", CultureInfo.InvariantCulture);
