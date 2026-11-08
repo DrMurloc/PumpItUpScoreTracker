@@ -516,9 +516,9 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
 | Passed-in-another-mix border | on, but only within a platform: Rise ↔ Rise Arcade, and the arcade family among themselves (D6) |
 | Tier lists | open on both mixes with community votes and the pass tiers; the score-derived lenses weight players by the competitive level on their PlayerStats row, which only a mix with PUMBILITY wrote at the time, so they arrive with phase 3. Since D20 RISE carries its own competitive levels, and since 2026-10-03 the pass tiers weight players by them too, as on every mix without difficulty titles — before then they grouped players by difficulty title, which RISE has none of, and read Not Rated; Phoenix 1 keeps its difficulty-title groups ([pumbility-tier-list.md §10a](pumbility-tier-list.md)) |
-| Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros |
+| Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros. *PUMBILITY and its tiles arrive with phase 3 (§13); official standing stays hidden* |
 | API | `GET api/v2/mixes` lists both with `scoringModel: phoenix`; every v2 read takes them; **`POST api/v2/players/me/plays`** (D14) accepts a judged play with the score checksum, the capture app's endpoint; v1 unchanged |
-| Off the nav | PUMBILITY, the recap, Titles, Weekly Charts, March of Murlocs, the Leaderboards group and the two Phoenix calculators are not offered on either Rise mix (owner, 2026-09-22); reached by URL they explain themselves, as on a legacy mix — no route gate (§11.2, `MixCapabilities`) |
+| Off the nav | PUMBILITY, the recap, Titles, Weekly Charts, March of Murlocs, the Leaderboards group and the two Phoenix calculators are not offered on either Rise mix (owner, 2026-09-22); reached by URL they explain themselves, as on a legacy mix — no route gate (§11.2, `MixCapabilities`). *PUMBILITY and Titles join the nav with phase 3 (§13)* |
 | Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes (scoped afterwards, §12), `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
 | Docs and locales | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md updated; every new string in all nine locales |
 
@@ -773,7 +773,8 @@ line under Domain models: a new mix is a profile row, an enum value, a `MixIds` 
 
 Phase 1 left Discord out (§8.0). The owner scoped it on 2026-09-23: the session snapshot card posts for both RISE
 mixes, carrying everything that does not depend on a feature RISE lacks. Titles, PUMBILITY, Hardmode, the weekly
-boards and the Daily Step stay off the card because RISE has none of them.
+boards and the Daily Step stay off the card because RISE has none of them. *Since phase 3 (§13) PUMBILITY and the
+three PUMBILITY title ladders ride the card on both RISE mixes; the rest stays off.*
 
 ### 12.1 Decisions
 
@@ -863,3 +864,98 @@ D25 adds, with no migration:
 | SharedKernel | `MixProfile.SittingWindow`: 4 hours on both RISE mixes, 15 minutes on every other |
 | ScoreLedger | Every sitting timer reads the mix's window: the sittings still open, the planner's gap, the scheduled close and its quiet check. The sweep asks once per window (`ListOverdueSittings` takes the mixes), so RISE sittings still inside their 4 hours never fill its cap. `CloseOpenSittingsCommand` closes every open sitting a player has on a mix, under the same per-player lock as recording, skipping the quiet check |
 | Web | `PlayersController` gains `POST me/sittings/close`; the Sessions page shows a sitting that has not closed without the patience card |
+
+---
+
+## 13. PUMBILITY and titles (phase 3)
+
+Phase 3 opens PUMBILITY and the three PUMBILITY title ladders on both RISE mixes. The thresholds come from a review
+of RISE's scores through 2026-10-16 (13 public accounts), shared with RISE players before the owner chose between
+two options. Chart titles, boss breakers, Phoenix 1's folder titles and Hardmode stay out.
+
+### 13.1 Decisions
+
+- **D27 (owner, 2026-11-07). The ladders are Phoenix 2's with the top rungs raised (option B).** Every rung through
+  [S]/[D] EXPERT LV.1 and every gem through RED BERYL keeps Phoenix 2's number. Above that the rungs are score
+  lines: the pool a player earns by holding one score on all fifty of their hardest RISE charts — 940,000 for
+  EXPERT LV.3, rising to 985,000 for LV.10 and 990,000 for MASTER.
+
+  | Ladder | Rungs | Phoenix 2 | RISE |
+  |---|---|---|---|
+  | [S] | EXPERT LV.2 → LV.10 | 17,700 · 17,900 · 18,100 · 18,300 · 18,500 · 18,600 · 18,700 · 18,800 · 18,900 | 17,750 · 18,000 · 18,250 · 18,500 · 18,650 · 18,750 · 18,900 · 19,000 · 19,150 |
+  | [S] | SINGLE MASTER | 19,000 | 19,250 |
+  | [D] | EXPERT LV.2 → LV.10 | 18,200 · 18,400 · 18,600 · 18,800 · 19,000 · 19,100 · 19,200 · 19,300 · 19,400 | 18,250 · 18,450 · 18,750 · 19,000 · 19,150 · 19,250 · 19,400 · 19,550 · 19,650 |
+  | [D] | DOUBLE MASTER | 19,500 | 19,800 |
+  | [P.B] | ALEXANDRITE | 19,000 | 19,200 |
+  | [P.B] | ABYSS ABSOLUTE | 20,000 | 20,100 |
+
+  A gem still splits its span into five levels, so RISE's RED BERYL steps 240 apart (18,000–19,200) and its
+  ALEXANDRITE 180 (19,200–20,100). On the review's data the move costs three players one to three rungs and DOUBLE
+  MASTER one of its three holders. No threshold makes the top rarer: the best RISE pools sit within 1% of what the
+  catalog can pay at all. Rise Arcade keeps Phoenix 2's numbers; 118 records from ten players tune nothing.
+- **D28 (owner, 2026-11-08). RISE's titles are the three PUMBILITY ladders.** "We are NOT gonna add the phoenix
+  titles right now": no chart titles, no boss breakers and no Phoenix 1 folder titles on either RISE mix. The Titles
+  page draws the [S], [D] and [P.B] rails.
+- **D29. PUMBILITY prices RISE with Phoenix 2's formula.** Half-doubles are priced and pooled as RISE's doubles at
+  their printed level, singles keep Phoenix 2's one-level bump, the grade multiplier reads Phoenix 2's floors off the
+  raw score rather than RISE's nine letters, and a mark prices as the plate it is stored as (D5). Rise Arcade prices
+  with Phoenix 2's formula as it is. *From the review; decided unless he objects.*
+- **D30. The profile says which PUMBILITY rules a mix plays by** — `MixProfile.Pumbility`, a `PumbilityRules` of
+  none, Phoenix's or Phoenix 2's — replacing the PUMBILITY flag in `MixFeatures`. Both RISE mixes play by Phoenix 2's.
+  Every PUMBILITY question Phoenix 2 answers differently from Phoenix asks `UsesPhoenix2Pumbility()` instead of naming
+  the mix: plates priced, the Singles and Doubles pools as boards with their own milestones and ladders, the gem
+  levels, PUMBILITY peers instead of the competitive band, and the window the projection draws them from. A pool's
+  doubles are the mix's doubles type (`PumbilityPools.TypesOn`, §3.1), never `ChartType.Double` by name. What belongs
+  to Phoenix 2 the mix still asks for it: Hardmode, seasons, the official boards and every rank estimated on them,
+  March of Murlocs, Discord title roles, title communities, the chart page's presence graph, the calculators, and the
+  tier list's Phoenix 1 stand-in for an empty Phoenix 2 list.
+- **D31 (owner, 2026-11-08). The PUMBILITY section and the PUMBILITY tier list open on RISE.** "PUMBILITY tier list
+  is fine for RISE, as is the PUMBILITY page": Play and Breakdown, the PUMBILITY lens and its Personalized view, the
+  player page's PUMBILITY tiles and the home widget. Hardmode and the Phoenix 1 tab stay Phoenix 2's. The nightly
+  rebuild runs for every mix with PUMBILITY, and a pool counts once it holds fifty contributing charts of a type, as
+  on every mix.
+- **D32 (owner, 2026-11-08). A player's first RISE card after this ships is their debut.** "make sure that players
+  show their discord achieves for pumbility/titles etc. the next time they import so they can get that dopamine
+  hit." On a mix with no official site, where the site is the only place these numbers have ever been shown:
+  - the first PUMBILITY announcement reads from zero — `PUMBILITY 0 → 18,234`, with the (S) and (D) lines — whatever
+    the stored number says, keyed on the player having no PUMBILITY milestone on the mix yet;
+  - the title step announces every rung the player holds and has not been awarded, not only the rungs the batch
+    crossed;
+  - on the first card that announces any titles, each ladder names only its highest rung (owner, 2026-11-08:
+    "1 yeah"). Every card after it lists every rung crossed, as on Phoenix 2.
+
+  The milestones are minted the same way, so the Sessions page and the feeds say what the card said. Phoenix 1 and
+  Phoenix 2 keep their rules: piugame showed those players their numbers first, and their accounts predate the
+  milestone table, so "no milestone yet" would not mean "never announced" there. The launch re-price (§13.3) writes
+  the stored numbers quietly and leaves the announcement to the import.
+- **D33 (owner, 2026-11-08). A thin population says so.** "If there's not a disclaimer for 'your pool has low
+  population' or something we should add it." The notes that existed switch on with the rules: Play's "every row
+  here is read off fewer than five scores", the tier list's Personalized view turning off below three peers, and
+  Breakdown's count of the players holding your title. The tier list's Community PUMBILITY view had none; it now says
+  how many players' top 50s it is read off whenever that is under 100 — the cutoff the PUMBILITY calculator's "Early
+  days" note already uses, which no Phoenix list is under.
+- **D34 (owner, 2026-11-08). Peer score coloring works on RISE, half-doubles included.** "Score coloring based on
+  peers should also work." Rivals, World and communities already colored RISE scores. The competitive band and the
+  PUMBILITY peers now key on the mix's own chart types, so a half-double finds its doubles peers, and the
+  PUMBILITY-peers source opens wherever the rules are Phoenix 2's.
+
+### 13.2 Shape
+
+| Layer | What changes |
+|---|---|
+| SharedKernel | `PumbilityRules` on `MixProfile`, read by `HasPumbility()` and `UsesPhoenix2Pumbility()`; `PumbilityScoring` gains Rise (Phoenix 2's configuration with half-doubles at a full modifier) and Rise Arcade (Phoenix 2's); `PumbilityPools.TypesOn(mix)` |
+| Domain | RISE and Rise Arcade title lists that hold the PUMBILITY ladders and nothing else (Rise's per D27, Rise Arcade's on Phoenix 2's numbers), sharing the pool arithmetic with `Phoenix2TitleList`; `TitleLists.For(mix)` resolves the list a mix keeps titles against; the gem levels (`Phoenix2PumbilityLevel`) and the title bands (`PumbilityBand`) take the mix and read its [P.B] rungs, throwing for a mix without them |
+| PlayerProgress | Rating, titles, projection, cohorts and highlights ask the rules; `PlayerRatingSaga` mints the debut from zero and `TitleSaga` announces unawarded rungs (D32), both reading `IPlayerMilestoneRepository.HasMilestone` |
+| ChartIntelligence | The PUMBILITY tier list counts the mix's own two types; its peer groups and the personalized lens follow the rules |
+| Rivals | Competitive bands and PUMBILITY peers key on the mix's own chart types; the PUMBILITY source opens by the rules |
+| Web | Pages ask the rules; `RecurringJobRunner` rebuilds the PUMBILITY tier list for every mix with PUMBILITY; Admin offers Re-price and Rebuild PUMBILITY for each such mix (Speed stays Phoenix 1 and 2); the tier list's early-days line (D33); the PUMBILITY-peers copy on `/Account` |
+
+No migration: titles, stats, tier lists, milestones and the per-score pricing are keyed per mix already. No new job.
+No API shape change; the v2 PUMBILITY reads start answering for the two RISE mixes.
+
+### 13.3 After deploy
+
+Admin → **Re-price Rise ratings**, then **Re-price Rise Arcade ratings**, so the player page, the home widget and
+community Rankings carry every RISE player's number before their next play. A quiet re-price mints nothing, so the
+debut (D32) still fires on the next import. The PUMBILITY tier lists fill on the next nightly rebuild, or at once from
+Admin → **Rebuild Rise PUMBILITY tier lists**.
