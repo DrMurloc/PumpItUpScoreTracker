@@ -5800,6 +5800,9 @@
   <data name="not on the board" xml:space="preserve">
     <value>not on the board</value>
   </data>
+  <data name="Not on this mix" xml:space="preserve">
+    <value>Not on this mix</value>
+  </data>
   <data name="Not played" xml:space="preserve">
     <value>Not played</value>
   </data>
@@ -6664,9 +6667,6 @@
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2 moved every letter below AAA —</value>
   </data>
-  <data name="Phoenix 2 only" xml:space="preserve">
-    <value>Phoenix 2 only</value>
-  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan.</value>
   </data>
@@ -7006,11 +7006,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Players opening your site or your source from the directory, counted since the tool was listed.</value>
   </data>
-  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
-    <value>Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty.</value>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty." xml:space="preserve">
+    <value>Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty.</value>
   </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit.</value>
+  </data>
+  <data name="Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs." xml:space="preserve">
+    <value>Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs.</value>
   </data>
   <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
     <value>Players within half a level of you, per chart type — today's definition.</value>

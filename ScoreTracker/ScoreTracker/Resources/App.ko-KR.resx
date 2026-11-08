@@ -5770,6 +5770,9 @@
   <data name="not on the board" xml:space="preserve">
     <value>보드 미등록</value>
   </data>
+  <data name="Not on this mix" xml:space="preserve">
+    <value>이 시리즈에서는 사용할 수 없음</value>
+  </data>
   <data name="Not played" xml:space="preserve">
     <value>미플레이</value>
   </data>
@@ -6631,9 +6634,6 @@
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2는 AAA 미만의 모든 랭크 기준을 옮겼습니다 —</value>
   </data>
-  <data name="Phoenix 2 only" xml:space="preserve">
-    <value>Phoenix 2 전용</value>
-  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2는 Singles 채보를 기본 곡선에서 한 레벨 위로 계산합니다 — S22가 23처럼 매겨집니다. 이전 시리즈와 같은 채보를 파는 것은 잘못된 계획입니다.</value>
   </data>
@@ -6970,11 +6970,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>디렉터리에서 여러분의 사이트나 소스를 연 플레이어 수입니다. 목록에 오른 이후의 누계입니다.</value>
   </data>
-  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
-    <value>해당 유형 풀이 내 풀보다 500 아래에서 250 위 사이에 있는 유저입니다. Phoenix 2 전용이며 Phoenix 1에서는 이 그룹이 비어 있습니다.</value>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty." xml:space="preserve">
+    <value>해당 유형 풀이 내 풀보다 500 아래에서 250 위 사이에 있는 유저입니다. Phoenix 1에서는 이 그룹이 비어 있습니다.</value>
   </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>해당 유형의 풀이 내 풀보다 {0} 아래에서 {1} 위 사이에 있고, 그 풀을 다 채운 플레이어입니다. 나는 나 자신의 동료가 될 수 없으며, 강조된 행이 내가 있을 자리입니다.</value>
+  </data>
+  <data name="Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs." xml:space="preserve">
+    <value>이 목록의 바탕이 된 상위 50을 가득 채운 플레이어: {0}명. 아직 초기라서 상위 50을 채우는 사람이 늘어나면 달라집니다.</value>
   </data>
   <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
     <value>채보 유형별로 나와 반 레벨 이내인 유저입니다. 현재 사용 중인 기준입니다.</value>
