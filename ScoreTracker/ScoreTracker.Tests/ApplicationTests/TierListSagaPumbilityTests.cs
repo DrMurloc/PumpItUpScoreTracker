@@ -282,6 +282,35 @@ public sealed class TierListSagaPumbilityTests
     ///     Level 12 keeps the ballast below whatever folder is under test, so it fills the pool
     ///     without displacing the charts the test is about.
     /// </summary>
+    [Fact]
+    public async Task RiseCountsItsHalfDoublesAsItsDoublesAndWritesTheCommunityListAlone()
+    {
+        // Rise plays by Phoenix 2's rules: its doubles pool is its half-doubles, and its
+        // personalized lens is the projector's, so only the community list materializes.
+        var user = Guid.NewGuid();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).WithMix(MixEnum.Rise).Build();
+        var ballast = Enumerable.Range(0, 50)
+            .Select(_ => new ChartBuilder().WithLevel(12).WithType(ChartType.HalfDouble).WithMix(MixEnum.Rise).Build())
+            .ToArray();
+        var charts = new List<Chart> { halfDouble };
+        charts.AddRange(ballast);
+        var scores = new List<(Guid, RecordedPhoenixScore)> { (user, Score(halfDouble, 990_000)) };
+        scores.AddRange(ballast.Select(c => (user, Score(c, 900_000))));
+        var titles = new Mock<ITitleRepository>();
+        var saved = new List<SavedFolder>();
+        var saga = BuildSaga(charts, scores, saved, mix: MixEnum.Rise, titles: titles);
+
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand(MixEnum.Rise)));
+
+        var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.HalfDouble);
+        Assert.Equal(MixEnum.Rise, folder.Mix);
+        Assert.Equal(new[] { PumbilityPeers.Community }, folder.ByPeerKey.Keys);
+        Assert.Equal(1, folder.ByPeerKey[PumbilityPeers.Community].Entries.Single().Appearances);
+        Assert.DoesNotContain(saved, f => f.ChartType == ChartType.Double);
+        titles.Verify(t => t.GetUserIdsOnHighestLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static void GiveFullPools(List<Chart> charts, List<(Guid, RecordedPhoenixScore)> scores,
         params Guid[] users)
     {

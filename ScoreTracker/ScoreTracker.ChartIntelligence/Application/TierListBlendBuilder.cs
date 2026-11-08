@@ -188,7 +188,7 @@ internal sealed class TierListBlendBuilder
     private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
         MixEnum mix, Guid? userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
     {
-        if (userId != null && mix == MixEnum.Phoenix2)
+        if (userId != null && mix.UsesPhoenix2Pumbility())
             return await ProjectedPumbility(chartType, mix, userId.Value, folderCharts, cancellationToken);
 
         var (peerKey, ownPool) = userId == null
@@ -317,7 +317,7 @@ internal sealed class TierListBlendBuilder
     private async Task<(string? Key, IReadOnlySet<Guid>? Pool)> ResolveViewerPeersAndPool(ChartType chartType,
         MixEnum mix, Guid userId, CancellationToken cancellationToken)
     {
-        if (mix == MixEnum.Phoenix2) return (null, null);
+        if (mix.UsesPhoenix2Pumbility()) return (null, null);
         var pool = await ViewerPool(chartType, mix, userId, cancellationToken);
         var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
         return (PumbilityPeers.ForDifficultyTitleLevel((int)titleLevel), pool);
