@@ -8,6 +8,7 @@ using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -56,9 +57,9 @@ internal sealed class PumbilityFoldersHandler
             // viewer's peers are the projector's (D55), so their folders are the levels those
             // peers' pools reach; everyone else reads a stored list's folders.
             var folders = new List<PumbilityFolderRecord>();
-            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            foreach (var chartType in PumbilityPools.TypesOn(request.Mix))
             {
-                if (userId != null && request.Mix == MixEnum.Phoenix2)
+                if (userId != null && request.Mix.UsesPhoenix2Pumbility())
                 {
                     folders.AddRange(
                         (await _builder.ProjectedPumbilityFolders(chartType, request.Mix, userId.Value, cancellationToken))

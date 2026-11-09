@@ -78,8 +78,8 @@ public sealed class PumbilityTitleCohortProbeTests
         {
             _output.WriteLine($"--- Phoenix 2 · {pool} ---");
             var bands = pool == PumbilityPool.Total
-                ? PumbilityBand.Gems().Concat(PumbilityBand.Levels(pool)).ToArray()
-                : PumbilityBand.Levels(pool).ToArray();
+                ? PumbilityBand.Gems(MixEnum.Phoenix2).Concat(PumbilityBand.Levels(MixEnum.Phoenix2, pool)).ToArray()
+                : PumbilityBand.Levels(MixEnum.Phoenix2, pool).ToArray();
             var levelSites = new Dictionary<string, int>();
             var levelTotals = new Dictionary<string, int>();
             foreach (var band in bands)
@@ -98,7 +98,7 @@ public sealed class PumbilityTitleCohortProbeTests
             // What "enough" buys: how many accounts keep their own level rather than its gem.
             foreach (var threshold in new[] { 20, 25, 30, 40, 50, 75, 100 })
             {
-                var stays = PumbilityBand.Levels(pool)
+                var stays = PumbilityBand.Levels(MixEnum.Phoenix2, pool)
                     .Where(b => levelTotals.GetValueOrDefault(b.Name.ToString()) >= threshold)
                     .Sum(b => levelSites.GetValueOrDefault(b.Name.ToString()));
                 _output.WriteLine($"enough {threshold,4}: {stays,4} accounts stay on their level");

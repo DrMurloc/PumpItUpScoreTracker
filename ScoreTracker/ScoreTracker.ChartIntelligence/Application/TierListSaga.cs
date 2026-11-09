@@ -520,7 +520,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         // the latter being the pool a player's total and title rung actually come from
         // (docs/design/pumbility-calculator.md D10).
         var ratedByType = new Dictionary<ChartType, IReadOnlyDictionary<Guid, List<RatedChart>>>();
-        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+        foreach (var chartType in PumbilityPools.TypesOn(mix))
         {
             var rated = await RateCharts(mix, chartType, allCharts, scoring, cancellationToken);
             ratedByType[chartType] = rated;
@@ -655,9 +655,9 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     /// <summary>
     ///     The peer groups to count over, plus the community group that is every player at once.
-    ///     Phoenix 1 groups by the level of a player's highest difficulty title. Phoenix 2 writes
-    ///     the community group alone: its personalized lens is a window around the viewer's own
-    ///     pool of the type, per viewer, which the projector answers at request time
+    ///     Phoenix 1 groups by the level of a player's highest difficulty title. A mix on Phoenix
+    ///     2's rules writes the community group alone: its personalized lens is a window around the
+    ///     viewer's own pool of the type, per viewer, which the projector answers at request time
     ///     (docs/design/pumbility-tier-list.md §5, D55) and nothing materializes.
     /// </summary>
     private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolvePeers(MixEnum mix,
@@ -669,7 +669,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             [PumbilityPeers.Community] = pools.Keys.ToHashSet()
         };
 
-        if (mix == MixEnum.Phoenix2) return peerGroups;
+        if (mix.UsesPhoenix2Pumbility()) return peerGroups;
 
         for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
         {

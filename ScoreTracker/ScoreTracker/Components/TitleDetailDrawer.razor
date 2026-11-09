@@ -77,7 +77,7 @@
                            the bar (docs/design/pumbility-levels.md §8). *@
                         @if (IsGemRung)
                         {
-                            <PumbilityLevelTicks Floor="Rung.Title.CompletionFloor"
+                            <PumbilityLevelTicks Mix="Mix" Floor="Rung.Title.CompletionFloor"
                                                  Ceiling="Rung.Title.CompletionRequired"
                                                  Pool="Rung.Progress.CompletionCount">
                                 <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
@@ -274,7 +274,7 @@
     private SuggestedLevel? Suggested => Rung == null ? null : SuggestedTitleLevel.For(Rung.Title);
 
     /// <summary>The eight total-pool [P.B] rungs — the only titles whose holders subdivide by level.</summary>
-    private bool IsGemRung => Mix == MixEnum.Phoenix2 &&
+    private bool IsGemRung => Mix.UsesPhoenix2Pumbility() &&
                               Rung?.Title is Phoenix2PumbilityTitle { Pool: PumbilityPool.Total };
 
     /// <summary>
@@ -283,12 +283,14 @@
     ///     than an UNRANKED badge on every gem drawer.
     /// </summary>
     private Phoenix2PumbilityLevel? ViewerLevel =>
-        Rung is { Progress.CompletionCount: > 0 } ? Phoenix2PumbilityLevel.From(Rung.Progress.CompletionCount) : null;
+        IsGemRung && Rung is { Progress.CompletionCount: > 0 }
+            ? Phoenix2PumbilityLevel.From(Mix, Rung.Progress.CompletionCount)
+            : null;
 
     /// <summary>This gem's levels, strongest first — the order the groups render in.</summary>
-    private IReadOnlyList<Phoenix2PumbilityLevel> GemLevels => Rung == null
+    private IReadOnlyList<Phoenix2PumbilityLevel> GemLevels => Rung == null || !IsGemRung
         ? Array.Empty<Phoenix2PumbilityLevel>()
-        : Phoenix2PumbilityLevel.LevelsOf(Rung.Title.Name).Reverse().ToArray();
+        : Phoenix2PumbilityLevel.LevelsOf(Mix, Rung.Title.Name).Reverse().ToArray();
 
     private IReadOnlyList<TitleHolder> PoollessHolders =>
         _holders?.Holders.Where(h => h.TotalPumbility == null).ToArray() ?? Array.Empty<TitleHolder>();
@@ -300,11 +302,11 @@
     /// </summary>
     private List<TitleHolder> MembersAt(Phoenix2PumbilityLevel level)
     {
-        if (_holders == null || Rung == null) return new List<TitleHolder>();
-        var levels = Phoenix2PumbilityLevel.LevelsOf(Rung.Title.Name);
+        if (_holders == null || Rung == null || !IsGemRung) return new List<TitleHolder>();
+        var levels = Phoenix2PumbilityLevel.LevelsOf(Mix, Rung.Title.Name);
         return _holders.Holders
             .Where(h => h.TotalPumbility is { } pool &&
-                        Math.Clamp(Phoenix2PumbilityLevel.From(pool).Index, levels[0].Index, levels[^1].Index) ==
+                        Math.Clamp(Phoenix2PumbilityLevel.From(Mix, pool).Index, levels[0].Index, levels[^1].Index) ==
                         level.Index)
             .ToList();
     }

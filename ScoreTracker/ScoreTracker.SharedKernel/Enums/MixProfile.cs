@@ -31,6 +31,19 @@ public enum AwardSet
     None
 }
 
+/// <summary>
+///     Which PUMBILITY a mix prices, as a family of rules: none at all; Phoenix's, one plate-blind
+///     pool; or Phoenix 2's, where plates price, the Singles and Doubles pools are boards with their
+///     own ladders, and a gem ladder levels the total. A mix's own formula is
+///     <c>ScoringConfiguration.PumbilityScoring</c>; this says which rules it is read by.
+/// </summary>
+public enum PumbilityRules
+{
+    None,
+    Phoenix,
+    Phoenix2
+}
+
 /// <summary>What the player stands on. A clear on one platform says nothing about the other.</summary>
 public enum Platform
 {
@@ -53,18 +66,18 @@ public sealed record MixArt(string? BubbleFolder, string? ScoreArtFolder, bool H
 ///     The nav's honest answers for a mix: whether it is fair to put each link in front of a
 ///     player of it (see <see cref="MixCapabilities" /> for why these are not a route gate).
 ///     <c>ScoresWatcher</c> is the download of the RISE capture app, which reads RISE and nothing
-///     else (docs/design/rise.md D26).
+///     else (docs/design/rise.md D26). PUMBILITY is not one of them: whether a mix has it is
+///     <see cref="MixProfile.Pumbility" />, the rules it plays by.
 /// </summary>
 public sealed record MixFeatures(
-    bool Pumbility,
     bool OfficialBoards,
     bool WeeklyBoard,
     bool MarchOfMurlocs,
     bool PhoenixCalculators,
     bool ScoresWatcher)
 {
-    public static readonly MixFeatures Phoenix = new(true, true, true, true, true, ScoresWatcher: false);
-    public static readonly MixFeatures None = new(false, false, false, false, false, ScoresWatcher: false);
+    public static readonly MixFeatures Phoenix = new(true, true, true, true, ScoresWatcher: false);
+    public static readonly MixFeatures None = new(false, false, false, false, ScoresWatcher: false);
 }
 
 /// <summary>
@@ -78,6 +91,10 @@ public sealed record MixFeatures(
 ///         far apart in play time two plays can be and still share a sitting, and how long a sitting
 ///         stays open with nothing arriving before it closes on its own (docs/design/rise.md §12).
 ///     </para>
+///     <para>
+///         <c>Pumbility</c> is the PUMBILITY rules the mix plays by, <see cref="PumbilityRules.None" />
+///         for a mix without it (docs/design/rise.md D30).
+///     </para>
 /// </summary>
 public sealed record MixProfile(
     ScoringModel ScoringModel,
@@ -89,7 +106,8 @@ public sealed record MixProfile(
     IReadOnlyList<ChartType> ChartTypes,
     MixArt Art,
     MixFeatures Features,
-    TimeSpan SittingWindow);
+    TimeSpan SittingWindow,
+    PumbilityRules Pumbility);
 
 /// <summary>
 ///     The profile of every mix. Adding a mix is a row here, its enum value, a <c>MixIds</c> Guid
@@ -125,7 +143,8 @@ public static class MixProfiles
 
     private static readonly MixProfile Legacy = new(
         ScoringModel.Legacy, GradeLadder.Phoenix1, AwardSet.None, OfficialSite: null, Platform.Pad,
-        HasLifebarModel: false, EveryLegacyType, MixArt.Flat, MixFeatures.None, QuarterHourSitting);
+        HasLifebarModel: false, EveryLegacyType, MixArt.Flat, MixFeatures.None, QuarterHourSitting,
+        PumbilityRules.None);
 
     private static readonly IReadOnlyDictionary<MixEnum, MixProfile> All = Build();
 
@@ -142,29 +161,32 @@ public static class MixProfiles
         all[MixEnum.Phoenix] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix1, AwardSet.PhoenixPlates, OfficialSite: MixEnum.Phoenix,
             Platform.Pad, HasLifebarModel: true, SingleDoubleCoOp,
-            new MixArt("Phoenix", null, HasHalfDoubleBubble: false), MixFeatures.Phoenix, QuarterHourSitting);
+            new MixArt("Phoenix", null, HasHalfDoubleBubble: false), MixFeatures.Phoenix, QuarterHourSitting,
+            PumbilityRules.Phoenix);
         // The Phoenix 2 stepball set carries the H. DOUBLE bubble piugame drew for the RISE MIX
         // channel (docs/design/rise.md D12); Phoenix 2 itself has no half-double charts to draw with it.
         all[MixEnum.Phoenix2] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: MixEnum.Phoenix2,
             Platform.Pad, HasLifebarModel: true, SingleDoubleCoOp,
-            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.Phoenix, QuarterHourSitting);
+            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.Phoenix, QuarterHourSitting,
+            PumbilityRules.Phoenix2);
         // Pump It Up RISE (docs/design/rise.md §3): Phoenix-scored on a keyboard, no site, no lifebar
         // the site models (D9), Rise's own nine-grade ladder and three marks, the Phoenix 2 stepballs
-        // (D12) with Rise's own letters and marks, and none of the Phoenix-generation features until
-        // phase 3 tunes them. What it has instead is the capture app, which reads its result screens (D26).
+        // (D12) with Rise's own letters and marks, and none of the Phoenix-generation features but
+        // PUMBILITY, which it plays by Phoenix 2's rules (D30). What it has instead is the capture app,
+        // which reads its result screens (D26).
         all[MixEnum.Rise] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Rise, AwardSet.RiseMarks, OfficialSite: null, Platform.Keyboard,
             HasLifebarModel: false, new[] { ChartType.Single, ChartType.HalfDouble },
             new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None with { ScoresWatcher = true },
-            RiseSitting);
+            RiseSitting, PumbilityRules.Phoenix2);
         // The Arcade Station plays the Phoenix 2 charts as-is — Phoenix 2 grades, plates and art —
         // on the same keyboard, and the capture app reads its result screens too.
         all[MixEnum.RiseArcade] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: null,
             Platform.Keyboard, HasLifebarModel: false, new[] { ChartType.Single, ChartType.Double },
             new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None with { ScoresWatcher = true },
-            RiseSitting);
+            RiseSitting, PumbilityRules.Phoenix2);
         return all;
     }
 }

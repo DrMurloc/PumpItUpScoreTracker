@@ -84,10 +84,10 @@ public sealed class RecurringJobRunner
             _bus.Publish(new ProcessPassTierListCommand(MixEnum.Rise)),
             _bus.Publish(new ProcessPassTierListCommand(MixEnum.RiseArcade)));
 
+    /// <summary>Every mix with a PUMBILITY formula gets its lists rebuilt (docs/design/rise.md D31).</summary>
     public Task PublishProcessPumbilityTierList() =>
-        Task.WhenAll(
-            _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix)),
-            _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
+        Task.WhenAll(Enum.GetValues<MixEnum>().Where(m => m.HasPumbility())
+            .Select(m => _bus.Publish(new ProcessPumbilityTierListCommand(m))));
 
     /// <summary>
     ///     The weekly Hardmode census (docs/design/hardmode-leaderboard.md). Phoenix 2 alone —

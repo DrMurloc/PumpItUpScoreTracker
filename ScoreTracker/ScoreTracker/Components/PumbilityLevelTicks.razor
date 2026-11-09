@@ -1,6 +1,7 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
 @using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 
 @* The level rungs on a one-gem PUMBILITY bar: big ticks with visible LV.n labels
@@ -42,12 +43,17 @@ else
     [Parameter]
     public double Pool { get; set; }
 
+    /// <summary>The mix whose gem ladder the ticks come from. A mix without one draws none.</summary>
+    [Parameter]
+    [EditorRequired]
+    public MixEnum Mix { get; set; }
+
     /// <summary>The bar being decorated, rendered unchanged.</summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
     private IReadOnlyList<PumbilityLevelMarkers.Tick> Ticks =>
-        PumbilityLevelMarkers.TicksFor(Floor, Ceiling, Pool);
+        PumbilityLevelMarkers.TicksFor(Mix, Floor, Ceiling, Pool);
 
     private static string Left(PumbilityLevelMarkers.Tick tick)
     {

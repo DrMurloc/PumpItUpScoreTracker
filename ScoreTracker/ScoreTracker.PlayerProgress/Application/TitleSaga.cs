@@ -73,8 +73,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     public async Task<IEnumerable<TitleProgress>> Handle(GetTitleProgressQuery request,
         CancellationToken cancellationToken)
     {
-        // Explicit three-way dispatch — no "not XX ⇒ Phoenix" fallthrough. An unknown
-        // mix must throw loudly rather than silently show Phoenix titles (plan doc).
+        // XX computes its own list on read; every other mix keeps its titles against the list
+        // TitleLists names for it, and never borrows another mix's (plan doc).
         switch (request.Mix)
         {
             case MixEnum.XX:
@@ -92,9 +92,14 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
                 return XXTitleList.BuildProgress(attempts);
             }
-            case MixEnum.Phoenix:
-            case MixEnum.Phoenix2:
+            default:
             {
+                // No ladder for this mix, which is a state the reader has to be able to
+                // render rather than a programming error: every mix is browsable now, and
+                // most of them never awarded a title at all. TitleLadders says which case
+                // this is so the page can tell "not built yet" from "never existed".
+                if (TitleLists.For(request.Mix) is not { } list) return Array.Empty<TitleProgress>();
+
                 ISet<Name> completedTitles;
                 IEnumerable<RecordedPhoenixScore> scores;
                 if (_currentUser.IsLoggedIn)
@@ -114,16 +119,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
                 var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                     .ToDictionary(c => c.Id);
 
-                return request.Mix == MixEnum.Phoenix
-                    ? PhoenixTitleList.BuildProgress(charts, scores, completedTitles)
-                    : Phoenix2TitleList.BuildProgress(charts, scores, completedTitles);
+                return list.BuildProgress(charts, scores, completedTitles);
             }
-            default:
-                // No ladder for this mix, which is a state the reader has to be able to
-                // render rather than a programming error: every mix is browsable now, and
-                // most of them never awarded a title at all. TitleLadders says which case
-                // this is so the page can tell "not built yet" from "never existed".
-                return Array.Empty<TitleProgress>();
         }
     }
 
@@ -136,13 +133,13 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
 
-        return mix switch
-        {
-            MixEnum.Phoenix => PhoenixTitleList.BuildProgress(charts, scores, completed),
-            MixEnum.Phoenix2 => Phoenix2TitleList.BuildProgress(charts, scores, completed),
-            _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
-                "Title persistence only exists for Phoenix-generation mixes")
-        };
+        return ListFor(mix).BuildProgress(charts, scores, completed);
+    }
+
+    private static IPhoenixTitleList ListFor(MixEnum mix)
+    {
+        return TitleLists.For(mix) ?? throw new ArgumentOutOfRangeException(nameof(mix), mix,
+            "Title persistence only exists for a mix with a title list");
     }
 
     /// <summary>
@@ -258,22 +255,25 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
     private static PhoenixTitle GetTitleByName(MixEnum mix, Name title)
     {
-        return mix switch
-        {
-            MixEnum.Phoenix => PhoenixTitleList.GetTitleByName(title),
-            MixEnum.Phoenix2 => Phoenix2TitleList.GetTitleByName(title),
-            _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
-                "Title persistence only exists for Phoenix-generation mixes")
-        };
+        return ListFor(mix).GetTitleByName(title);
     }
 
     public async Task<SessionTitlesResult> Handle(CaptureSessionTitles request,
         CancellationToken cancellationToken)
     {
-        // XX and unknown mixes have no title persistence — an empty result, not a throw
+        // A mix without a title list keeps no titles — an empty result, not a throw
         // (the old raw-event consumer would have faulted on an XX score event).
-        if (request.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2))
+        if (TitleLists.For(request.Mix) == null)
             return new SessionTitlesResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<TitleProgressDelta>());
+
+        // On a mix with no official site the saved set is exactly what this site has awarded, so
+        // it is read before this batch saves over it: a held rung missing from it has never been
+        // announced (docs/design/rise.md D32). A site's mix leaves it null — piugame showed those
+        // titles first, and its imports save them before any score batch runs.
+        var awarded = request.Mix.HasOfficialSite()
+            ? null
+            : (await _titles.GetCompletedTitles(request.Mix, request.UserId, cancellationToken))
+            .Select(t => t.Title).ToHashSet();
 
         // Persist the up-to-date title set (SaveTitles + highest) first, with the titles the official
         // site reported when an import announced — so everything below reads the set as it now
@@ -289,7 +289,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         // the ones before it: a session envelope lasts 8 hours while a score batch drains after
         // 2 minutes, so one session emits many batches — and each card re-announced every title
         // earned since the session opened.
-        var crossings = await ComputeBatchCompletions(request, cancellationToken);
+        var crossings = await ComputeBatchCompletions(request, awarded, cancellationToken);
 
         var progress = await ComputeProgressDeltas(request, cancellationToken);
         await PersistProgress(request, progress, cancellationToken);
@@ -391,9 +391,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     ///     crossing surfaces even when the site-detection path already persisted the title
     ///     (it fires first during imports). Mints the milestones the snapshot card renders,
     ///     chart-specific titles (skill, boss-breaker) included.
+    ///     <para>
+    ///         <paramref name="awarded" />, on a mix with no official site, is what the site had
+    ///         awarded before this batch: any held rung missing from it is announced too, however
+    ///         long ago its scores were set. When it was empty, this is the player's first title
+    ///         card on the mix, and each ladder names only its highest rung — the rest were earned
+    ///         on the way, and listing every one would bury the card.
+    ///     </para>
     /// </summary>
     private async Task<IReadOnlyList<PlayerMilestoneRecord>> ComputeBatchCompletions(CaptureSessionTitles request,
-        CancellationToken cancellationToken)
+        IReadOnlySet<Name>? awarded, CancellationToken cancellationToken)
     {
         var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
@@ -404,7 +411,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var empty = (ISet<Name>)new HashSet<Name>();
         var beforeByTitle = BuildProgress(request.Mix, charts, before, empty).ToDictionary(t => t.Title.Name);
 
-        var writes = new List<PlayerMilestoneWrite>();
+        var announced = new List<TitleProgress>();
         foreach (var title in BuildProgress(request.Mix, charts, current, empty)
                      .Where(t => t.Title.CompletionRequired > 0 && t.IsComplete)
                      .OrderBy(LadderOrder)
@@ -413,10 +420,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         {
             var wasBefore = beforeByTitle.GetValueOrDefault(title.Title.Name);
             var newlyComplete = wasBefore is not { IsComplete: true };
-            if (newlyComplete)
-                writes.Add(new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, request.SessionId, _dateTime.Now,
-                    Title: title.Title.Name.ToString()));
+            var neverAwarded = awarded != null && !awarded.Contains(title.Title.Name);
+            if (newlyComplete || neverAwarded) announced.Add(title);
         }
+
+        if (awarded is { Count: 0 })
+            announced = announced.GroupBy(LadderOf).Select(rungs => rungs.MaxBy(t => t.Title.CompletionRequired)!)
+                .ToList();
+
+        var writes = announced.Select(title => new PlayerMilestoneWrite(MilestoneKind.TitleCompleted,
+            request.SessionId, _dateTime.Now, Title: title.Title.Name.ToString())).ToList();
 
         if (writes.Count == 0) return Array.Empty<PlayerMilestoneRecord>();
         await _milestones.Append(request.Mix, request.UserId, writes, cancellationToken);
@@ -443,12 +456,21 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         };
     }
 
+    /// <summary>
+    ///     The ladder a rung climbs: a PUMBILITY pool, or the title itself for anything that is not
+    ///     a pool's rung — a ladder of one, never folded into another.
+    /// </summary>
+    private static object LadderOf(TitleProgress progress)
+    {
+        return (progress as PhoenixTitleProgress)?.PhoenixTitle is Phoenix2PumbilityTitle pumbility
+            ? pumbility.Pool
+            : progress.Title.Name;
+    }
+
     private static IEnumerable<TitleProgress> BuildProgress(MixEnum mix, IDictionary<Guid, Chart> charts,
         IEnumerable<RecordedPhoenixScore> scores, ISet<Name> completed)
     {
-        return mix == MixEnum.Phoenix
-            ? PhoenixTitleList.BuildProgress(charts, scores, completed)
-            : Phoenix2TitleList.BuildProgress(charts, scores, completed);
+        return ListFor(mix).BuildProgress(charts, scores, completed);
     }
 
     public async Task Handle(ProcessTitles request, CancellationToken cancellationToken)

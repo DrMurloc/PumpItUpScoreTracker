@@ -33,7 +33,8 @@ public static class TitleLadders
     {
         return mix switch
         {
-            MixEnum.XX or MixEnum.Phoenix or MixEnum.Phoenix2 => TitleLadderAvailability.Available,
+            MixEnum.XX or MixEnum.Phoenix or MixEnum.Phoenix2 or MixEnum.Rise or MixEnum.RiseArcade =>
+                TitleLadderAvailability.Available,
             MixEnum.Prime2 => TitleLadderAvailability.NotYetBuilt,
             _ => TitleLadderAvailability.NeverExisted
         };

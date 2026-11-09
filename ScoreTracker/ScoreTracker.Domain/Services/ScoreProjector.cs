@@ -61,7 +61,7 @@ public sealed class ScoreProjector : IScoreProjector
     {
         if (request.Targets.Count == 0) return Task.FromResult(ScoreProjection.None());
 
-        return request.Mix == MixEnum.Phoenix2
+        return request.Mix.UsesPhoenix2Pumbility()
             ? ProjectFromPumbilityPeers(request, cancellationToken)
             : ProjectFromCompetitiveBand(request, cancellationToken);
     }
@@ -353,23 +353,24 @@ public sealed class ScoreProjector : IScoreProjector
     /// <summary>
     ///     A player's settled PUMBILITY pool of the type off their stats row — each type's top
     ///     fifty summed, unrounded — or the merged total for a type that has no pool of its own.
+    ///     A type reads its folder's pool, so Rise's half-doubles read the doubles pool.
     /// </summary>
     private static double PoolOfType(PlayerStatsRecord stats, ChartType chartType)
     {
-        return chartType switch
+        return chartType.Category() switch
         {
-            ChartType.Single => stats.SinglesRating,
-            ChartType.Double => stats.DoublesRating,
+            ChartTypeCategory.Single => stats.SinglesRating,
+            ChartTypeCategory.Double => stats.DoublesRating,
             _ => stats.SkillRating
         };
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
     {
-        return chartType switch
+        return chartType.Category() switch
         {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
+            ChartTypeCategory.Single => stats.SinglesCompetitiveLevel,
+            ChartTypeCategory.Double => stats.DoublesCompetitiveLevel,
             _ => stats.CompetitiveLevel
         };
     }

@@ -1,4 +1,5 @@
 @using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.SharedKernel.Enums
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
@@ -33,7 +34,7 @@
     public ChartType? Pool { get; set; }
 
     private IEnumerable<(ChartType Type, PeerGroup Group)> Chips =>
-        (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+        (Pool is { } one ? new[] { one } : Peers.Keys.OrderBy(type => type.Category()).ToArray())
         .Where(type => Peers.TryGetValue(type, out var group) && !group.IsLit)
         .Select(type => (type, Peers[type]));
 

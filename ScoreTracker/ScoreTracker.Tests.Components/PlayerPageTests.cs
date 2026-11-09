@@ -174,7 +174,7 @@ public sealed class PlayerPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void OnRiseTheCompetitiveLevelsShowAndTheRatingTilesDoNot()
+    public void OnRiseThePumbilityTilesAndTheGemShowBesideTheCompetitiveLevels()
     {
         GivenViewer(Guid.NewGuid());
         _settings.Setup(u => u.GetSelectedMix()).ReturnsAsync(MixEnum.Rise);
@@ -186,6 +186,8 @@ public sealed class PlayerPageTests : ComponentTestBase
         Assert.Contains("22.05", cut.Markup);
         // RISE's doubles folder holds its half-doubles, and the label says so.
         Assert.Contains(">HD<", cut.Markup);
-        Assert.DoesNotContain("Total Rating", cut.Markup);
+        Assert.Contains("Total Rating", cut.Markup);
+        Assert.Contains("17,412", cut.Markup);
+        Assert.Single(cut.FindComponents<PumbilityLevelBadge>());
     }
 }

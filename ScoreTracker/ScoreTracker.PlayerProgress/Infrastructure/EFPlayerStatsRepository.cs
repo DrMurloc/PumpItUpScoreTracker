@@ -226,14 +226,15 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             var mixId = MixIds.For(mix);
             // SinglesRating and DoublesRating ARE the per-type pools — each type's top fifty summed,
             // stored unrounded (docs/UX-GUIDELINES.md, the PUMBILITY precision rule) — and
-            // SkillRating the merged one. The window is inclusive at both ends (D53).
+            // SkillRating the merged one. The window is inclusive at both ends (D53). The mix says which
+            // of its types fills each pool, so RISE's half-doubles read the doubles pool.
             var query = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
-            query = chartType switch
-            {
-                ChartType.Single => query.Where(p => p.SinglesRating >= minimumPool && p.SinglesRating <= maximumPool),
-                ChartType.Double => query.Where(p => p.DoublesRating >= minimumPool && p.DoublesRating <= maximumPool),
-                _ => query.Where(p => p.SkillRating >= minimumPool && p.SkillRating <= maximumPool)
-            };
+            if (chartType == ChartTypeCategory.Single.TypeOn(mix))
+                query = query.Where(p => p.SinglesRating >= minimumPool && p.SinglesRating <= maximumPool);
+            else if (chartType == ChartTypeCategory.Double.TypeOn(mix))
+                query = query.Where(p => p.DoublesRating >= minimumPool && p.DoublesRating <= maximumPool);
+            else
+                query = query.Where(p => p.SkillRating >= minimumPool && p.SkillRating <= maximumPool);
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 

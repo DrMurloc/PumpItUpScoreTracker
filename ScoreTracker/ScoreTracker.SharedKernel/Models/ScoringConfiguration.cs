@@ -405,7 +405,9 @@ namespace ScoreTracker.SharedKernel.Models
 
         /// <summary>
         ///     The PUMBILITY formula for a mix — Phoenix and Phoenix 2 compute per-chart
-        ///     PUMBILITY differently, so every caller must say which era it is scoring.
+        ///     PUMBILITY differently, so every caller must say which era it is scoring. Both RISE
+        ///     mixes price with Phoenix 2's; Rise counts its half-doubles as its doubles
+        ///     (docs/design/rise.md D29).
         ///     <para>
         ///         <paramref name="includeCoOp" /> asks for the mix's <b>CO-OP Rating</b> pricing on
         ///         top: a co-op chart never enters a PUMBILITY pool on either mix, but each mix rates
@@ -421,6 +423,8 @@ namespace ScoreTracker.SharedKernel.Models
             {
                 MixEnum.Phoenix => PhoenixPumbilityScoring(includeCoOp),
                 MixEnum.Phoenix2 => Phoenix2PumbilityScoring(includeCoOp),
+                MixEnum.Rise => RisePumbilityScoring(includeCoOp),
+                MixEnum.RiseArcade => Phoenix2PumbilityScoring(includeCoOp),
                 _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
                     "No PUMBILITY formula exists for this mix")
             };
@@ -620,6 +624,19 @@ namespace ScoreTracker.SharedKernel.Models
                 [PhoenixPlate.ExtremeGame] = 0.014,
                 [PhoenixPlate.UltimateGame] = 0.017
             };
+            return config;
+        }
+
+        /// <summary>
+        ///     Rise's PUMBILITY: Phoenix 2's formula, grades read off Phoenix 2's floors on the raw
+        ///     score, with the six-panel half-doubles priced at their printed level the way a Double
+        ///     is, because on Rise they are the doubles. Rise's marks are stored as the plates they
+        ///     coincide with, so they price as those plates.
+        /// </summary>
+        private static ScoringConfiguration RisePumbilityScoring(bool includeCoOp)
+        {
+            var config = Phoenix2PumbilityScoring(includeCoOp);
+            config.ChartTypeModifiers[ChartType.HalfDouble] = 1.0;
             return config;
         }
 

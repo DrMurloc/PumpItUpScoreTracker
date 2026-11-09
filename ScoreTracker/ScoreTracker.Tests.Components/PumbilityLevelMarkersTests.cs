@@ -3,6 +3,7 @@ using System.Linq;
 using Bunit;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
 using Xunit;
@@ -20,7 +21,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     [Fact]
     public void AOneGemSpanTicksItsFourInteriorRungsEvenly()
     {
-        var ticks = PumbilityLevelMarkers.TicksFor(17_000, 18_000, 17_602.69);
+        var ticks = PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 17_000, 18_000, 17_602.69);
 
         Assert.Equal(new[] { 0.2, 0.4, 0.6, 0.8 }, ticks.Select(t => t.Fraction));
         Assert.Equal(new int?[] { 2, 3, 4, 5 }, ticks.Select(t => t.Level.Level));
@@ -33,7 +34,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     {
         // The bar toward [P.B] DIAMOND runs 16,000 → 17,000: PLATINUM's levels, the rungs being
         // climbed through on the way to the title.
-        var ticks = PumbilityLevelMarkers.TicksFor(16_000, 17_000, 16_450);
+        var ticks = PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 16_000, 17_000, 16_450);
 
         Assert.Equal(new[] { "[P.B] PLATINUM" }, ticks.Select(t => t.Level.Gem!.Value.ToString()).Distinct());
         // 16,450 stands on PLATINUM LV.3 (16,400+).
@@ -44,7 +45,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     public void TheSpanEndsAreNeverTicked()
     {
         // 17,000 and 18,000 are the bar's own endpoints — a tick there would double the edge.
-        var ticks = PumbilityLevelMarkers.TicksFor(17_000, 18_000, 17_100);
+        var ticks = PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 17_000, 18_000, 17_100);
 
         Assert.DoesNotContain(ticks, t => t.Level.Threshold is 17_000 or 18_000);
     }
@@ -53,10 +54,10 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     public void SpansHoldingNoRungsYieldNothing()
     {
         // BRONZE's first rung: 0 → 10,000 contains no levels at all.
-        Assert.Empty(PumbilityLevelMarkers.TicksFor(0, 10_000, 4_000));
+        Assert.Empty(PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 0, 10_000, 4_000));
         // A degenerate span cannot divide.
-        Assert.Empty(PumbilityLevelMarkers.TicksFor(17_000, 17_000, 17_000));
-        Assert.Empty(PumbilityLevelMarkers.TicksFor(18_000, 17_000, 17_500));
+        Assert.Empty(PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 17_000, 17_000, 17_000));
+        Assert.Empty(PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 18_000, 17_000, 17_500));
     }
 
     [Fact]
@@ -64,7 +65,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     {
         // An earned rung's bar renders full with its ticks intact — but the pool stands above
         // every tick in the span, so none of them claims to be where the player is.
-        var ticks = PumbilityLevelMarkers.TicksFor(16_000, 17_000, 17_602.69);
+        var ticks = PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 16_000, 17_000, 17_602.69);
 
         Assert.Equal(4, ticks.Count);
         Assert.DoesNotContain(ticks, t => t.Current);
@@ -73,7 +74,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     [Fact]
     public void TheCapstoneBarTicksAlexandritesLevels()
     {
-        var ticks = PumbilityLevelMarkers.TicksFor(19_000, 20_000, 19_616.11);
+        var ticks = PumbilityLevelMarkers.TicksFor(MixEnum.Phoenix2, 19_000, 20_000, 19_616.11);
 
         Assert.Equal(new[] { 19_200, 19_400, 19_600, 19_800 }, ticks.Select(t => t.Level.Threshold));
         Assert.Equal(4, Assert.Single(ticks, t => t.Current).Level.Level);
@@ -82,21 +83,21 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     [Fact]
     public void GemSpansResolveByNameAndOnlyForTotalPoolGems()
     {
-        Assert.Equal((16_000, 17_000), PumbilityLevelMarkers.GemSpanFor("[P.B] DIAMOND"));
-        Assert.Equal((0, 10_000), PumbilityLevelMarkers.GemSpanFor("[P.B] BRONZE"));
-        Assert.Equal((19_000, 20_000), PumbilityLevelMarkers.GemSpanFor("ABYSS ABSOLUTE"));
+        Assert.Equal((16_000, 17_000), PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "[P.B] DIAMOND"));
+        Assert.Equal((0, 10_000), PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "[P.B] BRONZE"));
+        Assert.Equal((19_000, 20_000), PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "ABYSS ABSOLUTE"));
 
         // The per-type ladders have no levels, and Phoenix has no gem ladder — the null is the
         // gate that keeps those bars exactly as they are.
-        Assert.Null(PumbilityLevelMarkers.GemSpanFor("[S] ADVANCED LV.2"));
-        Assert.Null(PumbilityLevelMarkers.GemSpanFor("SINGLE MASTER"));
-        Assert.Null(PumbilityLevelMarkers.GemSpanFor("Advanced Lv. 3"));
+        Assert.Null(PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "[S] ADVANCED LV.2"));
+        Assert.Null(PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "SINGLE MASTER"));
+        Assert.Null(PumbilityLevelMarkers.GemSpanFor(MixEnum.Phoenix2, "Advanced Lv. 3"));
     }
 
     [Fact]
     public void TheTickFragmentFramesTheBarWithLabelledMarkers()
     {
-        var cut = RenderComponent<PumbilityLevelTicks>(p => p
+        var cut = RenderComponent<PumbilityLevelTicks>(p => p.Add(x => x.Mix, MixEnum.Phoenix2)
             .Add(x => x.Floor, 17_000).Add(x => x.Ceiling, 18_000).Add(x => x.Pool, 17_602.69)
             .AddChildContent("<div class='probe-bar'></div>"));
 
@@ -119,7 +120,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     {
         // BRONZE's first rung holds no levels: the child passes through untouched, so the frame
         // never adds label headroom where there are no labels.
-        var cut = RenderComponent<PumbilityLevelTicks>(p => p
+        var cut = RenderComponent<PumbilityLevelTicks>(p => p.Add(x => x.Mix, MixEnum.Phoenix2)
             .Add(x => x.Floor, 0).Add(x => x.Ceiling, 10_000).Add(x => x.Pool, 4_000)
             .AddChildContent("<div class='probe-bar'></div>"));
 
@@ -133,7 +134,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     {
         // The [P.B] bar resolves its one-gem span from the title's name — the model carries only
         // the name — while the [S] bar resolves to nothing and renders exactly as today.
-        var cut = RenderComponent<SessionTitleBars>(p => p.Add(x => x.Bars, new[]
+        var cut = RenderComponent<SessionTitleBars>(p => p.Add(x => x.Mix, MixEnum.Phoenix2).Add(x => x.Bars, new[]
         {
             new SessionTitleBarModel("Pumbility", "[P.B] DIAMOND", 0.40, 0.45, 16_450, 17_000),
             new SessionTitleBarModel("Singles", "[S] EXPERT LV.2", 0.03, 0.07, 17_507, 17_700)
@@ -150,6 +151,31 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     }
 
     [Fact]
+    public void RisesRaisedAlexandriteMovesTheTicksOfTheGemBelowIt()
+    {
+        // Rise's RED BERYL runs 18,000 to 19,200, so its levels step 240 instead of 200.
+        var cut = RenderComponent<PumbilityLevelTicks>(p => p.Add(x => x.Mix, MixEnum.Rise)
+            .Add(x => x.Floor, 18_000).Add(x => x.Ceiling, 19_200).Add(x => x.Pool, 18_500)
+            .AddChildContent("<div class='probe-bar'></div>"));
+
+        Assert.Equal(new[] { "left:20%", "left:40%", "left:60%", "left:80%" },
+            cut.FindAll(".pmb-lvl-tick").Select(t => t.GetAttribute("style")));
+        Assert.Contains("cur", Assert.Single(cut.FindAll(".pmb-lvl-tick"),
+            t => t.GetAttribute("title") == "RED BERYL LV.3 · 18,480").GetAttribute("class"));
+    }
+
+    [Fact]
+    public void AMixWithoutTheGemLadderDrawsNoTicks()
+    {
+        var cut = RenderComponent<PumbilityLevelTicks>(p => p.Add(x => x.Mix, MixEnum.Phoenix)
+            .Add(x => x.Floor, 17_000).Add(x => x.Ceiling, 18_000).Add(x => x.Pool, 17_602.69)
+            .AddChildContent("<div class='probe-bar'></div>"));
+
+        Assert.Single(cut.FindAll(".probe-bar"));
+        Assert.Empty(cut.FindAll(".pmb-lvl-tick"));
+    }
+
+    [Fact]
     public void OnlyTheTotalRailWearsTicks()
     {
         // The Singles rail is real and mid-climb, and stays bare: the per-type ladders have no
@@ -162,7 +188,7 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
                 "[S] EXPERT LV.2", 17_700, 354, 350, 340, Array.Empty<AskExample>(), null)
         };
 
-        var cut = RenderComponent<PumbilityTitleRails>(p => p.Add(x => x.Rails, rails));
+        var cut = RenderComponent<PumbilityTitleRails>(p => p.Add(x => x.Mix, MixEnum.Phoenix2).Add(x => x.Rails, rails));
 
         var ticks = cut.FindAll(".pmb-lvl-tick");
         Assert.Equal(4, ticks.Count);

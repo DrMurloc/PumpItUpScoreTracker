@@ -23,19 +23,23 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
     [Theory]
     [InlineData(MixEnum.Rise)]
     [InlineData(MixEnum.RiseArcade)]
-    public void ARiseMixOffersNothingItCannotAnswerYet(MixEnum mix)
+    public void ARiseMixOffersPumbilityAndTitlesAndNothingElseItCannotAnswerYet(MixEnum mix)
     {
         // Every feature the profile answers false for stays off the sheet (docs/design/rise.md
-        // §11.2); what the mix can answer — charts, tier lists, the import, sessions — stays on.
+        // §11.2); what the mix can answer — charts, tier lists, the import, sessions, and since
+        // phase 3 PUMBILITY and its title ladders (D31) — stays on.
         var sheet = Render(Model(mix: mix));
         var hrefs = sheet.FindAll("a").Select(a => a.GetAttribute("href") ?? string.Empty).ToArray();
 
         foreach (var gated in new[]
                  {
-                     "/Pumbility", "/Titles", "/WeeklyCharts", "/MarchOfMurlocs", "/OfficialLeaderboards",
-                     "/PhoenixCalculator", "/PumbilityCalculator", "/Players", "/Popularity", "/WhatItTakes"
+                     "/WeeklyCharts", "/MarchOfMurlocs", "/OfficialLeaderboards", "/PhoenixCalculator",
+                     "/PumbilityCalculator", "/Players", "/Popularity", "/WhatItTakes"
                  })
             Assert.DoesNotContain(hrefs, h => h.StartsWith(gated, StringComparison.Ordinal));
+        Assert.Contains(hrefs, h => h.StartsWith("/Pumbility", StringComparison.Ordinal)
+                                    && !h.StartsWith("/PumbilityCalculator", StringComparison.Ordinal));
+        Assert.Contains(hrefs, h => h.StartsWith("/Titles", StringComparison.Ordinal));
         Assert.Contains("/Charts", hrefs);
         Assert.Contains("/UploadPhoenixScores", hrefs);
         Assert.Contains(hrefs, h => h.StartsWith("/Player/", StringComparison.Ordinal) && h.EndsWith("/Sessions"));

@@ -216,7 +216,9 @@ namespace ScoreTracker.PlayerProgress.Application
         {
             // Phoenix 1 has one pool and no PUMBILITY-threshold titles, so there is neither a
             // split to show nor a ladder to show it against.
-            if (mix != MixEnum.Phoenix2) return null;
+            if (!mix.UsesPhoenix2Pumbility()) return null;
+            var singlesType = PumbilityPools.SinglesOn(mix);
+            var doublesType = PumbilityPools.DoublesOn(mix);
 
             async Task<(double Total, double? Bar, int Count)> PoolFor(ChartType? type)
             {
@@ -234,10 +236,10 @@ namespace ScoreTracker.PlayerProgress.Application
             }
 
             var all = await PoolFor(null);
-            var singles = await PoolFor(ChartType.Single);
-            var doubles = await PoolFor(ChartType.Double);
+            var singles = await PoolFor(singlesType);
+            var doubles = await PoolFor(doublesType);
 
-            var ladders = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
+            var ladders = PumbilityLadders.For(mix)
                 .GroupBy(t => t.Pool)
                 .ToDictionary(g => g.Key, g => g.OrderBy(t => t.CompletionRequired).ToArray());
 
@@ -245,14 +247,11 @@ namespace ScoreTracker.PlayerProgress.Application
             // re-ranks the total, the bar, the curve, the board and the targets — a control that
             // moves everything in the section except this reads as broken. All three ladders
             // still exist; the other two are one click away, and the totals beside them say so.
-            var rail = scope switch
-            {
-                ChartType.Single => Rail(PumbilityPool.Singles, singles, ChartType.Single, ChartType.Single),
-                ChartType.Double => Rail(PumbilityPool.Doubles, doubles, ChartType.Double, ChartType.Double),
-                // The merged ladder can be filled from either side, and Phoenix 2 pays a Singles
-                // chart one level up — so the cheapest route to its ask is a single.
-                _ => Rail(PumbilityPool.Total, all, ChartType.Single, null)
-            };
+            // The merged ladder can be filled from either side, and Phoenix 2's rules pay a Singles
+            // chart one level up — so the cheapest route to its ask is a single.
+            var rail = scope == singlesType ? Rail(PumbilityPool.Singles, singles, singlesType, singlesType)
+                : scope == doublesType ? Rail(PumbilityPool.Doubles, doubles, doublesType, doublesType)
+                : Rail(PumbilityPool.Total, all, singlesType, null);
 
             return (new PoolTotals(all.Total, singles.Total, doubles.Total),
                 rail == null ? Array.Empty<TitleRail>() : new[] { rail });

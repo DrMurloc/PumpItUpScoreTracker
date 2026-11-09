@@ -1182,7 +1182,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task ARiseSessionStoresCompetitiveLevelWithoutPricingPumbility()
+    public async Task ARiseSessionPricesItsHalfDoublesIntoTheDoublesPoolBesideItsCompetitiveLevel()
     {
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
         var halfDouble = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise)
@@ -1200,18 +1200,127 @@ public sealed class PlayerRatingSagaTests
         var result = await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Rise,
             new[] { single.Id, halfDouble.Id }, Guid.NewGuid()), CancellationToken.None);
 
+        // Phoenix 2's formula, with the half-double priced as a Phoenix 2 Double at its printed level.
+        var phoenix2 = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var singleValue = phoenix2.GetScore(ChartType.Single, DifficultyLevel.From(20), PhoenixScore.From(990000),
+            PhoenixPlate.SuperbGame, false);
+        var halfDoubleValue = phoenix2.GetScore(ChartType.Double, DifficultyLevel.From(20),
+            PhoenixScore.From(982500), PhoenixPlate.SuperbGame, false);
         Assert.NotNull(saved);
-        Assert.Equal(0d, saved!.SkillRating);
-        Assert.Equal(0, (int)saved.TotalRating);
+        Assert.True(Near(saved!.SinglesRating, singleValue));
+        Assert.True(Near(saved.DoublesRating, halfDoubleValue));
+        Assert.True(Near(saved.SkillRating, singleValue + halfDoubleValue));
         Assert.Equal(2, saved.ClearCount);
         Assert.True(Near(saved.SinglesCompetitiveLevel, 20 + 25000 / 17500.0));
         // The half-doubles are RISE's doubles.
         Assert.True(Near(saved.DoublesCompetitiveLevel, 21));
         Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.SinglesCompetitiveGain);
         Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.DoublesCompetitiveGain);
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.SinglesPumbilityGain);
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.DoublesPumbilityGain);
         Assert.Contains(halfDouble.Id, result.ImproverChartIds);
+        // No official board to place a RISE pool on.
         officialBoards.VerifyNoOtherCalls();
-        recordStats.VerifyNoOtherCalls();
+        recordStats.Verify(r => r.UpdateScoreStats(MixEnum.Rise, userId, It.IsAny<IEnumerable<PhoenixRecordStats>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARisePlayersFirstPumbilityCardReadsFromZeroWhateverTheStoredNumberSays()
+    {
+        var (saga, userId, chartIds, milestones, stored) = RiseDebutSaga(hasAnnouncedPumbility: false);
+
+        var result = await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Rise, chartIds,
+            Guid.NewGuid()), CancellationToken.None);
+
+        // A quiet re-price already stored the pool, but nothing the player saw ever said it.
+        var total = Assert.Single(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
+        Assert.Equal(0, total.OldValue);
+        Assert.True(Near(total.NewValue!.Value, stored.SkillRating));
+        Assert.Equal(0, Assert.Single(result.Milestones, m => m.Kind == MilestoneKind.SinglesPumbilityGain).OldValue);
+        Assert.Equal(0, Assert.Single(result.Milestones, m => m.Kind == MilestoneKind.DoublesPumbilityGain).OldValue);
+        milestones.Verify(m => m.HasMilestone(MixEnum.Rise, userId, MilestoneKind.PumbilityGain,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARisePlayerAlreadyAnnouncedMeasuresAgainstTheStoredNumber()
+    {
+        var (saga, userId, chartIds, _, _) = RiseDebutSaga(hasAnnouncedPumbility: true);
+
+        var result = await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Rise, chartIds,
+            Guid.NewGuid()), CancellationToken.None);
+
+        Assert.DoesNotContain(result.Milestones, m => m.Kind is MilestoneKind.PumbilityGain
+            or MilestoneKind.SinglesPumbilityGain or MilestoneKind.DoublesPumbilityGain);
+    }
+
+    [Fact]
+    public async Task AMixWithAnOfficialSiteNeverReadsItsPumbilityFromZero()
+    {
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Phoenix2).Build();
+        var userId = Guid.NewGuid();
+        var scores = new[] { Score(single.Id, 990000) };
+        var value = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false).GetScore(ChartType.Single,
+            DifficultyLevel.From(20), PhoenixScore.From(990000), PhoenixPlate.SuperbGame, false);
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { single }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, scores, MixEnum.Phoenix2),
+            stats: StoredStats(userId, ZeroStats(userId) with
+            {
+                SkillRating = value, SinglesRating = value, ClearCount = 1, HighestLevel = 20,
+                SinglesCompetitiveLevel = 20 + 25000 / 17500.0, CompetitiveLevel = 20 + 25000 / 17500.0
+            }),
+            milestones: milestones);
+
+        var result = await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix2,
+            new[] { single.Id }, Guid.NewGuid()), CancellationToken.None);
+
+        Assert.DoesNotContain(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
+        milestones.Verify(m => m.HasMilestone(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<MilestoneKind>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     A RISE player whose stored row already holds the pool their scores price at — what a
+    ///     quiet re-price leaves behind — with the milestone table saying whether PUMBILITY was
+    ///     ever announced to them on the mix.
+    /// </summary>
+    private static (PlayerRatingSaga Saga, Guid UserId, Guid[] ChartIds, Mock<IPlayerMilestoneRepository> Milestones,
+        PlayerStatsRecord Stored) RiseDebutSaga(bool hasAnnouncedPumbility)
+    {
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var halfDouble = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise)
+            .Build();
+        var userId = Guid.NewGuid();
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Rise, false);
+        var singleValue = scoring.GetScore(ChartType.Single, DifficultyLevel.From(20), PhoenixScore.From(990000),
+            PhoenixPlate.SuperbGame, false);
+        var halfDoubleValue = scoring.GetScore(ChartType.HalfDouble, DifficultyLevel.From(20),
+            PhoenixScore.From(982500), PhoenixPlate.SuperbGame, false);
+        var stored = ZeroStats(userId) with
+        {
+            SkillRating = singleValue + halfDoubleValue, SinglesRating = singleValue, DoublesRating = halfDoubleValue,
+            ClearCount = 2, HighestLevel = 20, CompetitiveLevel = 21, SinglesCompetitiveLevel = 21,
+            DoublesCompetitiveLevel = 21
+        };
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        milestones.Setup(m => m.HasMilestone(MixEnum.Rise, userId, MilestoneKind.PumbilityGain,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(hasAnnouncedPumbility);
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { single, halfDouble }, MixEnum.Rise),
+            scores: ScoresMockReturning(userId,
+                new[] { Score(single.Id, 990000), Score(halfDouble.Id, 982500) }, MixEnum.Rise),
+            stats: StoredStats(userId, stored), milestones: milestones);
+        return (saga, userId, new[] { single.Id, halfDouble.Id }, milestones, stored);
+    }
+
+    private static Mock<IPlayerStatsRepository> StoredStats(Guid userId, PlayerStatsRecord stored)
+    {
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(stored);
+        return stats;
     }
 
     private static PlayerRatingSaga BuildSaga(

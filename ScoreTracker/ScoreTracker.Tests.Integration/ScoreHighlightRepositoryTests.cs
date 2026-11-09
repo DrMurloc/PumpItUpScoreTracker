@@ -94,6 +94,27 @@ public sealed class ScoreHighlightRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task WhetherAPlayerWasEverGivenAMilestoneIsAskedPerMixAndKind()
+    {
+        // The RISE PUMBILITY debut reads this: one Rise PUMBILITY milestone, nothing else.
+        var userId = Guid.NewGuid();
+        var repo = new EFPlayerMilestoneRepository(_fixture.DbContextFactory);
+        await repo.Append(MixEnum.Rise, userId, new[]
+        {
+            new PlayerMilestoneWrite(MilestoneKind.PumbilityGain, Guid.NewGuid(), Now, 0, 18_234.5)
+        }, CancellationToken.None);
+
+        Assert.True(await repo.HasMilestone(MixEnum.Rise, userId, MilestoneKind.PumbilityGain,
+            CancellationToken.None));
+        Assert.False(await repo.HasMilestone(MixEnum.RiseArcade, userId, MilestoneKind.PumbilityGain,
+            CancellationToken.None));
+        Assert.False(await repo.HasMilestone(MixEnum.Rise, userId, MilestoneKind.TitleCompleted,
+            CancellationToken.None));
+        Assert.False(await repo.HasMilestone(MixEnum.Rise, Guid.NewGuid(), MilestoneKind.PumbilityGain,
+            CancellationToken.None));
+    }
+
+    [Fact]
     public async Task TheCompetitiveBaselineAndPumbilityGainSurviveTheRoundTrip()
     {
         // A mocked repository cannot catch a column that never reached the model, and these two

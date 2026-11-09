@@ -96,7 +96,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var quantile = energy.Quantile();
 
             var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
-            var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
+            var types = pool is { } only ? new[] { only } : PumbilityPools.TypesOn(mix).ToArray();
             var groups = types.Where(sweep.Peers.ContainsKey).ToDictionary(t => t, t => sweep.Peers[t]);
             var lit = types.Where(sweep.PeerPools.ContainsKey).ToArray();
             if (lit.Length == 0)
@@ -270,7 +270,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 peerFor.TryGetValue(voice, out var types);
                 // The gem is read off the total on the one mix that has a ladder to read it from.
                 return new PeerRosterEntry(user, total,
-                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null,
+                    mix.UsesPhoenix2Pumbility() ? Phoenix2PumbilityLevel.From(mix, total).Index : null,
                     stat?.SinglesCompetitiveLevel ?? 0, stat?.DoublesCompetitiveLevel ?? 0,
                     types ?? new HashSet<ChartType>(), OverlapOf(voice, types), null);
             }
@@ -285,7 +285,7 @@ namespace ScoreTracker.PlayerProgress.Application
                         .TryGetValue(voice, out var published) ? published : 0d)
                     .DefaultIfEmpty(0d).Max();
                 return new PeerRosterEntry(null, total,
-                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null, 0, 0,
+                    mix.UsesPhoenix2Pumbility() ? Phoenix2PumbilityLevel.From(mix, total).Index : null, 0, 0,
                     types ?? new HashSet<ChartType>(), OverlapOf(voice, types), voice.Tag);
             }
 
@@ -315,23 +315,25 @@ namespace ScoreTracker.PlayerProgress.Application
             // The most permissive bar any pool could set, because this set has to serve all
             // three. A merged top fifty is drawn from a superset of either single type's, so
             // it never sits below both — the lower of the two per-type bars is the floor.
-            var singles = await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None);
-            var doubles = await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None);
+            var singlesType = PumbilityPools.SinglesOn(mix);
+            var doublesType = PumbilityPools.DoublesOn(mix);
+            var singles = await BuildPool(singlesType, userId, mix, charts, scoring, CancellationToken.None);
+            var doubles = await BuildPool(doublesType, userId, mix, charts, scoring, CancellationToken.None);
             var floor = Math.Min(singles.Baseline, doubles.Baseline);
 
             // Where each type's pool finishes (D48), off the same two reads: the peers of a type
             // are drawn around the viewer's pool OF THAT TYPE (D53), so each type is placed by
             // its own. Phoenix 1 seats nobody by a pool and reads none.
-            var finish = mix == MixEnum.Phoenix2
+            var finish = mix.UsesPhoenix2Pumbility()
                 ? new Dictionary<ChartType, (double Total, bool IsEstimate)?>
                 {
-                    [ChartType.Single] = FinishedTotal(singles), [ChartType.Double] = FinishedTotal(doubles)
+                    [singlesType] = FinishedTotal(singles), [doublesType] = FinishedTotal(doubles)
                 }
                 : new Dictionary<ChartType, (double Total, bool IsEstimate)?>();
 
             // Phoenix 1 scopes its window on scoring levels; Phoenix 2 has no window and does
             // not read them.
-            var scoringLevels = mix == MixEnum.Phoenix2
+            var scoringLevels = mix.UsesPhoenix2Pumbility()
                 ? new Dictionary<Guid, double>()
                 : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
@@ -340,7 +342,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var pools = new Dictionary<ChartType, PeerPoolSummary>();
             var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor, finish);
 
-            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            foreach (var chartType in PumbilityPools.TypesOn(mix))
                 await ProjectType(chartType, userId, scope, ladders, peers, pools, CancellationToken.None);
 
             return new ProjectionSweep(ladders, peers, pools);
@@ -489,7 +491,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var finish = finishByType.GetValueOrDefault(chartType);
 
             var candidates = charts.Values.Where(c => c.Type == chartType);
-            if (mix != MixEnum.Phoenix2)
+            if (!mix.UsesPhoenix2Pumbility())
             {
                 // The same level the projector draws peers around, so the charts asked about and
                 // the players asked cannot end up centred on different numbers. Phoenix 2 skips

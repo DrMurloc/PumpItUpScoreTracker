@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -14,7 +16,7 @@ public sealed class PumbilityBandTests
     [Fact]
     public void TheMergedLadderIsFiveLevelsAGemAndOneCapstone()
     {
-        var levels = PumbilityBand.Levels(PumbilityPool.Total);
+        var levels = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Total);
         Assert.Equal(36, levels.Count);
 
         var first = levels[0];
@@ -32,14 +34,14 @@ public sealed class PumbilityBandTests
     public void AMergedLevelKnowsTheGemAroundIt()
     {
         // The owner's own pool on 2026-09-11.
-        var level = PumbilityBand.LevelOf(PumbilityPool.Total, 17_738.06);
+        var level = PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Total, 17_738.06);
         Assert.NotNull(level);
         Assert.Equal("[P.B] DIAMOND LV.4", level!.Name.ToString());
         Assert.Equal(17_600, level.Floor);
         Assert.Equal(17_800, level.Ceiling);
         Assert.Equal("[P.B] DIAMOND", level.Gem!.Value.ToString());
 
-        var gem = PumbilityBand.GemOf(17_738.06);
+        var gem = PumbilityBand.GemOf(MixEnum.Phoenix2, 17_738.06);
         Assert.NotNull(gem);
         Assert.Equal("[P.B] DIAMOND", gem!.Name.ToString());
         Assert.Equal(17_000, gem.Floor);
@@ -50,16 +52,16 @@ public sealed class PumbilityBandTests
     [Fact]
     public void TheTypedLaddersAreRungsWithNothingCoarserInside()
     {
-        var singles = PumbilityBand.Levels(PumbilityPool.Singles);
+        var singles = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Singles);
         Assert.Equal(31, singles.Count);
         Assert.All(singles, band => Assert.Null(band.Gem));
 
-        var rung = PumbilityBand.LevelOf(PumbilityPool.Singles, 16_100);
+        var rung = PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Singles, 16_100);
         Assert.Equal("[S] ADVANCED LV.5", rung!.Name.ToString());
         Assert.Equal(16_000, rung.Floor);
         Assert.Equal(16_250, rung.Ceiling);
 
-        var master = PumbilityBand.Levels(PumbilityPool.Doubles)[^1];
+        var master = PumbilityBand.Levels(MixEnum.Phoenix2, PumbilityPool.Doubles)[^1];
         Assert.Equal("DOUBLE MASTER", master.Name.ToString());
         Assert.Equal(19_500, master.Floor);
         Assert.Null(master.Ceiling);
@@ -70,13 +72,13 @@ public sealed class PumbilityBandTests
     {
         foreach (var pool in new[] { PumbilityPool.Total, PumbilityPool.Singles, PumbilityPool.Doubles })
         {
-            var bands = PumbilityBand.Levels(pool);
+            var bands = PumbilityBand.Levels(MixEnum.Phoenix2, pool);
             for (var i = 0; i + 1 < bands.Count; i++)
                 Assert.Equal(bands[i + 1].Floor, bands[i].Ceiling);
             Assert.Null(bands[^1].Ceiling);
         }
 
-        var gems = PumbilityBand.Gems();
+        var gems = PumbilityBand.Gems(MixEnum.Phoenix2);
         Assert.Equal(8, gems.Count);
         for (var i = 0; i + 1 < gems.Count; i++) Assert.Equal(gems[i + 1].Floor, gems[i].Ceiling);
     }
@@ -84,26 +86,44 @@ public sealed class PumbilityBandTests
     [Fact]
     public void APoolUnderTheLadderStandsOnNoBand()
     {
-        Assert.Null(PumbilityBand.LevelOf(PumbilityPool.Total, 9_999.99));
-        Assert.Null(PumbilityBand.GemOf(9_999.99));
-        Assert.Null(PumbilityBand.LevelOf(PumbilityPool.Singles, 4_999));
-        Assert.Null(PumbilityBand.LevelOf(PumbilityPool.Doubles, 0));
+        Assert.Null(PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Total, 9_999.99));
+        Assert.Null(PumbilityBand.GemOf(MixEnum.Phoenix2, 9_999.99));
+        Assert.Null(PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Singles, 4_999));
+        Assert.Null(PumbilityBand.LevelOf(MixEnum.Phoenix2, PumbilityPool.Doubles, 0));
     }
 
     [Fact]
     public void ASavedChoiceIsFoundByName()
     {
-        Assert.Equal(17_600, PumbilityBand.ByName(PumbilityPool.Total, "[P.B] DIAMOND LV.4")!.Floor);
+        Assert.Equal(17_600, PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Total, "[P.B] DIAMOND LV.4")!.Floor);
         // A gem is a band a viewer can pin too, even though it is not one of the levels.
-        Assert.Equal(17_000, PumbilityBand.ByName(PumbilityPool.Total, "[P.B] DIAMOND")!.Floor);
-        Assert.Equal(17_500, PumbilityBand.ByName(PumbilityPool.Singles, "[S] EXPERT LV.1")!.Floor);
-        Assert.Null(PumbilityBand.ByName(PumbilityPool.Singles, "[P.B] DIAMOND"));
-        Assert.Null(PumbilityBand.ByName(PumbilityPool.Total, "nothing of the sort"));
+        Assert.Equal(17_000, PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Total, "[P.B] DIAMOND")!.Floor);
+        Assert.Equal(17_500, PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Singles, "[S] EXPERT LV.1")!.Floor);
+        Assert.Null(PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Singles, "[P.B] DIAMOND"));
+        Assert.Null(PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Total, "nothing of the sort"));
     }
 
     [Fact]
     public void TwentyFiveIsWhatALevelOwesBeforeItIsReadOverItsGem()
     {
         Assert.Equal(25, PumbilityBand.MinimumForLevel);
+    }
+
+    [Fact]
+    public void RiseBandsItsPlayersOnItsOwnLadders()
+    {
+        Assert.Equal(17_750, PumbilityBand.ByName(MixEnum.Rise, PumbilityPool.Singles, "[S] EXPERT LV.2")!.Floor);
+        var master = PumbilityBand.Levels(MixEnum.Rise, PumbilityPool.Doubles)[^1];
+        Assert.Equal("DOUBLE MASTER", master.Name.ToString());
+        Assert.Equal(19_800, master.Floor);
+        Assert.Null(master.Ceiling);
+        Assert.Equal(19_200, PumbilityBand.GemOf(MixEnum.Rise, 19_500)!.Floor);
+        Assert.Equal(19_000, PumbilityBand.GemOf(MixEnum.Phoenix2, 19_500)!.Floor);
+    }
+
+    [Fact]
+    public void AMixWithoutTheLadderHasNoBands()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PumbilityBand.Levels(MixEnum.Phoenix, PumbilityPool.Total));
     }
 }

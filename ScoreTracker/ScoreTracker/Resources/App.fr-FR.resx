@@ -5799,6 +5799,9 @@
   <data name="not on the board" xml:space="preserve">
     <value>hors du tableau</value>
   </data>
+  <data name="Not on this mix" xml:space="preserve">
+    <value>Pas sur ce mix</value>
+  </data>
   <data name="Not played" xml:space="preserve">
     <value>Non joué</value>
   </data>
@@ -6663,9 +6666,6 @@
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2 a déplacé chaque grade sous AAA —</value>
   </data>
-  <data name="Phoenix 2 only" xml:space="preserve">
-    <value>Phoenix 2 uniquement</value>
-  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 valorise un chart Singles un niveau au-dessus sur la courbe de base — un S22 rapporte comme un 23. Refaire les mêmes charts que dans le Mix précédent est le mauvais plan.</value>
   </data>
@@ -7005,11 +7005,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Les joueurs qui ouvrent votre site ou votre code depuis l'annuaire, comptés depuis la mise en ligne de l'outil.</value>
   </data>
-  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
-    <value>Les joueurs dont le pool du type se situe entre 500 en dessous et 250 au-dessus du tien. Phoenix 2 uniquement ; sur Phoenix 1 ce groupe est vide.</value>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty." xml:space="preserve">
+    <value>Les joueurs dont le pool du type se situe entre 500 en dessous et 250 au-dessus du tien. Sur Phoenix 1 ce groupe est vide.</value>
   </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Joueurs dont l'ensemble du type se situe entre {0} en dessous et {1} au-dessus du tien, chacun avec un ensemble complet. Tu n'es jamais ton propre pair ; la ligne surlignée est là où tu te placerais.</value>
+  </data>
+  <data name="Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs." xml:space="preserve">
+    <value>Joueurs avec un top 50 complet derrière cette liste : {0}. C'est encore tôt, attends-toi à ce qu'elle évolue à mesure que d'autres joueurs complètent le leur.</value>
   </data>
   <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
     <value>Les joueurs à un demi-niveau de toi, par type de chart — la définition actuelle.</value>

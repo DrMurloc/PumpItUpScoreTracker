@@ -1010,3 +1010,16 @@ from the step's older wording), `blgrlgrrglmaglmorg` (spreadsheet), `Blub` (you)
 | cleared (a pass) | lurgurggro | `lurgurg` (passing) + `gro`. |
 | mark (RISE's PG, FC, NM) | glomarg | Not `Murp` (plate): RISE stores its marks as plates but never calls them that. Not `blurp`, which the comment strings spend. |
 | empty | bamgl | On `Bam` (nothing). |
+
+## RISE PUMBILITY batch (2026-11-08)
+
+The tier list's early-days line and the PUMBILITY-peers source on `/Account` ([rise.md](design/rise.md) D33, D34).
+Reused, not re-coined: `Morp` (players), `mag` (with), `mrglmr` (full), `ropgl 50` (top 50), `blu` (this), `grog`
+(list), `ug` (it), `arg` (is), `Gramp gurgo` (early days), `murm` (so), `blarggro` (expect), `ulo` (as), `glurg`
+(fill), `grglblarg` (theirs), `bo` (not), `ap` (on) and `mrg` (mix).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| behind (a list) | glub | Reused from *below / under*: the pools a list stands on sit under it. |
+| more (players) | mrgl | Reused from *many*. |
+| move (a list changing) | grublorp | Coined. Not `murgro`, which already means *fifty* and *reach*. |

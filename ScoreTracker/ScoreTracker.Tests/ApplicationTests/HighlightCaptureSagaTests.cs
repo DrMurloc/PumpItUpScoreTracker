@@ -770,7 +770,7 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
-    public async Task ARiseFolderCompletionFiresItsLampsWithoutAskingForPumbilityOrOfficialBoards()
+    public async Task ARiseFolderCompletionFiresItsLampsAndReadsItsFiftyButNeverAnOfficialBoard()
     {
         var chartA = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
         var chartB = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
@@ -786,8 +786,9 @@ public sealed class HighlightCaptureSagaTests
                 w.Any(x => x.Kind == MilestoneKind.FolderPassLamp && x.Detail == "HD20")
                 && w.Any(x => x.Kind == MilestoneKind.FolderGradeLamp && x.Detail == "HD20|SS")),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        // RISE prices PUMBILITY, so its fifty is read for the top-50 caption; it has no official board.
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.Mix == MixEnum.Rise),
+            It.IsAny<CancellationToken>()), Times.Once);
         ctx.OfficialPlacements.Verify(o => o.EstimatePlacements(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()), Times.Never);
     }

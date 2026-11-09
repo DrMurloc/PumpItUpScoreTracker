@@ -66,7 +66,8 @@ internal sealed class ChartPresenceSaga :
             return;
         }
 
-        var ladderFloor = PumbilityBand.Gems()[0].Floor;
+        // The presence graph reads Phoenix 2's title columns, the census and its reading alike.
+        var ladderFloor = PumbilityBand.Gems(MixEnum.Phoenix2)[0].Floor;
 
         var accounts = (await _stats.GetPlayersInPoolBand(mix, PumbilityPool.Total, ladderFloor, null,
             cancellationToken)).ToArray();

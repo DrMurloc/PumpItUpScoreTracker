@@ -65,7 +65,7 @@ public sealed class PumbilityPeerPoolProbeTests
         var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
 
         var mine = await stats.GetStats(mix, userId, CancellationToken.None);
-        var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
+        var rung = Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, mine.SkillRating);
         _output.WriteLine($"=== {userId} · total {mine.SkillRating:F2} · rung {rung.Index} ({rung.Gem} {rung.Level}) · singles pool {mine.SinglesRating:F2} · doubles pool {mine.DoublesRating:F2} ===");
 
         // The peers of either type, for the merged-fifty split exported after the loop.
@@ -331,9 +331,9 @@ public sealed class PumbilityPeerPoolProbeTests
                     {
                         userId = p, name = nameOf[p].Name, isPublic = nameOf[p].IsPublic,
                         total = peerStats.TryGetValue(p, out var ps) ? ps.SkillRating : 0,
-                        rung = peerStats.TryGetValue(p, out var ps2) ? Phoenix2PumbilityLevel.From(ps2.SkillRating).Index : 0,
-                        gem = peerStats.TryGetValue(p, out var ps3) ? Phoenix2PumbilityLevel.From(ps3.SkillRating).Gem?.ToString() : null,
-                        gemLevel = peerStats.TryGetValue(p, out var ps4) ? Phoenix2PumbilityLevel.From(ps4.SkillRating).Level : null,
+                        rung = peerStats.TryGetValue(p, out var ps2) ? Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, ps2.SkillRating).Index : 0,
+                        gem = peerStats.TryGetValue(p, out var ps3) ? Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, ps3.SkillRating).Gem?.ToString() : null,
+                        gemLevel = peerStats.TryGetValue(p, out var ps4) ? Phoenix2PumbilityLevel.From(MixEnum.Phoenix2, ps4.SkillRating).Level : null,
                         singlesLevel = peerStats.TryGetValue(p, out var ps5) ? ps5.SinglesCompetitiveLevel : 0,
                         doublesLevel = peerStats.TryGetValue(p, out var ps6) ? ps6.DoublesCompetitiveLevel : 0,
                         overlap = pools[p].Count(c => myPoolSet.Contains(c.ChartId))

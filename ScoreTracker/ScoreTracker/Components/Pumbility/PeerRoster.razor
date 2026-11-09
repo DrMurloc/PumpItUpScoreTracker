@@ -208,8 +208,10 @@ else
     /// <summary>The gem column exists only where the mix has a ladder to read one from (Phoenix 2; D43).</summary>
     private bool ShowLevel => Rows.Any(r => r.RungIndex != null) || You?.RungIndex != null;
 
+    // An index names the same gem and level on every mix with the ladder; only the thresholds
+    // differ, and nothing here reads one.
     private static Phoenix2PumbilityLevel? Rung(PeerRosterEntry row) =>
-        row.RungIndex is { } index ? Phoenix2PumbilityLevel.FromIndex(index) : null;
+        row.RungIndex is { } index ? Phoenix2PumbilityLevel.FromIndex(MixEnum.Phoenix2, index) : null;
 
     private string LevelText(PeerRosterEntry row) =>
         Rung(row) is { } rung ? PumbilityLevelLabel.Of(rung, L["Unranked"]) : string.Empty;

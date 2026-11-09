@@ -192,6 +192,68 @@ public sealed class PeerStandingReaderTests
     }
 
     [Fact]
+    public async Task ARiseHalfDoubleMeetsItsCompetitivePeersOnTheDoublesBand()
+    {
+        // RISE's doubles folder holds its half-doubles: the band is asked for that type, so the
+        // default competitive-level coloring reaches them (docs/design/rise.md D34).
+        var halfDouble = RiseHalfDouble();
+        var peer = Guid.NewGuid();
+        MyBestIs(halfDouble.Id, 950_000);
+        _stats.Setup(s => s.GetPlayersByCompetitiveRange(MixEnum.Rise, ChartType.HalfDouble, It.IsAny<double>(), .5,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Me, peer });
+        PeerScoresAre(Score(peer, halfDouble.Id, 960_000));
+
+        var standing = (await Reader().GetStandings(Me, MixEnum.Rise, new[] { halfDouble.Id }))[halfDouble.Id];
+
+        Assert.Equal(1, standing.PeerCount);
+        Assert.Equal(1, standing.Passed);
+        Assert.Equal(PeerSourceKind.CompetitiveLevel, Assert.Single(standing.Sources).Kind);
+    }
+
+    [Fact]
+    public async Task PumbilityPeersColorARiseHalfDoubleFromTheDoublesPool()
+    {
+        _settings[PeerSourceSelection.SettingKey] =
+            new PeerSourceSelection(false, false, true, new HashSet<Guid>()).Serialize();
+        var halfDouble = RiseHalfDouble();
+        var peer = Guid.NewGuid();
+        MyBestIs(halfDouble.Id, 950_000);
+        _mediator.Setup(m => m.Send(
+                It.Is<GetPumbilityPeersQuery>(q => q.Mix == MixEnum.Rise && q.ChartType == ChartType.HalfDouble),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.Account(peer) });
+        PeerScoresAre(Score(peer, halfDouble.Id, 940_000));
+
+        var standing = (await Reader().GetStandings(Me, MixEnum.Rise, new[] { halfDouble.Id }))[halfDouble.Id];
+
+        Assert.Equal(1, standing.PeerCount);
+        Assert.Equal(1, standing.Passed);
+        Assert.Equal(PeerSourceKind.Pumbility, Assert.Single(standing.Sources).Kind);
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Rise, true)]
+    [InlineData(MixEnum.RiseArcade, true)]
+    [InlineData(MixEnum.Phoenix2, true)]
+    [InlineData(MixEnum.Phoenix, false)]
+    public async Task PumbilityPeersAreOfferedWhereverTheRulesArePhoenix2s(MixEnum mix, bool offered)
+    {
+        var catalog = await Reader().Handle(new GetPeerSourceCatalogQuery(mix), CancellationToken.None);
+
+        Assert.Equal(offered, catalog.Options.Single(o => o.Kind == PeerSourceKind.Pumbility).Available);
+    }
+
+    private Chart RiseHalfDouble()
+    {
+        var halfDouble = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(21).WithMix(MixEnum.Rise).Build();
+        _charts.Setup(c => c.GetCharts(MixEnum.Rise, null, null, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { halfDouble });
+        return halfDouble;
+    }
+
+    [Fact]
     public async Task NothingTickedMeansNoStandingsAtAll()
     {
         _settings[PeerSourceSelection.SettingKey] = PeerSourceSelection.Nothing.Serialize();

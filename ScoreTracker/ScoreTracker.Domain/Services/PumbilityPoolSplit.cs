@@ -32,7 +32,8 @@ public static class PumbilityPoolSplit
     /// <summary>
     ///     A player's merged fifty: the highest-priced records above zero across both types, split
     ///     by type. A pool short of fifty is still answered — whether it counts is the caller's
-    ///     call, through <see cref="IsFull" />.
+    ///     call, through <see cref="IsFull" />. A type is split by its folder, so Rise's
+    ///     half-doubles count on the doubles side.
     /// </summary>
     public static PoolTypeSplit Of(IEnumerable<PricedRecord> records)
     {
@@ -42,10 +43,10 @@ public static class PumbilityPoolSplit
             .Take(PeerGroup.PumbilityPoolSize)
             .ToArray();
         return new PoolTypeSplit(1,
-            fifty.Count(r => r.Type == ChartType.Single),
-            fifty.Count(r => r.Type == ChartType.Double),
-            fifty.Where(r => r.Type == ChartType.Single).Sum(r => r.Rating),
-            fifty.Where(r => r.Type == ChartType.Double).Sum(r => r.Rating));
+            fifty.Count(r => r.Type.Category() == ChartTypeCategory.Single),
+            fifty.Count(r => r.Type.Category() == ChartTypeCategory.Double),
+            fifty.Where(r => r.Type.Category() == ChartTypeCategory.Single).Sum(r => r.Rating),
+            fifty.Where(r => r.Type.Category() == ChartTypeCategory.Double).Sum(r => r.Rating));
     }
 
     /// <summary>

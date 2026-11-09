@@ -5800,6 +5800,9 @@
   <data name="not on the board" xml:space="preserve">
     <value>bo ap mrp mrglblarg</value>
   </data>
+  <data name="Not on this mix" xml:space="preserve">
+    <value>Bo ap blu mrg</value>
+  </data>
   <data name="Not played" xml:space="preserve">
     <value>Murm blubrgl</value>
   </data>
@@ -6664,9 +6667,6 @@
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2 morgro blub rorgl blogro AAA —</value>
   </data>
-  <data name="Phoenix 2 only" xml:space="preserve">
-    <value>Phoenix 2 argl</value>
-  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 mrglrg Mrglrlgl Murgl mrgl mrogl blub grorp — S22 mrgloru murp 23. Grrgl morgl Murgl blarg mrg mrgl mo grubmarg.</value>
   </data>
@@ -7006,11 +7006,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Morp blorp murgm bloop blu murgm murgblub la golba grog, murgloo blarg murgm grog.</value>
   </data>
-  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
-    <value>Morp morpmurp blubgro ob ur morg murgblurg arglblgrl 500 glub opa 250 grolrgl grorpmrp. Phoenix 2 argl; ap Phoenix 1 mrp blurgrgl ur urgro.</value>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty." xml:space="preserve">
+    <value>Morp morpmurp blubgro ob ur morg murgblurg arglblgrl 500 glub opa 250 grolrgl grorpmrp. Ap Phoenix 1 mrp blurgrgl ur urgro.</value>
   </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Morp murpo morg blubgro mrogl arglblgrl {0} glub ap {1} mrrgl morp, algro gurg mrglmr blubgro. Blub mo maglmurp mrgl; blarg grolgub mrgl morggrrgl blub.</value>
+  </data>
+  <data name="Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs." xml:space="preserve">
+    <value>Morp mag mrglmr ropgl 50 glub blu grog: {0}. Ug arg gramp gurgo, murm blarggro ug grublorp ulo mrgl glurg grglblarg.</value>
   </data>
   <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
     <value>Morp arglblgrl glmagl a grorpmurm ob murg, lurg murgl morg — lurgargl brgllurgur.</value>

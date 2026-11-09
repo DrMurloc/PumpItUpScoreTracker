@@ -307,7 +307,7 @@ else
 
     private string SectionName(TitleSection section) => section switch
     {
-        TitleSection.Progression => _currentMix == MixEnum.Phoenix2 ? L["PUMBILITY"] : L["Progression"],
+        TitleSection.Progression => _currentMix.UsesPhoenix2Pumbility() ? L["PUMBILITY"] : L["Progression"],
         TitleSection.Skill => L["Skill"],
         TitleSection.CoOp => L["Co-Op"],
         TitleSection.Plates => L["Plates"],

@@ -27,7 +27,7 @@
            PUMBILITY peers on Phoenix 2, the competitive band on Phoenix 1 — auditable rather than
            asserted (D40, D43). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
-                            BoardScope="@(_detailsBoardScope ?? (ctx.Mix == MixEnum.Phoenix2 ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers))"
+                            BoardScope="@(_detailsBoardScope ?? (ctx.Mix.UsesPhoenix2Pumbility() ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers))"
                             BoardCommunity="_detailsBoardCommunity" InitialTab="_detailsTab"
                             IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                             OnToDo="ToggleToDo"></ChartDetailsDialog>

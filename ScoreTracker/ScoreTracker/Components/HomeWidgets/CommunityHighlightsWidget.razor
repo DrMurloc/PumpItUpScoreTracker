@@ -436,8 +436,10 @@ else
 
     // ---- the PUMBILITY level-up row (docs/design/pumbility-levels.md §5) ----
 
+    // An index names the same gem and level on every mix with the ladder; only the thresholds
+    // differ, and nothing here reads one.
     private static Phoenix2PumbilityLevel? LevelOf(SignificantWin win) =>
-        win.Rank is { } index ? Phoenix2PumbilityLevel.FromIndex(index) : null;
+        win.Rank is { } index ? Phoenix2PumbilityLevel.FromIndex(MixEnum.Phoenix2, index) : null;
 
     // The gem is the game's own proper noun; only a row whose index no longer resolves needs a
     // word of ours.

@@ -1,5 +1,6 @@
 ﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 
@@ -28,9 +29,9 @@
                    that gem's level rungs — labelled, framed around the bar. The name lookup is
                    the gate: [S]/[D] and Phoenix titles resolve to nothing and stay exactly as
                    they are (docs/design/pumbility-levels.md §8). *@
-                @if (PumbilityLevelMarkers.GemSpanFor(bar.Title) is { } span)
+                @if (PumbilityLevelMarkers.GemSpanFor(Mix, bar.Title) is { } span)
                 {
-                    <PumbilityLevelTicks Floor="span.Floor" Ceiling="span.Required" Pool="bar.Current">
+                    <PumbilityLevelTicks Mix="Mix" Floor="span.Floor" Ceiling="span.Required" Pool="bar.Current">
                         <div class="sbd-track">
                             <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
                             <span class="sbd-track-gain"
@@ -93,6 +94,9 @@
     public const string HardmodePointerKey = "Sessions__HardmodePointerDismissed";
 
     [Parameter] public IReadOnlyList<SessionTitleBarModel> Bars { get; set; } = Array.Empty<SessionTitleBarModel>();
+
+    /// <summary>The session's mix, whose gem ladder a total-pool bar wears.</summary>
+    [Parameter] public MixEnum Mix { get; set; }
 
     [Parameter] public IReadOnlyList<HardmodeTitleBar> HardmodeBars { get; set; } =
         Array.Empty<HardmodeTitleBar>();

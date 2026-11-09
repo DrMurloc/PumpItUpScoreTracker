@@ -5800,6 +5800,9 @@
   <data name="not on the board" xml:space="preserve">
     <value>ボード外</value>
   </data>
+  <data name="Not on this mix" xml:space="preserve">
+    <value>このバージョンでは利用できません</value>
+  </data>
   <data name="Not played" xml:space="preserve">
     <value>未プレイ</value>
   </data>
@@ -6664,9 +6667,6 @@
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2ではAAA未満のすべてのランク基準が動きました —</value>
   </data>
-  <data name="Phoenix 2 only" xml:space="preserve">
-    <value>Phoenix 2専用</value>
-  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 では Singles の譜面が基準カーブ上で1レベル上として計算されます。S22 は 23 と同じ扱いです。前のバージョンと同じ譜面を掘るのは正しい戦略ではありません。</value>
   </data>
@@ -7006,11 +7006,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>ディレクトリからあなたのサイトやソースを開いたプレイヤーの数です。掲載開始以降の合計です。</value>
   </data>
-  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
-    <value>そのタイプのプールがあなたの500下から250上の範囲にあるプレーヤー。Phoenix 2専用で、Phoenix 1ではこのグループは空です。</value>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. On Phoenix 1 this group is empty." xml:space="preserve">
+    <value>そのタイプのプールがあなたの500下から250上の範囲にあるプレーヤー。Phoenix 1ではこのグループは空です。</value>
   </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>その種別のプールがあなたのプールの {0} 下から {1} 上までに収まり、そのプールを埋めているプレイヤーです。自分自身がピアになることはありません。強調行があなたの位置です。</value>
+  </data>
+  <data name="Players with a full top 50 behind this list: {0}. It is early days, so expect it to move as more fill theirs." xml:space="preserve">
+    <value>このリストの元になったトップ50が埋まっているプレイヤー: {0}人。まだ初期なので、トップ50を埋めるプレイヤーが増えると変動します。</value>
   </data>
   <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
     <value>譜面タイプごとに、あなたから半レベル以内のプレーヤー。現在の定義です。</value>

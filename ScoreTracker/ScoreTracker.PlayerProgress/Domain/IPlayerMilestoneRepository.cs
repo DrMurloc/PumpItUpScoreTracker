@@ -11,6 +11,9 @@ internal interface IPlayerMilestoneRepository
     Task<IEnumerable<PlayerMilestoneRecord>> GetMilestones(MixEnum mix, Guid userId, DateTimeOffset since,
         DateTimeOffset until, CancellationToken cancellationToken);
 
+    /// <summary>Whether the player has ever been given a milestone of this kind on the mix.</summary>
+    Task<bool> HasMilestone(MixEnum mix, Guid userId, MilestoneKind kind, CancellationToken cancellationToken);
+
     /// <summary>Reads session-attached milestones for specific sessions (FK by SessionId).</summary>
     Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId, IEnumerable<Guid> sessionIds,
         CancellationToken cancellationToken);

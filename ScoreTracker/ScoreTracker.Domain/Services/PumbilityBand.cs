@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Services;
@@ -10,7 +11,9 @@ namespace ScoreTracker.Domain.Services;
 ///     which have nothing coarser inside them to fall back to.
 ///     <para>
 ///         Phoenix 1 has no band table: its cohort is the difficulty title already stored per
-///         player, which is rating earned on one level rather than a range on a pool.
+///         player, which is rating earned on one level rather than a range on a pool. Every mix on
+///         Phoenix 2's PUMBILITY rules has its own, read off its own ladders, so Rise's raised top
+///         rungs band Rise's players (docs/design/rise.md D27).
 ///     </para>
 /// </summary>
 /// <param name="Gem">The gem a merged level sits in, and null on every other band.</param>
@@ -30,10 +33,10 @@ public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, 
     /// </summary>
     public const int MinimumForLevel = 25;
 
-    private static readonly IReadOnlyList<PumbilityBand> MergedLevels = BuildMergedLevels();
-    private static readonly IReadOnlyList<PumbilityBand> MergedGems = BuildMergedGems();
-    private static readonly IReadOnlyList<PumbilityBand> SinglesRungs = BuildTyped(PumbilityPool.Singles);
-    private static readonly IReadOnlyList<PumbilityBand> DoublesRungs = BuildTyped(PumbilityPool.Doubles);
+    private static readonly IReadOnlyDictionary<MixEnum, Tables> ByMix = Enum.GetValues<MixEnum>()
+        .Where(m => m.UsesPhoenix2Pumbility())
+        .ToDictionary(m => m, m => new Tables(BuildMergedLevels(m), BuildMergedGems(m),
+            BuildTyped(m, PumbilityPool.Singles), BuildTyped(m, PumbilityPool.Doubles)));
 
     /// <summary>Whether a pool sum stands on this band. Never rounds: a pool is fifty fractions.</summary>
     public bool Holds(double pool)
@@ -41,45 +44,53 @@ public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, 
         return pool >= Floor && (Ceiling is not { } top || pool < top);
     }
 
-    /// <summary>Every band of a ladder, weakest first — what the selector lists.</summary>
-    public static IReadOnlyList<PumbilityBand> Levels(PumbilityPool pool)
+    /// <summary>Every band of one of the mix's ladders, weakest first — what the selector lists.</summary>
+    public static IReadOnlyList<PumbilityBand> Levels(MixEnum mix, PumbilityPool pool)
     {
+        var tables = TablesOf(mix);
         return pool switch
         {
-            PumbilityPool.Singles => SinglesRungs,
-            PumbilityPool.Doubles => DoublesRungs,
-            _ => MergedLevels
+            PumbilityPool.Singles => tables.SinglesRungs,
+            PumbilityPool.Doubles => tables.DoublesRungs,
+            _ => tables.MergedLevels
         };
     }
 
-    /// <summary>The merged ladder's gems. The typed ladders have none.</summary>
-    public static IReadOnlyList<PumbilityBand> Gems()
+    /// <summary>The mix's merged ladder's gems. The typed ladders have none.</summary>
+    public static IReadOnlyList<PumbilityBand> Gems(MixEnum mix)
     {
-        return MergedGems;
+        return TablesOf(mix).MergedGems;
     }
 
     /// <summary>The band a pool sum stands on, or null when it sits under the ladder's first rung.</summary>
-    public static PumbilityBand? LevelOf(PumbilityPool pool, double value)
+    public static PumbilityBand? LevelOf(MixEnum mix, PumbilityPool pool, double value)
     {
-        return Levels(pool).LastOrDefault(b => b.Holds(value));
+        return Levels(mix, pool).LastOrDefault(b => b.Holds(value));
     }
 
     /// <summary>The gem a merged pool sum stands in, or null under the ladder.</summary>
-    public static PumbilityBand? GemOf(double value)
+    public static PumbilityBand? GemOf(MixEnum mix, double value)
     {
-        return MergedGems.LastOrDefault(b => b.Holds(value));
+        return Gems(mix).LastOrDefault(b => b.Holds(value));
     }
 
     /// <summary>A band by the name a saved choice carries, over both the levels and the gems.</summary>
-    public static PumbilityBand? ByName(PumbilityPool pool, Name name)
+    public static PumbilityBand? ByName(MixEnum mix, PumbilityPool pool, Name name)
     {
-        return Levels(pool).FirstOrDefault(b => b.Name == name)
-               ?? (pool == PumbilityPool.Total ? MergedGems.FirstOrDefault(b => b.Name == name) : null);
+        return Levels(mix, pool).FirstOrDefault(b => b.Name == name)
+               ?? (pool == PumbilityPool.Total ? Gems(mix).FirstOrDefault(b => b.Name == name) : null);
     }
 
-    private static IReadOnlyList<PumbilityBand> BuildMergedLevels()
+    private static Tables TablesOf(MixEnum mix)
     {
-        return Phoenix2PumbilityLevel.All
+        return ByMix.TryGetValue(mix, out var tables)
+            ? tables
+            : throw new ArgumentOutOfRangeException(nameof(mix), mix, "This mix has no PUMBILITY title bands");
+    }
+
+    private static IReadOnlyList<PumbilityBand> BuildMergedLevels(MixEnum mix)
+    {
+        return Phoenix2PumbilityLevel.All(mix)
             .Where(rung => rung.IsRanked)
             .Select(rung => new PumbilityBand(PumbilityPool.Total, NameOf(rung), rung.Threshold,
                 rung.NextThreshold, rung.Gem, rung.Level))
@@ -91,9 +102,9 @@ public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, 
         return rung.Level is { } level && rung.Gem is { } gem ? Name.From($"{gem} LV.{level}") : rung.Gem!.Value;
     }
 
-    private static IReadOnlyList<PumbilityBand> BuildMergedGems()
+    private static IReadOnlyList<PumbilityBand> BuildMergedGems(MixEnum mix)
     {
-        var gems = Phoenix2PumbilityLevel.All.Where(rung => rung.IsRanked && rung.Gem is { })
+        var gems = Phoenix2PumbilityLevel.All(mix).Where(rung => rung.IsRanked && rung.Gem is { })
             .GroupBy(rung => rung.Gem!.Value)
             .Select(g => (Gem: g.Key, Floor: g.Min(rung => rung.Threshold)))
             .OrderBy(g => g.Floor)
@@ -102,13 +113,13 @@ public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, 
             i + 1 < gems.Length ? gems[i + 1].Floor : null)).ToArray();
     }
 
-    private static IReadOnlyList<PumbilityBand> BuildTyped(PumbilityPool pool)
+    private static IReadOnlyList<PumbilityBand> BuildTyped(MixEnum mix, PumbilityPool pool)
     {
-        var rungs = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
-            .Where(title => title.Pool == pool)
-            .OrderBy(title => title.CompletionRequired)
-            .ToArray();
+        var rungs = PumbilityLadders.For(mix, pool);
         return rungs.Select((title, i) => new PumbilityBand(pool, title.Name, title.CompletionRequired,
-            i + 1 < rungs.Length ? rungs[i + 1].CompletionRequired : null)).ToArray();
+            i + 1 < rungs.Count ? rungs[i + 1].CompletionRequired : null)).ToArray();
     }
+
+    private sealed record Tables(IReadOnlyList<PumbilityBand> MergedLevels, IReadOnlyList<PumbilityBand> MergedGems,
+        IReadOnlyList<PumbilityBand> SinglesRungs, IReadOnlyList<PumbilityBand> DoublesRungs);
 }

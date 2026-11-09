@@ -1,6 +1,7 @@
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartIntelligence.Domain;
@@ -33,7 +34,7 @@ internal static class ChartPresenceReading
         var byColumn = rows.ToDictionary(r => r.Column);
         var ordered = columns.Where(c => c.CountsBoardPlayers == countsBoardPlayers).OrderBy(c => c.Order).ToArray();
         if (ordered.Length == 0) return null;
-        var bands = ordered.Select(c => PumbilityBand.ByName(PumbilityPool.Total, c.Band)).ToArray();
+        var bands = ordered.Select(c => PumbilityBand.ByName(MixEnum.Phoenix2, PumbilityPool.Total, c.Band)).ToArray();
 
         var presence = ordered.Select((column, i) =>
         {

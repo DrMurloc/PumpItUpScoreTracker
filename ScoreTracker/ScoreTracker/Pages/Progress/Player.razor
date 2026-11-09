@@ -35,11 +35,11 @@ else if (_profile != null)
             @if (HasRatings)
             {
                 <div class="ph-pum">
-                    @* The level gem is Phoenix 2's ladder alone; on Phoenix the number stands by
-                       itself. It self-hides on a 404 until the art is mirrored. *@
-                    @if (_currentMix == MixEnum.Phoenix2)
+                    @* The level gem belongs to a mix with the gem ladder; on Phoenix the number stands
+                       by itself. It self-hides on a 404 until the art is mirrored. *@
+                    @if (_currentMix.UsesPhoenix2Pumbility())
                     {
-                        <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.From(_profile.Pumbility)" Height="60"/>
+                        <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.From(_currentMix, _profile.Pumbility)" Height="60"/>
                     }
                     <div class="cmp-hero-pum">
                         <span class="cmp-hero-num">@_profile.Pumbility.ToString("N0")</span>

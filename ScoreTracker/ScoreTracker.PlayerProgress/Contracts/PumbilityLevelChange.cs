@@ -37,15 +37,15 @@ public sealed record PumbilityLevelChange(
     /// </summary>
     public static PumbilityLevelChange? TryFrom(MixEnum mix, IEnumerable<PlayerMilestoneRecord> milestones)
     {
-        if (mix != MixEnum.Phoenix2) return null;
+        if (!mix.UsesPhoenix2Pumbility()) return null;
 
         var records = milestones as IReadOnlyCollection<PlayerMilestoneRecord> ?? milestones.ToArray();
         var gain = records.FirstOrDefault(m =>
             m is { Kind: MilestoneKind.PumbilityGain, OldValue: not null, NewValue: not null });
         if (gain == null) return null;
 
-        var from = Phoenix2PumbilityLevel.From(gain.OldValue!.Value);
-        var to = Phoenix2PumbilityLevel.From(gain.NewValue!.Value);
+        var from = Phoenix2PumbilityLevel.From(mix, gain.OldValue!.Value);
+        var to = Phoenix2PumbilityLevel.From(mix, gain.NewValue!.Value);
         if (to.Index <= from.Index) return null;
 
         var completedAGem = records.Any(m =>
