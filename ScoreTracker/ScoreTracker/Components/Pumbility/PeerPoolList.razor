@@ -26,11 +26,11 @@
 }
 else
 {
-    @foreach (var section in _sections)
+    @foreach (var tierSection in _sections)
     {
-        <div class="@section.WrapperClass" data-testid="@($"ppl-section-{section.Key}")">
-            <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count" Stat="@section.Stat"
-                         Collapsed="_collapsed.Contains(section.Key)" CollapsedChanged="c => SetCollapsed(section.Key, c)">
+        <div class="@tierSection.WrapperClass" data-testid="@($"ppl-section-{tierSection.Key}")">
+            <TierSection Name="@tierSection.Name" Color="@tierSection.Color" Count="tierSection.Rows.Count" Stat="@tierSection.Stat"
+                         Collapsed="_collapsed.Contains(tierSection.Key)" CollapsedChanged="c => SetCollapsed(tierSection.Key, c)">
                 @if (Density == UiDensity.Table)
                 {
                     <div class="tier-table-wrap">
@@ -61,7 +61,7 @@ else
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach (var row in section.Rows)
+                            @foreach (var row in tierSection.Rows)
                             {
                                 <tr class="@RowClass(row)">
                                     <td class="tier-table-jacket-cell">
@@ -146,7 +146,7 @@ else
                 else
                 {
                     <div class="@(Density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
-                        @foreach (var row in section.Rows)
+                        @foreach (var row in tierSection.Rows)
                         {
                             <TierListChartCard Chart="row.Chart"
                                                Density="Density"

@@ -55,17 +55,17 @@ else
         @if (!_useStrips)
         {
         <div class="dash-targets dash-scroll">
-            @foreach (var section in _sections.Where(s => s.Rows.Any()))
+            @foreach (var suggestionGroup in _sections.Where(s => s.Rows.Any()))
             {
                 @if (ShowCaptions)
                 {
                     <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption"
-                             title="@section.CaptionDetail">@section.Caption</MudText>
+                             title="@suggestionGroup.CaptionDetail">@suggestionGroup.Caption</MudText>
                 }
-                @foreach (var row in section.Rows)
+                @foreach (var row in suggestionGroup.Rows)
                 {
                     var chart = row.Chart;
-                    var sect = section;
+                    var sect = suggestionGroup;
                     var r = row;
                     @* The name is always here; CSS (a container query on .dash-suggested)
                        shows it only when the row is physically wide enough — so a
@@ -123,15 +123,15 @@ else
                 <button type="button" class="dash-strip-arrow dash-strip-arrow-left"
                         aria-label="@L["Scroll left"]">‹</button>
                 <div class="dash-card-strip">
-                    @foreach (var section in _sections.Where(s => s.Rows.Any()))
+                    @foreach (var suggestionGroup in _sections.Where(s => s.Rows.Any()))
                     {
-                        var sect = section;
+                        var sect = suggestionGroup;
                         @if (ShowCaptions)
                         {
                             <div class="dash-strip-divider"
-                                 title="@(section.CaptionDetail ?? section.Caption)">@section.Caption</div>
+                                 title="@(suggestionGroup.CaptionDetail ?? suggestionGroup.Caption)">@suggestionGroup.Caption</div>
                         }
-                        @foreach (var row in section.Rows)
+                        @foreach (var row in suggestionGroup.Rows)
                         {
                             @Card((sect, row))
                         }
