@@ -44,6 +44,7 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution policies — read before opening a PR |
 | [DOMAIN.md](docs/DOMAIN.md) | Pump It Up domain glossary |
 | [LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) | The short form a volunteer native speaker fills to bootstrap a new UI language |
+| [SPECS.md](docs/SPECS.md) | How features are specced: spec-first, and the spec wins. None extracted yet; [specs/](docs/specs/README.md) is the index |
 | [design/](docs/design/login-overhaul.md) | In-flight feature designs (currently: the login overhaul and its [build plan](docs/design/login-overhaul-spec.md)) |
 
 ## Contribute

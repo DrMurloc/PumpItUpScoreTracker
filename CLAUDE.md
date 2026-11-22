@@ -24,6 +24,8 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — the owner's contribution policies
 - [docs/DOMAIN.md](docs/DOMAIN.md) — PIU domain glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, UCS, Saga)
 - [docs/LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) — volunteer intake form for bootstrapping a new locale; Claude instantiates it per language and consumes the filled form (instructions inside the file)
+- [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. No specs are extracted yet, so a feature's design doc in `docs/design/` stays its record until it has one
+- [docs/specs/README.md](docs/specs/README.md) — the spec index and the Removed register; a new spec gets its line in the same PR
 
 Decision rationale for the vertical architecture is [docs/adr/ADR-001-subdomain-verticals.md](docs/adr/ADR-001-subdomain-verticals.md) — code comments cite it as `ADR-001 D2/D3/D4/Q8`. The maintainer is redoing product/roadmap docs post-Phoenix-2-announcement; until they exist, feature-fit and priority questions go to the owner, not a doc.
 
@@ -155,7 +157,7 @@ See [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) for the philosophy; these are the
 
 ### Test categorization
 
-**Folder-as-tag**: each test project's path (and subfolders within) encodes the classification. Per-test `[Trait]` attributes are not used and not required when adding a test to an existing folder.
+**Folder-as-tag**: each test project's path (and subfolders within) encodes the classification. Per-test `[Trait]` attributes are not used and not required when adding a test to an existing folder. The one exception is `[Trait("Verifies", "<ID>")]`, which names the spec requirement a test proves ([docs/SPECS.md](docs/SPECS.md#tests-name-what-they-verify)).
 
 | Folder | Layer | Size | Dependency mode |
 |---|---|---|---|
