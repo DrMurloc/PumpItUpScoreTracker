@@ -15,6 +15,7 @@ using Respawn;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Wiring;
 using Testcontainers.MsSql;
 using WireMock.Server;
 
@@ -33,6 +34,18 @@ namespace ScoreTracker.Tests.E2E.Support;
 /// </summary>
 public sealed class E2EAppFixture : IAsyncLifetime
 {
+    /// <summary>
+    ///     The <see cref="PiuGameConfiguration" /> URLs this fixture points at the WireMock stub:
+    ///     every <c>*Url</c> property on the type, so no host defaults to a live site in this suite.
+    /// </summary>
+    public static readonly IReadOnlyList<string> StubbedPiuGameUrls = new[]
+    {
+        nameof(PiuGameConfiguration.BaseUrl),
+        nameof(PiuGameConfiguration.Phoenix2BaseUrl),
+        nameof(PiuGameConfiguration.UcsBaseUrl),
+        nameof(PiuGameConfiguration.AmPassUrl)
+    };
+
     private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2025-latest")
         .Build();
@@ -62,12 +75,10 @@ public sealed class E2EAppFixture : IAsyncLifetime
             builder.UseSetting("AutoMigrate", "true");
             builder.UseSetting("PreventRecurringJobs", "true");
             builder.UseSetting("DevAuth:Enabled", "true");
-            builder.UseSetting("PiuGame:BaseUrl", PiuGame.Urls[0]);
-            // Phoenix 2 host points at the same stub so no test path can ever reach the real
-            // site; fixtures stay P1-only until owner-kit captures exist (plan doc, commit 9).
-            builder.UseSetting("PiuGame:Phoenix2BaseUrl", PiuGame.Urls[0]);
-            builder.UseSetting("PiuGame:UcsBaseUrl", PiuGame.Urls[0]);
-            builder.UseSetting("PiuGame:AmPassUrl", PiuGame.Urls[0]);
+            // Every PiuGame host points at the one stub so no test path can ever reach a real
+            // site; the Phoenix 2 fixtures stay P1-only until owner-kit captures exist.
+            foreach (var setting in StubbedPiuGameUrls)
+                builder.UseSetting($"PiuGame:{setting}", PiuGame.Urls[0]);
             // The OAuth handlers validate ClientId/Secret on first scheme resolution and the
             // Development placeholders are empty strings. Tests never OAuth-challenge, so
             // dummies keep the handlers registered (like production) without a 500 on render.
