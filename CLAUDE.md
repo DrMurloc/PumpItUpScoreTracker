@@ -4,7 +4,7 @@ Blazor Server + MVC API for tracking Pump It Up scores, leaderboards, tournament
 
 ## Imports
 
-- `@docs/ARCHITECTURE.md` — architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) and the code map. This file (CLAUDE.md) holds the machine-enforceable conventions that realize that philosophy.
+- `@docs/ARCHITECTURE.md` — architecture philosophy (bounded-context verticals, DDD + onion + hexagonal). This file (CLAUDE.md) holds the machine-enforceable conventions that realize that philosophy. Where things are is [docs/CODE-MAP.md](docs/CODE-MAP.md), deliberately not imported: open it when you need to find something.
 
 @docs/ARCHITECTURE.md
 
@@ -16,6 +16,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md) — prerequisites, Aspire local run, the /Dev/Populate harness, optional secrets
 - [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) — test philosophy + suite commands
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — update in the same PR that changes a structural pattern
+- [docs/CODE-MAP.md](docs/CODE-MAP.md) — where things are: the solution layout, a vertical's insides, the web app; update in the same PR that adds, moves or removes a project or folder it names
 - [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md) — the design system (per-mix themes, color tokens, the two semantic ramps) + the numbered UX rules; update in the same PR that changes a UI pattern
 - [docs/DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) — new tables get a row
 - [docs/API.md](docs/API.md) — the API surface map; Swagger is shape truth

@@ -46,7 +46,7 @@ Run these locally before opening a PR. The real-database integration suite ([HOW
 
 ## Conventions
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — architecture philosophy and the code map. Read before any non-trivial PR.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — architecture philosophy. Read before any non-trivial PR. [CODE-MAP.md](CODE-MAP.md) says where things are.
 - [CLAUDE.md](../CLAUDE.md) — machine-readable conventions for AI coding agents (layer package allowlists, test patterns, coverage exclusions). If you're contributing with an AI agent, point it here.
 - [DOMAIN.md](DOMAIN.md) — Pump It Up domain glossary (Mix, Chart, Phoenix score, Pumbility, UCS, …).
 
