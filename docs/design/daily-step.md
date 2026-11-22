@@ -1,7 +1,7 @@
 # Daily Step
 
 **Status**: scoped (2026-07-12), owner decisions locked; ready to execute. A catalog-walk widget
-(D12/D18 of [home-page-widgets.md](home-page-widgets.md)) — its own PR. Builds **inside the
+(D12/D18 of [HomePageWidgets/README.md](HomePageWidgets/README.md)) — its own PR. Builds **inside the
 `ScoreTracker.WeeklyChallenge` vertical**.
 
 A **per-mix shared daily chart** with a mini leaderboard. Everyone on a mix competes on the same chart
@@ -12,7 +12,7 @@ Day**: an easy chart (level ≤ 15) where the **lowest passing score wins**.
 
 ## 1. Locked decisions
 
-From D12 (home-page-widgets.md) plus the owner scoping pass 2026-07-12:
+From D12 ([HomePageWidgets/README.md](HomePageWidgets/README.md)) plus the owner scoping pass 2026-07-12:
 
 | # | Decision |
 |---|---|

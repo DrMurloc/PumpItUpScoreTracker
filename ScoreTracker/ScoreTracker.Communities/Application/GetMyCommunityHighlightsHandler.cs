@@ -8,7 +8,7 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 namespace ScoreTracker.Communities.Application;
 
 /// <summary>
-///     Reads the community big-wins feed for the current user (docs/design/home-page-widgets.md §7).
+///     Reads the community big-wins feed for the current user (docs/design/rivals.md §2.4).
 ///     Two steps since the payload moved out (docs/design/rivals.md D32): the index answers WHICH
 ///     events this member may see, then PlayerProgress answers what they were. Membership is still
 ///     the consent gate and it is still applied here, in the index read.

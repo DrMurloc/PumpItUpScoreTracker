@@ -10,7 +10,7 @@ namespace ScoreTracker.PlayerProgress.Domain;
 
 /// <summary>
 ///     Decides which of a score batch's changes/milestones are BIG wins
-///     (docs/design/home-page-widgets.md §7). Pure — the capturer loads the population snapshots
+///     (docs/design/rivals.md §2.4). Pure — the capturer loads the population snapshots
 ///     (cached) and passes them in, so every cutoff is pinned by DomainTest and tunable without
 ///     touching plumbing.
 ///     <para>

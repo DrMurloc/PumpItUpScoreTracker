@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.Components;
 ///     That trap has bitten a main-merge before (the shell moved <c>OnChartClick</c> from
 ///     <c>EventCallback&lt;Chart&gt;</c> to <c>EventCallback&lt;ChartClickContext&gt;</c> and added
 ///     <c>RefreshToken</c>). This pins the five-param contract for every registered widget so a shell
-///     change — or a new widget — can't ship a render crash. See home-page-widgets.md §2.2.
+///     change — or a new widget — can't ship a render crash. See docs/design/HomePageWidgets/README.md §2.2.
 /// </summary>
 public sealed class WidgetRenderContractTests
 {
