@@ -69,20 +69,13 @@ public sealed class LayerDependencyTests
     public void OnlyLedgerInternalTypesInjectThePhoenixRecordRepository()
     {
         // F1 ratchet (rearch C22, tightened C34): every consumer outside the Score Ledger
-        // reads scores through IScoreReader. The allowlist is the Ledger itself â the
-        // PlayerRatingSaga holdout resolved when its UpdateScoreStats write moved to
-        // IPhoenixRecordStatsRepository (Progression's own port).
-        var allowed = new[]
-        {
-            "UpdatePhoenixRecordHandler", "GetPhoenixRecordHandler", "GetPhoenixRecordsHandler",
-            "GetPhoenixScoresForChartHandler", "GetAllChartScoreAggregatesHandler",
-            "WipeUserScoresHandler"
-        };
-        var personalProgress = typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly;
-        var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
-            .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
-            .Where(t => t.GetConstructors().Any(c => c.GetParameters()
-                .Any(p => p.ParameterType.Name == "IPhoenixRecordRepository")))
+        // reads scores through IScoreReader. The port is internal to the Ledger now, so the
+        // compiler holds most of this; the scan covers Application and every other vertical,
+        // so an InternalsVisibleTo or a public port elsewhere cannot quietly reopen it.
+        var ledger = typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly;
+        var violations = VerticalAssemblies.All().Where(a => a != ledger).Prepend(ApplicationAssembly)
+            .SelectMany(a => a.GetTypes())
+            .Where(t => !t.IsInterface && Injects(t, "IPhoenixRecordRepository"))
             .Select(t => t.FullName)
             .ToArray();
 
@@ -114,18 +107,27 @@ public sealed class LayerDependencyTests
     {
         // F5 ratchet (rearch C23-C26): consumers read player stats through
         // IPlayerStatsReader. The writers are Progression-internal (PlayerRatingSaga)
-        // plus the wipe flow; the allowlist shrinks at P5.
+        // plus the wipe flow in the Score Ledger; the allowlist shrinks at P5.
         var allowed = new[] { "PlayerRatingSaga", "WipeUserScoresHandler" };
-        var personalProgress = typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly;
-        var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
-            .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
-            .Where(t => t.GetConstructors().Any(c => c.GetParameters()
-                .Any(p => p.ParameterType.Name == "IPlayerStatsRepository")))
-            .Select(t => t.FullName)
+        var injectors = VerticalAssemblies.All().Prepend(ApplicationAssembly)
+            .SelectMany(a => a.GetTypes())
+            .Where(t => !t.IsInterface && Injects(t, "IPlayerStatsRepository"))
             .ToArray();
+        var violations = injectors.Where(t => !allowed.Contains(t.Name)).Select(t => t.FullName).ToArray();
 
         Assert.True(violations.Length == 0,
             $"Read player stats through IPlayerStatsReader, not IPlayerStatsRepository: {string.Join(", ", violations)}");
+
+        // An allowlisted name that no longer injects the port is an entry guarding nothing.
+        var stale = allowed.Where(n => injectors.All(t => t.Name != n)).ToArray();
+        Assert.True(stale.Length == 0,
+            $"These allowlist entries no longer inject IPlayerStatsRepository; remove them: {string.Join(", ", stale)}");
+    }
+
+    private static bool Injects(Type type, string portName)
+    {
+        return type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Any(c => c.GetParameters().Any(p => p.ParameterType.Name == portName));
     }
 
     [Fact]
