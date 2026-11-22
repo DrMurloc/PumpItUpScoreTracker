@@ -71,7 +71,7 @@ spec.)
 - **One title, then `## Purpose`, then `## Requirements`.**
 - **Each requirement** is a `### Requirement: <PREFIX>-<NNN> <name>` heading, one statement with MUST,
   MUST NOT, SHALL or SHALL NOT (never SHOULD or MAY), and at least one `#### Scenario:` with exactly one
-  WHEN and at least one THEN.
+  WHEN and at least one THEN. A scenario's examples table, when it has one, ends the scenario.
 - **Approving a spec confirms it.** No requirement carries a Status line: the owner's review is the
   confirmation, and an AI agent never confirms a rule on its own.
 - **Rules at the level people talk about the feature,** not the level the code branches at. Rules that
@@ -136,10 +136,12 @@ trait naming it.
 - **Removed:** it is deleted from the spec, and the index's Removed register gets a line,
   `- <ID> <former name> (removed <YYYY-MM-DD>): <reason>.`, ending `Replaced by <ID>.` when another
   replaces it. Retiring a whole feature records each of its IDs and its prefix.
+- **An ID written in a spec names a live requirement.**
 - **IDs are never reused or renumbered once merged.** A new requirement takes its spec's next free number;
   when two branches take the same one, the second to merge takes the next free number.
 - **A new spec** goes in its bounded context's folder, with a new prefix - two to eight capital letters or
-  digits, starting with a letter - that no spec has declared or retired, and gets its line in the index.
+  digits, starting with a letter - that no spec has declared or retired, and never a word that already means something in this repo's text (ADR,
+  SHA, AES, OAEP, RFC, ISO, UTF, CVE) - and gets its line in the index.
 
 ## Findings
 
