@@ -1,7 +1,7 @@
 # ADR-001: Subdomain verticals with contract-only boundaries
 
 > Status: **accepted** · 2026-06-12 · Owner-approved in the 2026-06 rearchitecture design sessions.
-> This is the Step 1.7 deliverable from [BACKLOG.md §rearch](../../BACKLOG.md#onion--ddd--hexagonal-rearchitecture). It finalizes the 2026-05-17 workshop decisions as revised 2026-06-11, and resolves the open questions from [CONTEXTS.md](../../CONTEXTS.md). Commit-level roadmap lives in [PR #104](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/104).
+> This is the Step 1.7 deliverable from [BACKLOG.md §rearch](https://github.com/DrMurloc/PumpItUpScoreTracker/blob/214e1f448dff7e2ddd78dc128bc6a4b6333d5ff0/BACKLOG.md#onion--ddd--hexagonal-rearchitecture). It finalizes the 2026-05-17 workshop decisions as revised 2026-06-11, and resolves the open questions from [CONTEXTS.md](https://github.com/DrMurloc/PumpItUpScoreTracker/blob/214e1f448dff7e2ddd78dc128bc6a4b6333d5ff0/CONTEXTS.md). Commit-level roadmap lives in [PR #104](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/104).
 >
 > *Editorial note (2026-07-03): the rearchitecture this ADR planned is complete and merged; the BACKLOG.md / CONTEXTS.md planning docs it links were removed in the post-completion docs overhaul. This record stays because code comments cite its decision ids (`ADR-001 D2/D3/D4/Q8`). Current structure: [ARCHITECTURE.md](../ARCHITECTURE.md).*
 

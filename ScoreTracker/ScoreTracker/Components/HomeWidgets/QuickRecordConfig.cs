@@ -4,7 +4,7 @@ namespace ScoreTracker.Web.Components.HomeWidgets;
 
 /// <summary>
 ///     Quick Record widget config (public contract via export/import, D19). Mix scope is
-///     the only knob — the arcade recorder is deliberately tiny (docs/design/home-page-widgets.md
+///     the only knob — the arcade recorder is deliberately tiny (docs/design/HomePageWidgets/README.md
 ///     §4.2): no ClearAfterSave (it always clears), no size variants, no feedback machinery.
 ///     <para>
 ///         <see cref="Mix"/> null = follow the current mix; a value pins Phoenix / Phoenix 2.

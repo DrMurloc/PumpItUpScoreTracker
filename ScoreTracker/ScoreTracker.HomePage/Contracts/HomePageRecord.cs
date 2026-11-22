@@ -34,3 +34,8 @@ public sealed record HomePageWidgetRecord(Guid Id, string WidgetType, string? Ti
     public const int MaxSizeLength = 8;
     public const int MaxConfigLength = 2000;
 }
+
+/// <summary>A widget-to-be from an import document — everything but identity and ordinal.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record HomePageWidgetSpec(string WidgetType, string? Title, string SizePreset,
+    string ConfigJson, int ConfigVersion);

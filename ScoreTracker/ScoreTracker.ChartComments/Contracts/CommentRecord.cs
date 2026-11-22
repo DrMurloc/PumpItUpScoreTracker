@@ -86,3 +86,12 @@ public sealed record CommentPageRecord(
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record CommentScopeRecord(CommentAudience Audience, Name Label, bool CanPost = true);
+
+[ExcludeFromCodeCoverage]
+public sealed record CommentScopeCountRecord(CommentAudience Audience, int AnchoredComments);
+
+[ExcludeFromCodeCoverage]
+public sealed record CommentConsentRecord(bool NeedsTerms, bool NeedsPublicIdentityConsent)
+{
+    public bool NeedsAnything => NeedsTerms || NeedsPublicIdentityConsent;
+}

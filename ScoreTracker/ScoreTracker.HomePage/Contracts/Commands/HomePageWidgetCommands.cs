@@ -50,8 +50,3 @@ public sealed record UpdateHomePageWidgetConfigCommand(Guid WidgetId, string Con
 [ExcludeFromCodeCoverage]
 public sealed record ReplaceHomePageWidgetsCommand(Guid PageId, IReadOnlyList<HomePageWidgetSpec> Widgets)
     : IRequest;
-
-/// <summary>A widget-to-be from an import document — everything but identity and ordinal.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record HomePageWidgetSpec(string WidgetType, string? Title, string SizePreset,
-    string ConfigJson, int ConfigVersion);

@@ -6,13 +6,15 @@ namespace ScoreTracker.ExplorationTests.LiveSite;
 ///     every automated build and a flaky real site can't fail it. Run them on demand when a change
 ///     touches the PIU scraper, by configuring PiuTest:Username / PiuTest:Password in the shared
 ///     user-secrets store (the Aspire AppHost's) or the PIU_TEST_USERNAME / PIU_TEST_PASSWORD
-///     environment variables.
+///     environment variables, and setting <c>PIU_EXPLORE</c> to a list that names <c>livesite</c>.
 /// </summary>
 public sealed class LiveSiteFactAttribute : FactAttribute
 {
     public LiveSiteFactAttribute()
     {
-        if (!PiuGameSessionFixture.CredentialsConfigured)
+        if (!ExploreOptIn.Names(ExploreOptIn.LiveSite))
+            Skip = ExploreOptIn.SkipReason("Live-site test (signs in to the real PIU site)", ExploreOptIn.LiveSite);
+        else if (!PiuGameSessionFixture.CredentialsConfigured)
             Skip = "Live-site test: configure PiuTest:Username/PiuTest:Password user-secrets " +
                    "(AppHost store) or PIU_TEST_USERNAME/PIU_TEST_PASSWORD env vars to run against the real PIU site.";
     }

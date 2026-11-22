@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -35,7 +36,7 @@ public sealed class RetiredSkillRollupTests
     [Fact]
     public void TheRetiredRollupsVocabularyDoesNotComeBack()
     {
-        var root = FindSolutionRoot();
+        var root = SourceTree.SolutionRoot;
         var violations = SourceFiles(root)
             .SelectMany(file => RetiredNames
                 .Where(name => File.ReadAllText(file).Contains(name, StringComparison.Ordinal))
@@ -50,14 +51,19 @@ public sealed class RetiredSkillRollupTests
     }
 
     /// <summary>
-    ///     The enums themselves. Asserted by name against every loaded assembly rather than by
-    ///     source text, so a reintroduction anywhere in the solution trips it.
+    ///     The enums themselves. Asserted by name against the core assemblies and every vertical
+    ///     rather than by source text, so a reintroduction anywhere below Web trips it.
     /// </summary>
     [Fact]
     public void TheSkillAndSkillCategoryEnumsStayDeleted()
     {
-        var resurrected = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.GetName().Name?.StartsWith("ScoreTracker", StringComparison.Ordinal) == true)
+        var assemblies = new[]
+        {
+            typeof(SharedKernel.ValueTypes.Name).Assembly, typeof(Domain.Models.User).Assembly,
+            typeof(Application.Commands.SaveChartToListCommand).Assembly,
+            typeof(Data.Persistence.ChartAttemptDbContext).Assembly
+        }.Concat(VerticalAssemblies.All());
+        var resurrected = assemblies
             .SelectMany(a =>
             {
                 try
@@ -90,14 +96,5 @@ public sealed class RetiredSkillRollupTests
                         && !f.Contains($"{Path.DirectorySeparatorChar}Migrations{Path.DirectorySeparatorChar}")
                         // This file names them all on purpose.
                         && !f.EndsWith("RetiredSkillRollupTests.cs", StringComparison.Ordinal));
-    }
-
-    private static string FindSolutionRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ScoreTracker.sln")))
-            dir = dir.Parent;
-        return dir?.FullName
-               ?? throw new InvalidOperationException("ScoreTracker.sln not found above test bin directory");
     }
 }

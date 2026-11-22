@@ -114,8 +114,8 @@ public sealed record BreakdownResult(
 }
 
 /// <summary>
-///     Pure per-level aggregation for the By-Level Breakdown widget (docs
-///     …/HomePageWidgets/by-level-breakdown.md). Turns a scope's worth of
+///     Pure per-level aggregation for the By-Level Breakdown widget
+///     (docs/design/HomePageWidgets/by-level-breakdown.md). Turns a scope's worth of
 ///     <see cref="BreakdownRecord" />s into a render-ready <see cref="BreakdownResult" />.
 ///     No theming, no I/O — unit-tested in ScoreTracker.Tests.Components.
 ///

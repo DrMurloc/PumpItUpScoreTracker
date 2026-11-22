@@ -659,8 +659,8 @@ small beside the journal.
   names spelled out.
 - `AccountPurgeCoverageTests` / `AccountPurgeTests` again, for the Leaderboards vertical: the standings
   table names its `UserOwned` manifest and the decoy plants a standing row.
-- `MassTransitResolvesEveryVerticalConsumer`: `AddLeaderboardsConsumers` joins both the `Program.cs`
-  hook list and the test's own mirror of it.
+- `MassTransitResolvesEveryVerticalConsumer`: `AddLeaderboardsConsumers` joins `VerticalConsumers.AddAll`
+  (CompositionRoot), the one hook list the host and the test both call.
 - `BusMessageSerializationTests`: the stats fact carries a stats record and a `SeasonId`, the plays
   fact judgement counts and plates — every value type on them needs its converter on the type.
 - `VerticalBoundaryTests`: the Leaderboards vertical's public surface is `Contracts/` and `Wiring/`;

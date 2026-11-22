@@ -12,6 +12,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ScoreTracker.CompositionRoot;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Wiring;
@@ -28,34 +29,20 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class VerticalBoundaryTests
 {
-    // One entry per extracted vertical: the public Wiring marker type anchors the
-    // assembly and its root namespace. New verticals add themselves here.
-    public static TheoryData<Type> VerticalWiringMarkers => new()
+    // One case per vertical, by assembly name, which is also the vertical's root namespace.
+    public static TheoryData<string> Verticals()
     {
-        typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions),
-        typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
-        typeof(Catalog.Wiring.CatalogRegistrationExtensions),
-        typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions),
-        typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions),
-        typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions),
-        typeof(Communities.Wiring.CommunitiesRegistrationExtensions),
-        typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions),
-        typeof(Identity.Wiring.IdentityRegistrationExtensions),
-        typeof(Randomizer.Wiring.RandomizerRegistrationExtensions),
-        typeof(HomePage.Wiring.HomePageRegistrationExtensions),
-        typeof(Rivals.Wiring.RivalsRegistrationExtensions),
-        typeof(CommunityTools.Wiring.CommunityToolsRegistrationExtensions),
-        typeof(Translations.Wiring.TranslationsRegistrationExtensions),
-        typeof(Seasons.Wiring.SeasonsRegistrationExtensions)
-    };
+        var data = new TheoryData<string>();
+        foreach (var assembly in VerticalAssemblies.All()) data.Add(assembly.GetName().Name!);
+        return data;
+    }
 
     [Theory]
-    [MemberData(nameof(VerticalWiringMarkers))]
-    public void VerticalPublicSurfaceIsContractsAndWiringOnly(Type wiringMarker)
+    [MemberData(nameof(Verticals))]
+    public void VerticalPublicSurfaceIsContractsAndWiringOnly(string root)
     {
-        var root = wiringMarker.Namespace!.Substring(0,
-            wiringMarker.Namespace!.Length - ".Wiring".Length);
-        var offenders = wiringMarker.Assembly.GetTypes()
+        var assembly = VerticalAssemblies.All().Single(a => a.GetName().Name == root);
+        var offenders = assembly.GetTypes()
             .Where(t => t.IsPublic)
             .Where(t => t.Namespace == null
                         || (!t.Namespace.StartsWith(root + ".Contracts", StringComparison.Ordinal)

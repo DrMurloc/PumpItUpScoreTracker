@@ -1,0 +1,39 @@
+{
+ "_comment": "init.py copies this to <wd>/general.json and fills repo, workdir, baseline and findingsDir. Read every value against the repo as it is on the day of the run and correct what has moved. 'decisions' gains every ruling the owner gives at the shape check-in, in his words. calls.md (beside this file) is the run's live vocabulary and rulings, which the orchestrator curates between stages.",
+ "codebase": {
+  "name": "PIU Scores",
+  "aka": "PumpItUpScoreTracker, the score tracker, piuscores",
+  "repo": "(filled by init.py)",
+  "src": "ScoreTracker/ (the solution ScoreTracker/ScoreTracker.sln; one project per vertical (ScoreTracker.ScoreLedger and the rest), plus SharedKernel, Domain, Application, Data, the Web host ScoreTracker/ScoreTracker and CompositionRoot)",
+  "tests": "xUnit 2.9.3 + Moq: ScoreTracker.Tests (DomainTests, ApplicationTests, ArchitectureTests), ScoreTracker.Tests.Api, ScoreTracker.Tests.Components (bUnit), ScoreTracker.Tests.Integration, ScoreTracker.Tests.E2E (Playwright). ScoreTracker.ExplorationTests is never CI and never proves a requirement.",
+  "stack": "Blazor Server + MudBlazor pages and an MVC API (api/* v1 and api/v2/*) over MediatR handlers, one vertical per bounded context (see docs/ARCHITECTURE.md), EF Core on SQL Server, MassTransit on an in-memory transport, Hangfire recurring jobs (docs/SCHEDULED-JOBS.md), a Discord bot (posts and slash commands), nine UI locales (resx), per-mix themes. The official PIU site (piugame) is read through the OfficialMirror vertical. Anonymous visitors see the public pages; signed-in players see their own data; community admins and the maintainer have more."
+ },
+ "workdir": "(filled by init.py)",
+ "baseline": "(filled by init.py)",
+ "findingsDir": "(filled by init.py)",
+ "decisions": [
+  "The code is the truth: each spec states what main does today, including behavior that looks wrong (recorded as a finding), except what the security triage keeps out. Once merged, the specs win (docs/SPECS.md).",
+  "The design docs in docs/design/ are hints for intent, never rules: a rule is written only when the code proves it. A decision row the code does not follow is a finding (doc-drift), not a requirement. Never copy a design doc's wording, tables or numbering into a spec.",
+  "Specs follow docs/SPECS.md exactly: front matter prefix plus optional claims (routes, api, jobs, discord, events); no paths; no Status, Out, owner or visibility lines; MUST / MUST NOT / SHALL / SHALL NOT only; one WHEN and at least one THEN per scenario; synthetic players, communities and scores, example.com addresses; song and chart names may be real.",
+  "No pull request, issue or commit numbers anywhere in a spec, and no hostnames, URLs with real hosts, Discord ids, keys or connection strings. PIU Scores is a public repo.",
+  "Development-only surfaces (the /Dev pages, the DevAuth login, the exploration workbench) are not spec. Dead code is not spec; it is a finding.",
+  "Admin pages are spec, in the feature they administer: the maintainer is one of the feature's audiences.",
+  "Words: docs/DOMAIN.md and the English UI text (the en-US resx) first; never coin a noun.",
+  "<every ruling the owner gives at the shape check-in, in his words>"
+ ],
+ "leads": [
+  "<wd>/shape/shape.md (the plan)",
+  "<wd>/shape/shape-run.json (the shape's inventory and mapper notes; re-prove everything)",
+  "docs/ARCHITECTURE.md, docs/CODE-MAP.md, docs/DOMAIN.md, docs/API.md, docs/SCHEDULED-JOBS.md, docs/UX-GUIDELINES.md, docs/DATABASE-SCHEMA.md (current-state docs; leads, not proof)",
+  "docs/design/**.md (intent only; decision rows D1, D2...; many are partly out of date)"
+ ],
+ "styleRefs": [
+  "<wd>/example-spec.md (shape and depth only: its rules are an illustration, never verified, never copied)"
+ ],
+ "folderNotes": {
+  "shell": "The rules every page shares: the frame, navigation, themes, language and the error pages.",
+  "api": "The rules every API caller shares: keys, versions, errors and limits.",
+  "jobs": "The rules every recurring job shares: the schedule, parking and recovery."
+ },
+ "calls": []
+}

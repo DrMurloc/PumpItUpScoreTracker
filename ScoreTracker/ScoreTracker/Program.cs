@@ -108,24 +108,9 @@ builder.Services.AddMassTransit(o =>
     // Application and Web no longer hold public consumers — every saga lives in a
     // vertical now. The Web scan stays for future host-level consumers.
     o.AddConsumers(typeof(RecurringJobRunner).Assembly);
-    // Vertical consumers are internal — assembly scanning skips them (see the
-    // AddScoreLedgerConsumers doc comment and its tripwire test).
-    o.AddPlayerProgressConsumers();
-    o.AddScoreLedgerConsumers();
-    o.AddOfficialMirrorConsumers();
-    o.AddChartIntelligenceConsumers();
-    o.AddWeeklyChallengeConsumers();
-    o.AddCommunityToolsConsumers();
-    o.AddChartCommentsConsumers();
-    o.AddTranslationsConsumers();
-    o.AddEventCompetitionConsumers();
-    o.AddCommunitiesConsumers();
-    o.AddCatalogConsumers();
-    o.AddIdentityConsumers();
-    o.AddRandomizerConsumers();
-    o.AddHomePageConsumers();
-    o.AddRivalsConsumers();
-    o.AddSeasonsConsumers();
+    // Vertical consumers are internal, so assembly scanning skips them; each vertical's
+    // AddXxxConsumers hook registers its own, and VerticalConsumers lists every hook.
+    VerticalConsumers.AddAll(o);
 
     o.AddDelayedMessageScheduler();
 

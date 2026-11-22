@@ -3498,7 +3498,7 @@ html.sheet-open .more-sheet-scrim {
     font-variant-numeric: tabular-nums;
 }
 
-/* Community Highlights feed (docs/design/home-page-widgets.md §7). */
+/* Community Highlights feed (docs/design/rivals.md §3.7). */
 .dash-ch-feed {
     display: flex;
     flex-direction: column;

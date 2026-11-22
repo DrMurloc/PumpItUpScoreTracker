@@ -35,7 +35,8 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 |---|---|
 | [HOW-TO-RUN.md](docs/HOW-TO-RUN.md) | Prerequisites, local setup, the dev harness, optional configuration |
 | [HOW-TO-TEST.md](docs/HOW-TO-TEST.md) | Testing philosophy and how to run each suite |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) and the code map |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) |
+| [CODE-MAP.md](docs/CODE-MAP.md) | Where things are: the solution layout, a vertical's insides, the web app |
 | [UX-GUIDELINES.md](docs/UX-GUIDELINES.md) | The design system: per-mix themes, color tokens, the two semantic ramps, and the UX rules |
 | [DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) | Every table, grouped by owning vertical |
 | [API.md](docs/API.md) | The API surface at a glance; Swagger is the source of truth |
@@ -44,7 +45,9 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution policies — read before opening a PR |
 | [DOMAIN.md](docs/DOMAIN.md) | Pump It Up domain glossary |
 | [LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) | The short form a volunteer native speaker fills to bootstrap a new UI language |
-| [design/](docs/design/login-overhaul.md) | In-flight feature designs (currently: the login overhaul and its [build plan](docs/design/login-overhaul-spec.md)) |
+| [SPECS.md](docs/SPECS.md) | How features are specced: spec-first, and the spec wins. None extracted yet; [specs/](docs/specs/README.md) is the index |
+| [blueprints/](docs/blueprints/README.md) | Features proven in Astrid, written up for building here: the help assistant and the page intro |
+| [design/](docs/design/) | Feature designs and their decision records, one doc per feature, each retired once it's extracted into specs |
 
 ## Contribute
 

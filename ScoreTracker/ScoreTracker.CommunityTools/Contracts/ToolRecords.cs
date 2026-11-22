@@ -211,3 +211,11 @@ public sealed record ToolCodeContext(
     string? WebhookUrl,
     string? OutboundHeaderName,
     IReadOnlyList<MixEnum> Mixes);
+
+/// <summary>
+///     The outcome, in the console's closed vocabulary plus whatever the remote actually said. No
+///     exception text — a maker can act on "your server returned 404" and cannot act on ours.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record WebhookVerificationResult(bool Verified, string? Reason, int? StatusCode,
+    string? ResponseSnippet);

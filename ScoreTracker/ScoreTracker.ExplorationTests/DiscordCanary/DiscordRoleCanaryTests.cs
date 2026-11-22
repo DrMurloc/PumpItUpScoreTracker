@@ -10,13 +10,16 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 /// <summary>
 ///     Marks a test that grants and revokes a real Discord role. Manual only, and gated on THREE
 ///     extra secrets rather than the canary's two, so an environment configured for the posting
-///     canary does not start writing roles by accident.
+///     canary does not start writing roles by accident, and like the canary it runs only when
+///     <c>PIU_EXPLORE</c> names <c>discord</c>.
 /// </summary>
 public sealed class DiscordRoleCanaryFactAttribute : FactAttribute
 {
     public DiscordRoleCanaryFactAttribute()
     {
-        if (!DiscordRoleCanaryTests.Configured)
+        if (!ExploreOptIn.Names(ExploreOptIn.Discord))
+            Skip = ExploreOptIn.SkipReason("Discord role canary (writes a role)", ExploreOptIn.Discord);
+        else if (!DiscordRoleCanaryTests.Configured)
             Skip = "Discord role canary: set DiscordTest:CanaryGuildId, DiscordTest:CanaryRoleId and " +
                    "DiscordTest:CanaryUserId (AppHost user-secrets) alongside Discord:BotToken. " +
                    "The role must be one the bot may assign and nobody relies on.";

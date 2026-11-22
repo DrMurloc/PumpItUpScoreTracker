@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MassTransit;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -30,26 +31,11 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class BusMessageSerializationTests
 {
+    /// <summary>Application, Domain and every vertical.</summary>
     private static readonly Assembly[] ConsumerAssemblies =
-    {
-        typeof(Application.Commands.SaveChartToListCommand).Assembly,
-        typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
-        typeof(Domain.Models.User).Assembly,
-        typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,
-        typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
-        typeof(Catalog.Contracts.Queries.GetChartsQuery).Assembly,
-        typeof(Randomizer.Contracts.Queries.GetRandomSettingsQuery).Assembly,
-        typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly,
-        typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
-        typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly,
-        typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
-        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly,
-        typeof(Translations.Contracts.Messages.QueueTextForTranslationCommand).Assembly,
-        typeof(CommunityTools.Contracts.Queries.GetMyToolsQuery).Assembly,
-        typeof(ChartComments.Contracts.Queries.GetChartCommentsQuery).Assembly,
-        typeof(HomePage.Contracts.Queries.GetMyHomePagesQuery).Assembly,
-        typeof(Rivals.Contracts.Queries.GetMyRivalsQuery).Assembly
-    };
+        new[] { typeof(Application.Commands.SaveChartToListCommand).Assembly, typeof(Domain.Models.User).Assembly }
+            .Concat(VerticalAssemblies.All())
+            .ToArray();
 
     // The scalars System.Text.Json already knows how to write. The walk stops here rather than
     // inspecting their internals.
@@ -74,8 +60,8 @@ public sealed class BusMessageSerializationTests
     [Fact]
     public void EveryBusMessageIsDiscoverable()
     {
-        // A ratchet that walks nothing passes forever. If the vertical list above goes stale this
-        // is what says so.
+        // A ratchet that walks nothing passes forever. If the assembly list above stops reaching
+        // the consumers this is what says so.
         Assert.True(BusMessageTypes().Length > 50);
     }
 

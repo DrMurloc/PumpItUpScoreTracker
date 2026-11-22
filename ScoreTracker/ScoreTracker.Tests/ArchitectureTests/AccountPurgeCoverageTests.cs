@@ -4,22 +4,8 @@ using System.Linq;
 using System.Reflection;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using ScoreTracker.Catalog.Wiring;
-using ScoreTracker.ChartIntelligence.Wiring;
-using ScoreTracker.Communities.Wiring;
-using ScoreTracker.CommunityTools.Wiring;
+using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.EventCompetition.Wiring;
-using ScoreTracker.HomePage.Wiring;
-using ScoreTracker.Identity.Wiring;
-using ScoreTracker.OfficialMirror.Wiring;
-using ScoreTracker.PlayerProgress.Wiring;
-using ScoreTracker.Randomizer.Wiring;
-using ScoreTracker.Rivals.Wiring;
-using ScoreTracker.ScoreLedger.Wiring;
-using ScoreTracker.Seasons.Wiring;
-using ScoreTracker.ChartComments.Wiring;
-using ScoreTracker.WeeklyChallenge.Wiring;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -31,25 +17,10 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class AccountPurgeCoverageTests
 {
-    /// <summary>Every vertical assembly, anchored on its public model contribution.</summary>
-    private static readonly (string Name, Assembly Assembly)[] Verticals =
-    {
-        ("ScoreLedger", typeof(ScoreLedgerModelContribution).Assembly),
-        ("PlayerProgress", typeof(PlayerProgressModelContribution).Assembly),
-        ("ChartIntelligence", typeof(ChartIntelligenceModelContribution).Assembly),
-        ("WeeklyChallenge", typeof(WeeklyChallengeModelContribution).Assembly),
-        ("EventCompetition", typeof(EventCompetitionModelContribution).Assembly),
-        ("Communities", typeof(CommunitiesModelContribution).Assembly),
-        ("CommunityTools", typeof(CommunityToolsModelContribution).Assembly),
-        ("Randomizer", typeof(RandomizerModelContribution).Assembly),
-        ("HomePage", typeof(HomePageModelContribution).Assembly),
-        ("Identity", typeof(IdentityModelContribution).Assembly),
-        ("Catalog", typeof(CatalogModelContribution).Assembly),
-        ("OfficialMirror", typeof(OfficialMirrorModelContribution).Assembly),
-        ("Rivals", typeof(RivalsModelContribution).Assembly),
-        ("ChartComments", typeof(ChartCommentsModelContribution).Assembly),
-        ("Seasons", typeof(SeasonsModelContribution).Assembly)
-    };
+    /// <summary>Every vertical assembly, with its name after the <c>ScoreTracker.</c> prefix.</summary>
+    private static readonly (string Name, Assembly Assembly)[] Verticals = VerticalAssemblies.All()
+        .Select(a => (a.GetName().Name!["ScoreTracker.".Length..], a))
+        .ToArray();
 
     /// <summary>
     ///     Types carrying a user key that no purge deletes, each with the reason it survives.
@@ -164,23 +135,10 @@ public sealed class AccountPurgeCoverageTests
         // already-covered vertical slips past them — which is how the purge consumers would
         // have gone unregistered. This asks the question generically instead.
         var services = new ServiceCollection();
+        // The same hook list the host calls, so this checks what production registers.
         services.AddMassTransit(x =>
         {
-            x.AddPlayerProgressConsumers();
-            x.AddScoreLedgerConsumers();
-            x.AddOfficialMirrorConsumers();
-            x.AddChartIntelligenceConsumers();
-            x.AddWeeklyChallengeConsumers();
-            x.AddEventCompetitionConsumers();
-            x.AddCommunitiesConsumers();
-            x.AddCatalogConsumers();
-            x.AddIdentityConsumers();
-            x.AddRandomizerConsumers();
-            x.AddHomePageConsumers();
-            x.AddRivalsConsumers();
-            x.AddCommunityToolsConsumers();
-            x.AddChartCommentsConsumers();
-            x.AddSeasonsConsumers();
+            VerticalConsumers.AddAll(x);
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 

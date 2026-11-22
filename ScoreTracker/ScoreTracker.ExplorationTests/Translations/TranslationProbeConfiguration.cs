@@ -6,7 +6,8 @@ namespace ScoreTracker.ExplorationTests.Translations;
 ///     Where the translation probes get their API key. Shares the Aspire AppHost's user-secrets
 ///     store like the rest of this assembly, so one command configures it:
 ///     <c>dotnet user-secrets set "ClaudeApi:ApiKey" "sk-ant-..." --project ScoreTracker/ScoreTracker.AppHost</c>.
-///     The environment variable wins when both are set.
+///     Only that configured key arms the paid probes: an <c>ANTHROPIC_API_KEY</c> already in the
+///     environment for some other tool never does.
 ///     <para>
 ///         The key is named for the service it opens, not for the feature that happens to use it
 ///         first — a secret whose name does not say what it is for is a secret nobody can audit.
@@ -19,9 +20,7 @@ internal static class TranslationProbeConfiguration
             .AddUserSecrets<TranslationProbeFactAttribute>(true)
             .Build());
 
-    public static string? ApiKey =>
-        Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY")
-        ?? Configuration.Value["ClaudeApi:ApiKey"];
+    public static string? ApiKey => Configuration.Value["ClaudeApi:ApiKey"];
 
     public static bool KeyConfigured => !string.IsNullOrWhiteSpace(ApiKey);
 

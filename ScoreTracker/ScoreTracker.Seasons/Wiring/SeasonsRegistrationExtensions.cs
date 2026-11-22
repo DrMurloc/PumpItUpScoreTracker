@@ -31,8 +31,8 @@ public static class SeasonsRegistrationExtensions
     }
 
     /// <summary>
-    ///     MassTransit's assembly scan skips internal types, so every consumer is named here and the
-    ///     hook is called from Program.cs's AddMassTransit block (CLAUDE.md, tripwire-tested).
+    ///     MassTransit's assembly scan skips internal types, so every consumer is named here
+    ///     (CLAUDE.md, tripwire-tested).
     /// </summary>
     public static void AddSeasonsConsumers(this IRegistrationConfigurator configurator)
     {

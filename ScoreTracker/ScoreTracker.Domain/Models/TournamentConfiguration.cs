@@ -10,9 +10,6 @@ namespace ScoreTracker.Domain.Models
 
         public TimeSpan MaxTime { get; set; } = TimeSpan.FromMinutes(105);
         public bool AllowRepeats { get; set; } = false;
-        public bool IsStarted => StartDate == null || StartDate <= DateTimeOffset.Now;
-        public bool IsEnded => EndDate != null && DateTimeOffset.Now > EndDate;
-        public bool IsActive => IsStarted && !IsEnded;
         public bool IsMom { get; }
         public bool IsHighlighted { get; }
 

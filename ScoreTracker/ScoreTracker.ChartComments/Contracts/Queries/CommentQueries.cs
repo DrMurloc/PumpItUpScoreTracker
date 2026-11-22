@@ -45,9 +45,6 @@ public sealed record GetChartCommentMarksQuery(
 [ExcludeFromCodeCoverage]
 public sealed record GetChartCommentScopeCountsQuery(Guid ChartId) : IQuery<IReadOnlyList<CommentScopeCountRecord>>;
 
-[ExcludeFromCodeCoverage]
-public sealed record CommentScopeCountRecord(CommentAudience Audience, int AnchoredComments);
-
 /// <summary>
 ///     The scope rail: Public, Notes, then the reader's non-regional communities. Empty for a
 ///     signed-out reader, who may read public comments but has nowhere of their own to post.
@@ -61,12 +58,6 @@ public sealed record GetMyCommentScopesQuery : IQuery<IReadOnlyList<CommentScope
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record GetCommentConsentQuery(CommentAudience Audience) : IQuery<CommentConsentRecord>;
-
-[ExcludeFromCodeCoverage]
-public sealed record CommentConsentRecord(bool NeedsTerms, bool NeedsPublicIdentityConsent)
-{
-    public bool NeedsAnything => NeedsTerms || NeedsPublicIdentityConsent;
-}
 
 /// <summary>
 ///     The raw body of a comment, so its author can edit it. Null for anyone else — this is the

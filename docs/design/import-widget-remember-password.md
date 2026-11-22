@@ -143,7 +143,7 @@ We do **not** hold a piugame `sid` across page loads (each import mints a fresh 
 
 ## 7. Docs & localization
 - **New:** `SECURITY.md` (invariants + threat model + incident response), this design doc.
-- **Update:** `DATABASE-SCHEMA.md` (new table), `docs/design/home-page-widgets.md` (widget entry), `CLAUDE.md` (Data package allowlist), `API.md` (note: import contract unchanged).
+- **Update:** `DATABASE-SCHEMA.md` (new table), `docs/design/HomePageWidgets/README.md` (widget entry), `CLAUDE.md` (Data package allowlist), `API.md` (note: import contract unchanged).
 - **Localization:** every new string through `L[…]` in all 9 locales — the disclaimer is a large copy surface (ja/ko best-effort, flagged for volunteer review).
 
 ## 8. Commit plan
