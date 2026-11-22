@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using MediatR;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -23,24 +24,11 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class RequestHandlerCoverageTests
 {
+    /// <summary>Application, Domain and every vertical.</summary>
     private static readonly Assembly[] Assemblies =
-    {
-        typeof(Application.Commands.SaveChartToListCommand).Assembly,
-        typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
-        typeof(Domain.Models.User).Assembly,
-        typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,
-        typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
-        typeof(Catalog.Contracts.Queries.GetChartsQuery).Assembly,
-        typeof(Randomizer.Contracts.Queries.GetRandomSettingsQuery).Assembly,
-        typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly,
-        typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
-        typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly,
-        typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
-        typeof(CommunityTools.Contracts.Commands.CreateToolCommand).Assembly,
-        typeof(HomePage.Contracts.Commands.CreateHomePageCommand).Assembly,
-        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly,
-        typeof(Translations.Contracts.Commands.TranslateCommentCommand).Assembly
-    };
+        new[] { typeof(Application.Commands.SaveChartToListCommand).Assembly, typeof(Domain.Models.User).Assembly }
+            .Concat(VerticalAssemblies.All())
+            .ToArray();
 
     /// <summary>
     ///     Requests deliberately dispatched from outside these assemblies, or kept without a

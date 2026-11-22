@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -95,19 +96,8 @@ public sealed class LayerDependencyTests
         // P6 ratchet (rearch C53): user reads outside Identity go through IUserReader;
         // writes go through Identity contract commands. Web pages and the auth callback
         // still inject the port transitionally — this rule covers the verticals.
-        var verticalAssemblies = new[]
-        {
-            typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
-            typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
-            typeof(Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
-            typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions).Assembly,
-            typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions).Assembly,
-            typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions).Assembly,
-            typeof(Communities.Wiring.CommunitiesRegistrationExtensions).Assembly,
-            typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly,
-            typeof(Randomizer.Wiring.RandomizerRegistrationExtensions).Assembly,
-            typeof(Rivals.Wiring.RivalsRegistrationExtensions).Assembly
-        };
+        var identity = typeof(Identity.Wiring.IdentityRegistrationExtensions).Assembly;
+        var verticalAssemblies = VerticalAssemblies.All().Where(a => a != identity);
         var violations = verticalAssemblies.SelectMany(a => a.GetTypes())
             .Where(t => !t.IsInterface)
             .Where(t => t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)

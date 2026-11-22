@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -41,19 +42,23 @@ public sealed class PumbilityPrecisionTests
         new(@"Math\.(?:Round|Floor|Truncate|Ceiling)\s*\([^;]*\b(?:[Pp]umbility|[Ss]killRating|SinglesRating|DoublesRating|CoOpRating|[Pp]ool(?:Total|Value)?|[Gg]ain)\b",
             RegexOptions.Compiled);
 
-    /// <summary>
-    ///     Every project that computes PUMBILITY. Web is deliberately absent — it is the one
-    ///     layer allowed to round, which is the whole rule. EventCompetition is absent for a
-    ///     different reason: tournament scoring is its own scale, whole points by design, and
-    ///     it shares only the <c>ScoringConfiguration</c> type with this.
-    /// </summary>
-    private static readonly string[] ScannedProjects =
+    /// <summary>The projects the scan leaves out, each with the reason.</summary>
+    private static readonly IReadOnlyDictionary<string, string> LeftOut = new Dictionary<string, string>
     {
-        "ScoreTracker.SharedKernel", "ScoreTracker.Domain", "ScoreTracker.Application",
-        "ScoreTracker.Data", "ScoreTracker.PlayerProgress", "ScoreTracker.OfficialMirror",
-        "ScoreTracker.ScoreLedger", "ScoreTracker.Communities", "ScoreTracker.ChartIntelligence",
-        "ScoreTracker.Catalog"
+        ["ScoreTracker.Web"] = "The one layer allowed to round, which is the whole rule.",
+        ["ScoreTracker.EventCompetition"] =
+            "Tournament scoring is its own scale, whole points by design, and it shares only the " +
+            "ScoringConfiguration type with PUMBILITY."
     };
+
+    /// <summary>The core projects and every vertical, but the ones <see cref="LeftOut" /> names.</summary>
+    private static readonly string[] ScannedProjects = new[]
+        {
+            "ScoreTracker.SharedKernel", "ScoreTracker.Domain", "ScoreTracker.Application", "ScoreTracker.Data"
+        }
+        .Concat(VerticalAssemblies.All().Select(a => a.GetName().Name!))
+        .Where(p => !LeftOut.ContainsKey(p))
+        .ToArray();
 
     /// <summary>
     ///     Files that match the shapes above while measuring something that is NOT PUMBILITY.
@@ -79,7 +84,6 @@ public sealed class PumbilityPrecisionTests
         var root = FindSolutionRoot();
         var counts = ScannedProjects
             .Select(p => Path.Combine(root, p))
-            .Where(Directory.Exists)
             .SelectMany(dir => Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories))
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
                         && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")

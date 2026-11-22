@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ScoreTracker.CompositionRoot;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -50,14 +51,19 @@ public sealed class RetiredSkillRollupTests
     }
 
     /// <summary>
-    ///     The enums themselves. Asserted by name against every loaded assembly rather than by
-    ///     source text, so a reintroduction anywhere in the solution trips it.
+    ///     The enums themselves. Asserted by name against the core assemblies and every vertical
+    ///     rather than by source text, so a reintroduction anywhere below Web trips it.
     /// </summary>
     [Fact]
     public void TheSkillAndSkillCategoryEnumsStayDeleted()
     {
-        var resurrected = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.GetName().Name?.StartsWith("ScoreTracker", StringComparison.Ordinal) == true)
+        var assemblies = new[]
+        {
+            typeof(SharedKernel.ValueTypes.Name).Assembly, typeof(Domain.Models.User).Assembly,
+            typeof(Application.Commands.SaveChartToListCommand).Assembly,
+            typeof(Data.Persistence.ChartAttemptDbContext).Assembly
+        }.Concat(VerticalAssemblies.All());
+        var resurrected = assemblies
             .SelectMany(a =>
             {
                 try

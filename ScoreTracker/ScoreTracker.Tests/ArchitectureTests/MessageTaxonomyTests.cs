@@ -2,9 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using MediatR;
-using ScoreTracker.Identity.Contracts.Commands;
-using ScoreTracker.Identity.Contracts.Events;
-using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.CompositionRoot;
 using ScoreTracker.SharedKernel.Messaging;
 using Xunit;
 
@@ -20,22 +18,11 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class MessageTaxonomyTests
 {
+    /// <summary>Application, Domain and every vertical.</summary>
     private static readonly Assembly[] MessageAssemblies =
-    {
-        typeof(Application.Commands.SaveChartToListCommand).Assembly,
-        typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
-        typeof(Domain.Models.User).Assembly,
-        typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,
-        typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
-        typeof(Catalog.Contracts.Queries.GetChartsQuery).Assembly,
-        typeof(Randomizer.Contracts.Queries.GetRandomSettingsQuery).Assembly,
-        typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly,
-        typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
-        typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly,
-        typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
-        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly,
-        typeof(Translations.Contracts.Messages.QueueTextForTranslationCommand).Assembly
-    };
+        new[] { typeof(Application.Commands.SaveChartToListCommand).Assembly, typeof(Domain.Models.User).Assembly }
+            .Concat(VerticalAssemblies.All())
+            .ToArray();
 
     private static Type[] TypesIn(string namespaceSuffix)
     {
