@@ -28,6 +28,8 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. No specs are extracted yet, so a feature's design doc in `docs/design/` stays its record until it has one
 - [docs/specs/README.md](docs/specs/README.md) — the spec index and the Removed register; a new spec gets its line in the same PR
 
+A `docs/design/….md` path written anywhere in the repo, and a relative `.md` link inside `docs/`, must name a file that exists (arch-test enforced, `DesignDocCitationTests`, files only, no allowance): a PR that moves or splits a doc repoints its citations.
+
 Decision rationale for the vertical architecture is [docs/adr/ADR-001-subdomain-verticals.md](docs/adr/ADR-001-subdomain-verticals.md) — code comments cite it as `ADR-001 D2/D3/D4/Q8`. The maintainer is redoing product/roadmap docs post-Phoenix-2-announcement; until they exist, feature-fit and priority questions go to the owner, not a doc.
 
 ### Ticket skills (copied, not adapted yet)
@@ -194,6 +196,8 @@ See [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) for the philosophy; these are the
 | `ScoreTracker.ExplorationTests/` | Exploration (manual only — never CI, never a feature guarantee) | — | Real external systems (live PIU crawl, real Discord, a populated prod-synced database). Config-gated, skips unless secrets set; the probes that spend or post also skip unless `PIU_EXPLORE` names their area. `LiveSite/` + `DiscordCanary/` + `Catalog/` + `Translations/` (the one that spends money). Read-only by default; mutate only on the owner's explicit ask |
 
 PR gate: the fast suites (`ScoreTracker.Tests`, `ScoreTracker.Tests.Api`, `ScoreTracker.Tests.Components`) run without Docker; the integration and E2E suites need Docker. CI runs all five on every PR.
+
+**A ratchet that reads source finds the repo and walks it through `SourceTree`** (`ScoreTracker.Tests/ArchitectureTests/SourceTree.cs`): `RepoRoot`, `SolutionRoot`, and `Files()`, a walk that skips `.git/`, `.claude/`, `bin/` and `obj/` judged on the repo-relative path — a filter on the absolute path empties every scan inside a worktree under `.claude/worktrees/`. It is the one way from now on; the older private `FindSolutionRoot` copies move to it when their files are next touched.
 
 **A new ratchet lands at zero.** The PR that adds it fixes every violation it finds, or the ratchet covers only code that already follows its rule; it never lands with a list of offenders to shrink later. Rules are never removed, so a list that doesn't shrink is permanent. A permanent exemption with its reason (an `Exempt` set) is not such a list.
 

@@ -81,7 +81,7 @@ public sealed class PumbilityPrecisionTests
     [Fact]
     public void NothingBelowThePresentationLayerRoundsPumbility()
     {
-        var root = FindSolutionRoot();
+        var root = SourceTree.SolutionRoot;
         var counts = ScannedProjects
             .Select(p => Path.Combine(root, p))
             .SelectMany(dir => Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories))
@@ -125,7 +125,7 @@ public sealed class PumbilityPrecisionTests
     [Fact]
     public void TheScanReachesThePumbilityComputingFiles()
     {
-        var root = FindSolutionRoot();
+        var root = SourceTree.SolutionRoot;
         var expected = new[]
         {
             "ScoreTracker.PlayerProgress/Application/PlayerRatingSaga.cs",
@@ -146,14 +146,5 @@ public sealed class PumbilityPrecisionTests
     {
         var text = File.ReadAllText(file);
         return CastOnScore.Matches(text).Count + RoundingAPool.Matches(text).Count;
-    }
-
-    private static string FindSolutionRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ScoreTracker.sln")))
-            dir = dir.Parent;
-        return dir?.FullName
-               ?? throw new InvalidOperationException("ScoreTracker.sln not found above test bin directory");
     }
 }

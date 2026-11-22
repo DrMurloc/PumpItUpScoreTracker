@@ -29,7 +29,7 @@ public sealed class NoAmbientClockTests
     [Fact]
     public void ApplicationAndDomainCodeReadsTheClockThroughItsPort()
     {
-        var root = FindSolutionRoot();
+        var root = SourceTree.SolutionRoot;
         var violations = ScannedFiles(root)
             .SelectMany(file => File.ReadLines(file)
                 .Select((line, index) => (Line: line, Number: index + 1))
@@ -48,7 +48,7 @@ public sealed class NoAmbientClockTests
     [Fact]
     public void TheScanReachesApplicationDomainAndVerticalCode()
     {
-        var root = FindSolutionRoot();
+        var root = SourceTree.SolutionRoot;
         var scanned = ScannedFiles(root).Select(f => Relative(root, f)).ToHashSet(StringComparer.Ordinal);
         var expected = new[]
         {
@@ -107,14 +107,5 @@ public sealed class NoAmbientClockTests
     private static string Relative(string root, string file)
     {
         return Path.GetRelativePath(root, file).Replace('\\', '/');
-    }
-
-    private static string FindSolutionRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ScoreTracker.sln")))
-            dir = dir.Parent;
-        return dir?.FullName
-               ?? throw new InvalidOperationException("ScoreTracker.sln not found above test bin directory");
     }
 }
