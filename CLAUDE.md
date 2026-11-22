@@ -25,7 +25,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — the owner's contribution policies
 - [docs/DOMAIN.md](docs/DOMAIN.md) — PIU domain glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, UCS, Saga)
 - [docs/LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) — volunteer intake form for bootstrapping a new locale; Claude instantiates it per language and consumes the filled form (instructions inside the file)
-- [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. New features start as specs; the design docs are going away, and each stays its feature's record in `docs/design/` until it's extracted
+- [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. New features start as specs; the design docs are going away, and each stays its feature's record in `docs/design/` until it's extracted (the `spec-extraction` skill runs the extraction)
 - [docs/specs/README.md](docs/specs/README.md) — the spec index and the Removed register; a new spec gets its line in the same PR
 - [docs/blueprints/](docs/blueprints/README.md) — features proven in Astrid, written up for building here; the PR that builds one turns its draft requirements into the feature's spec and deletes the blueprint
 
