@@ -54,14 +54,6 @@ public sealed record SetToolVerificationSecretCommand(Guid ToolId, string? Secre
 [ExcludeFromCodeCoverage]
 public sealed record VerifyToolWebhookCommand(Guid ToolId) : IRequest<WebhookVerificationResult>;
 
-/// <summary>
-///     The outcome, in the console's closed vocabulary plus whatever the remote actually said. No
-///     exception text — a maker can act on "your server returned 404" and cannot act on ours.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public sealed record WebhookVerificationResult(bool Verified, string? Reason, int? StatusCode,
-    string? ResponseSnippet);
-
 [ExcludeFromCodeCoverage]
 public sealed record RequestToolListingCommand(Guid ToolId) : IRequest;
 
