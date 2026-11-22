@@ -25,7 +25,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — the owner's contribution policies
 - [docs/DOMAIN.md](docs/DOMAIN.md) — PIU domain glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, UCS, Saga)
 - [docs/LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) — volunteer intake form for bootstrapping a new locale; Claude instantiates it per language and consumes the filled form (instructions inside the file)
-- [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. No specs are extracted yet, so a feature's design doc in `docs/design/` stays its record until it has one
+- [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. New features start as specs; the design docs are going away, and each stays its feature's record in `docs/design/` until it's extracted
 - [docs/specs/README.md](docs/specs/README.md) — the spec index and the Removed register; a new spec gets its line in the same PR
 
 A `docs/design/….md` path written anywhere in the repo, and a relative `.md` link inside `docs/`, must name a file that exists (arch-test enforced, `DesignDocCitationTests`, files only, no allowance): a PR that moves or splits a doc repoints its citations.

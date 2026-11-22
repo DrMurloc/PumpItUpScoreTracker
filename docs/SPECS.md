@@ -12,10 +12,10 @@ PIU Scores is **spec-first, and the spec wins**:
 - **The spec wins.** Where the code and a spec disagree, the code is wrong. Whoever finds that outside
   their own task - a person or an agent - reports it rather than changing either side.
 
-**No specs have been extracted yet.** Until a feature has a spec, its design doc in
-[docs/design/](design/) is the record of what it does and why, and its decision rows play the spec's
-part: written and reviewed before the code. Extracting the design docs into specs is deferred. This
-page says how specs are kept once they exist.
+**New features start as specs, and the design docs are going away.** No specs have been extracted yet:
+until a feature's design doc in [docs/design/](design/) is extracted into specs, it stays the record of
+what the feature does and why, and its decision rows play the spec's part - written and reviewed before
+the code. This page says how specs are kept.
 
 ## Where specs live
 
