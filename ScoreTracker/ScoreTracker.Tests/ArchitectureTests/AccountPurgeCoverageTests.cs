@@ -8,6 +8,7 @@ using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CommunityTools.Wiring;
+using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.HomePage.Wiring;
@@ -164,23 +165,10 @@ public sealed class AccountPurgeCoverageTests
         // already-covered vertical slips past them — which is how the purge consumers would
         // have gone unregistered. This asks the question generically instead.
         var services = new ServiceCollection();
+        // The same hook list the host calls, so this checks what production registers.
         services.AddMassTransit(x =>
         {
-            x.AddPlayerProgressConsumers();
-            x.AddScoreLedgerConsumers();
-            x.AddOfficialMirrorConsumers();
-            x.AddChartIntelligenceConsumers();
-            x.AddWeeklyChallengeConsumers();
-            x.AddEventCompetitionConsumers();
-            x.AddCommunitiesConsumers();
-            x.AddCatalogConsumers();
-            x.AddIdentityConsumers();
-            x.AddRandomizerConsumers();
-            x.AddHomePageConsumers();
-            x.AddRivalsConsumers();
-            x.AddCommunityToolsConsumers();
-            x.AddChartCommentsConsumers();
-            x.AddSeasonsConsumers();
+            VerticalConsumers.AddAll(x);
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 
