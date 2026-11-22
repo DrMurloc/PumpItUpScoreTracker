@@ -195,6 +195,8 @@ See [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) for the philosophy; these are the
 
 PR gate: the fast suites (`ScoreTracker.Tests`, `ScoreTracker.Tests.Api`, `ScoreTracker.Tests.Components`) run without Docker; the integration and E2E suites need Docker. CI runs all five on every PR.
 
+**A new ratchet lands at zero.** The PR that adds it fixes every violation it finds, or the ratchet covers only code that already follows its rule; it never lands with a list of offenders to shrink later. Rules are never removed, so a list that doesn't shrink is permanent. A permanent exemption with its reason (an `Exempt` set) is not such a list.
+
 **UI test granularity ladder (owner directive 2026-07-12)**: always the lowest level that can catch the defect — domain/handler logic in `ScoreTracker.Tests`, component rendering/behavior in `ScoreTracker.Tests.Components` (bUnit, mocked data), Playwright (`Tests.E2E`) only for critical whole-workflow user journeys.
 
 ### Unit tests — `DomainTests/`
