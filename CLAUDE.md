@@ -27,6 +27,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) — volunteer intake form for bootstrapping a new locale; Claude instantiates it per language and consumes the filled form (instructions inside the file)
 - [docs/SPECS.md](docs/SPECS.md) — how features are specced: spec-first, and the spec wins. New features start as specs; the design docs are going away, and each stays its feature's record in `docs/design/` until it's extracted
 - [docs/specs/README.md](docs/specs/README.md) — the spec index and the Removed register; a new spec gets its line in the same PR
+- [docs/blueprints/](docs/blueprints/README.md) — features proven in Astrid, written up for building here; the PR that builds one turns its draft requirements into the feature's spec and deletes the blueprint
 
 A `docs/design/….md` path written anywhere in the repo, and a relative `.md` link inside `docs/`, must name a file that exists (arch-test enforced, `DesignDocCitationTests`, files only, no allowance): a PR that moves or splits a doc repoints its citations.
 

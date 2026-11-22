@@ -46,6 +46,7 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [DOMAIN.md](docs/DOMAIN.md) | Pump It Up domain glossary |
 | [LOCALIZATION-INTAKE-TEMPLATE.md](docs/LOCALIZATION-INTAKE-TEMPLATE.md) | The short form a volunteer native speaker fills to bootstrap a new UI language |
 | [SPECS.md](docs/SPECS.md) | How features are specced: spec-first, and the spec wins. None extracted yet; [specs/](docs/specs/README.md) is the index |
+| [blueprints/](docs/blueprints/README.md) | Features proven in Astrid, written up for building here: the help assistant and the page intro |
 | [design/](docs/design/) | Feature designs and their decision records, one doc per feature, each retired once it's extracted into specs |
 
 ## Contribute
