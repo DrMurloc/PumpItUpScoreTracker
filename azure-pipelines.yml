@@ -26,7 +26,8 @@
 #   5. The exploration workbench (ScoreTracker.ExplorationTests — PIU live-site probes + the
 #      Discord canary) is manual-run only and is named in no `dotnet test` step below, so it
 #      never runs in CI. It builds with the solution but is Sonar-excluded. Run it locally with
-#      PiuTest:* / Discord:* user-secrets when crawling the real site. No Key Vault wiring needed.
+#      PiuTest:* / Discord:* user-secrets and PIU_EXPLORE naming the area (livesite, discord)
+#      when crawling the real site. No Key Vault wiring needed.
 
 trigger:
 - main

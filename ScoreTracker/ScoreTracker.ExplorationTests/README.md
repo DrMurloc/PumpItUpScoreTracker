@@ -23,7 +23,12 @@ A sanctioned place to:
   lab channel by design (`[DiscordCanaryFact]`, manual-only).
 - **Manual only.** Every test is gated behind a config check (`[LiveSiteFact]`,
   `[DiscordCanaryFact]`, `[SessionShowcaseFact]`) and **skips** when the credentials/channel
-  aren't configured — which is always in CI. Nothing here is a feature test; a formula that must
+  aren't configured — which is always in CI.
+- **A second key for anything that spends, posts or signs in.** `[TranslationProbeFact]`, the
+  Discord facts and `[LiveSiteFact]` also skip unless the `PIU_EXPLORE` environment variable, a
+  comma-separated list, names their area: `translations`, `discord`, `livesite`. Secrets alone
+  never start one. An agent asks the owner before running a probe that costs money or posts, and
+  says what it costs. Nothing here is a feature test; a formula that must
   be guaranteed belongs in `ScoreTracker.Tests` (unit) or `ScoreTracker.Tests.Integration`
   (real DB).
 
@@ -42,7 +47,7 @@ dotnet user-secrets set "Discord:BotToken" "..." --project ScoreTracker/ScoreTra
 dotnet user-secrets set "DiscordTest:CanaryChannelId" "..." --project ScoreTracker/ScoreTracker.AppHost
 #   or DISCORD_CANARY_TOKEN / DISCORD_CANARY_CHANNEL env vars
 
-dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj \
+PIU_EXPLORE=livesite dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj \
   --filter "FullyQualifiedName~PiuGameLiveSiteTests"
 ```
 

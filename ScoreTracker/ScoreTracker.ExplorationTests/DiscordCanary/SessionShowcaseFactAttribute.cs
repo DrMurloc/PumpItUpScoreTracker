@@ -7,13 +7,16 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     bot) into the owner's lab channel. On top of the canary's config it needs the
 ///     local database's connection string — never configured in CI, so it always skips
 ///     there. It mutates that database (journal/highlight/milestone rows for the demo
-///     session), which is sanctioned for the local dev database only.
+///     session), which is sanctioned for the local dev database only. Like the canary, it runs
+///     only when <c>PIU_EXPLORE</c> names <c>discord</c>.
 /// </summary>
 public sealed class SessionShowcaseFactAttribute : FactAttribute
 {
     public SessionShowcaseFactAttribute()
     {
-        if (!RealSessionShowcaseTests.Configured)
+        if (!ExploreOptIn.Names(ExploreOptIn.Discord))
+            Skip = ExploreOptIn.SkipReason("Session showcase (posts to the lab channel)", ExploreOptIn.Discord);
+        else if (!RealSessionShowcaseTests.Configured)
             Skip = "Session showcase: configure Discord:BotToken + DiscordTest:CanaryChannelId + " +
                    "DiscordTest:ExampleConnectionString user-secrets (AppHost store) to replay a real " +
                    "session from the local database to the lab channel.";

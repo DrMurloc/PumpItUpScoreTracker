@@ -6,14 +6,16 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     communities faster than a scheduled run would report it). Run it when a change
 ///     touches Discord or Communities code. Configuration comes from the shared AppHost
 ///     user-secrets store (Discord:BotToken + DiscordTest:CanaryChannelId) or the
-///     DISCORD_CANARY_TOKEN / DISCORD_CANARY_CHANNEL environment variables; unconfigured
-///     environments (CI included) skip.
+///     DISCORD_CANARY_TOKEN / DISCORD_CANARY_CHANNEL environment variables, and it runs only
+///     when <c>PIU_EXPLORE</c> names <c>discord</c>; anything else (CI included) skips.
 /// </summary>
 public sealed class DiscordCanaryFactAttribute : FactAttribute
 {
     public DiscordCanaryFactAttribute()
     {
-        if (!DiscordCanaryTests.Configured)
+        if (!ExploreOptIn.Names(ExploreOptIn.Discord))
+            Skip = ExploreOptIn.SkipReason("Discord canary (posts to the lab channel)", ExploreOptIn.Discord);
+        else if (!DiscordCanaryTests.Configured)
             Skip = "Discord canary: configure Discord:BotToken + DiscordTest:CanaryChannelId user-secrets " +
                    "(AppHost store) or DISCORD_CANARY_TOKEN/DISCORD_CANARY_CHANNEL env vars to post to the lab channel.";
     }

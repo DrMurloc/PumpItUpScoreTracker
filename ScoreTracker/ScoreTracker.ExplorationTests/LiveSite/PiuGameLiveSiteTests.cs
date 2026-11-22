@@ -8,8 +8,9 @@ namespace ScoreTracker.ExplorationTests.LiveSite;
 ///     that goes red the day PIU changes their HTML, image hosts, or login flow (like the
 ///     2026-07-03 piugame.com → phoenix.piugame.com image-host move that broke every import).
 ///     <para>
-///         Gated on PIU_TEST_USERNAME / PIU_TEST_PASSWORD environment variables — skipped
-///         everywhere they aren't set, including CI. Run on demand with:
+///         Gated on PIU_TEST_USERNAME / PIU_TEST_PASSWORD environment variables and on
+///         <c>PIU_EXPLORE</c> naming <c>livesite</c> — skipped everywhere they aren't set, including
+///         CI. Run on demand with <c>PIU_EXPLORE=livesite</c> set and:
 ///         <c>dotnet test ScoreTracker/ScoreTracker.ExplorationTests/... --filter "FullyQualifiedName~PiuGameLiveSiteTests"</c>
 ///     </para>
 ///     <para>

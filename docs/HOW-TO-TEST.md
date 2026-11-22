@@ -61,6 +61,14 @@ Boots the whole stack once per run: an ephemeral SQL Server (Testcontainers), a 
 
 `ScoreTracker.ExplorationTests` is a **manual-only workbench**, not a test suite: a sanctioned place to crawl live pages (**read-only unless the owner explicitly asks for a mutation**), download files, and try formulas against real data/images (OCR experiments will land here). It is named in no `dotnet test` step in `azure-pipelines.yml`, so it **never runs in CI**; it builds with the solution and is excluded from Sonar. Every test is config-gated and **skips** when its secrets are absent, so the assembly is inert by default. Nothing here is a feature guarantee — a formula that must hold belongs in `ScoreTracker.Tests` or `Tests.Integration`.
 
+**A second key for the probes that spend money, post or sign in to a live site.** `[TranslationProbeFact]`, the Discord facts (`[DiscordCanaryFact]`, `[SessionShowcaseFact]`, `[DiscordRoleCanaryFact]`) and `[LiveSiteFact]` also skip unless the `PIU_EXPLORE` environment variable — a comma-separated list — names their area: `translations`, `discord`, `livesite`. Secrets configured for one probe therefore never start another, and a bare `dotnet test` of the project runs none of them. `[CatalogProbeFact]` is read-only against a local database and needs only its secret. The skip reason says which area to name.
+
+```sh
+PIU_EXPLORE=livesite dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~PiuGameLiveSiteTests"
+```
+
+(PowerShell: `$env:PIU_EXPLORE = "livesite"` first.) **An agent asks the owner before running a probe that costs money or posts, and says what it costs** — the translation smoke run is a couple of cents and the sweep about $1.50; the Discord facts post to, or write a role in, the owner's lab server.
+
 ### Live-site probes — PIU account required
 
 `ExplorationTests/LiveSite/` exercises every scraper method the score-import flow depends on **against the real phoenix.piugame.com** — the code most likely to break in production, since PIU changes their site without notice. GET-only crawls (read-only). They need a real PIU account and **skip automatically when none is configured**.
@@ -72,7 +80,7 @@ dotnet user-secrets set "PiuTest:Username" "..." --project ScoreTracker/ScoreTra
 dotnet user-secrets set "PiuTest:Password" "..." --project ScoreTracker/ScoreTracker.AppHost
 ```
 
-(`PIU_TEST_USERNAME` / `PIU_TEST_PASSWORD` environment variables also work and take precedence.) Then:
+(`PIU_TEST_USERNAME` / `PIU_TEST_PASSWORD` environment variables also work and take precedence.) Then, with `PIU_EXPLORE` naming `livesite`:
 
 ```sh
 dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~PiuGameLiveSiteTests"
@@ -108,7 +116,7 @@ dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationT
 
 **Every run bills the owner's account.** Run `SmokeOneCommentOnSonnet` first (a couple of cents, proves the plumbing) before `SweepThreeArmsOverTheCorpus` (~$1.50, writes a markdown report). `BatchTransportTests` proves the Batch API path separately — batching halves the bill and suits production, but an hour-long round trip is an hour per prompt revision, so the sweep runs synchronously.
 
-Configuration (skips automatically when absent): `ClaudeApi:ApiKey` in the shared AppHost user-secrets store, or `ANTHROPIC_API_KEY`. The report lands in `%TEMP%/scoretracker-translation-probe/sweep.md` unless `SCORETRACKER_TRANSLATION_REPORTS` says otherwise.
+Configuration (skips automatically when absent): `PIU_EXPLORE` naming `translations`, and `ClaudeApi:ApiKey` in the shared AppHost user-secrets store — only that configured key arms it, never an `ANTHROPIC_API_KEY` already in the environment. The report lands in `%TEMP%/scoretracker-translation-probe/sweep.md` unless `SCORETRACKER_TRANSLATION_REPORTS` says otherwise.
 
 ```sh
 dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~SmokeOneCommentOnSonnet"
@@ -120,7 +128,7 @@ Design and findings: [comment-translation.md](design/comment-translation.md).
 
 `ExplorationTests/DiscordCanary/` posts the sample Components V2 score cards to the owner's private lab channel with the **testing** bot and reads them back over REST — catching what component tests can't: Discord API contract drift, emoji-id resolution, and token/permission validity. It is the one exploration test that **writes** to a remote by design (the owner's own lab channel). **Run it manually when a change touches Discord or Communities code.** Messages are left in the channel on purpose: it doubles as a visual gallery of what the cards looked like on every run.
 
-Configuration (skips automatically when absent): `Discord:BotToken` + `DiscordTest:CanaryChannelId` in the shared AppHost user-secrets store, or `DISCORD_CANARY_TOKEN` / `DISCORD_CANARY_CHANNEL` environment variables. Then:
+Configuration (skips automatically when absent): `PIU_EXPLORE` naming `discord`, and `Discord:BotToken` + `DiscordTest:CanaryChannelId` in the shared AppHost user-secrets store, or `DISCORD_CANARY_TOKEN` / `DISCORD_CANARY_CHANNEL` environment variables. Then:
 
 ```sh
 dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~DiscordCanaryTests"
