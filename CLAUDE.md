@@ -29,6 +29,28 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 
 Decision rationale for the vertical architecture is [docs/adr/ADR-001-subdomain-verticals.md](docs/adr/ADR-001-subdomain-verticals.md) — code comments cite it as `ADR-001 D2/D3/D4/Q8`. The maintainer is redoing product/roadmap docs post-Phoenix-2-announcement; until they exist, feature-fit and priority questions go to the owner, not a doc.
 
+### Ticket skills (copied, not adapted yet)
+
+`.claude/skills/ticket-loop/`, `epic-run/` and `ai-review/` were copied as is from another codebase on 2026-11-21. They still assume that codebase's tracker and ticket keys, its MCP tools, and docs this repo doesn't have. Run their phases and review rules as written; where a step names something missing here, read its counterpart below, and when there is none, say so and skip the step rather than invent it.
+
+These skills are the owner's workflow; an outside contributor's session doesn't run them. Never create a file the table maps elsewhere.
+
+| A copied skill names | Read here |
+|---|---|
+| `docs/GLOSSARY.md` | [docs/DOMAIN.md](docs/DOMAIN.md) |
+| `docs/ARCHITECTURE-CODE.md`, `ARCHITECTURE-DATA.md` | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and this file's Architecture conventions |
+| `docs/ARCHITECTURE-TESTING.md` | [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) and this file's Test conventions |
+| `docs/ARCHITECTURE-UI.md`, `docs/DESIGN-SYSTEM.md` | [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md) and this file's UI conventions |
+| `docs/RATCHETS.md`, `Ratchets/*` | the classes in `ScoreTracker.Tests/ArchitectureTests/`, each explaining its rule in its XML doc; most are also named beside their rule in this file |
+| `docs/ACCEPTED-TECH-DEBT.md` | this file's Known divergences |
+| `docs/adrs/` | [docs/adr/](docs/adr/), as `ADR-NNN-slug.md` |
+| `docs/toggles.md` | none — settings live in each project's `appsettings.json` and [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md) |
+| the other codebase's solution file, test projects and test filters | this file's Commands and Test categorization: the five suites CI runs, and the exploration workbench |
+| `[Verifies("<ID>")]` | `[Trait("Verifies", "<ID>")]` ([docs/SPECS.md](docs/SPECS.md#tests-name-what-they-verify)); never add a local `Verifies` attribute |
+| a spec's `paths`, `Implements <ID>` tags, `RulesArePureTests`, `Rules/` folders | not used here; skip the step. A spec's `claims` are optional; when none claims the surface, use the index |
+| `spec-trace.ps1`, the spec ratchets, `RequirementGapInventory.cs` | none yet ([docs/SPECS.md](docs/SPECS.md#what-holds-it)) |
+| a ticket key, Jira, an MCP tool | none yet — the owner hasn't picked a tracker; ask |
+
 ## Commands
 
 Run from the repo root (the solution lives at `ScoreTracker/ScoreTracker.sln`).
