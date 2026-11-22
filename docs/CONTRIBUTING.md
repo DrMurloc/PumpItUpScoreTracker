@@ -28,17 +28,18 @@ Untested code is highly subject to declined PRs. See [HOW-TO-TEST.md](HOW-TO-TES
 
 ### 5. Talk to me *before* large refactors
 
-Architectural changes and large refactors must be communicated to me **before** the PR exists. I will scrutinize structural changes, and I expect you to be conversant in **DDD, Onion, Hexagonal, and Medallion** terminology before we talk shop on large refactors. Unannounced architecture PRs get closed regardless of quality. [ARCHITECTURE.md](ARCHITECTURE.md) describes the philosophy the codebase already follows — start there.
+Architectural changes and large refactors must be communicated to me **before** the PR exists. I will scrutinize structural changes, and I expect you to be conversant in **DDD, Onion and Hexagonal** terminology before we talk shop on large refactors. Unannounced architecture PRs get closed regardless of quality. [ARCHITECTURE.md](ARCHITECTURE.md) describes the philosophy the codebase already follows — start there.
 
 ## Build and test
 
 ```sh
-dotnet build ScoreTracker/ScoreTracker.sln -c Release
+dotnet build ScoreTracker/ScoreTracker.sln -c Debug   # Release only to reproduce a CI failure
 dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj          # unit/component — no Docker
 dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj  # API wire-shape approval
+dotnet test ScoreTracker/ScoreTracker.Tests.Components/ScoreTracker.Tests.Components.csproj  # Blazor components (bUnit) — no Docker
 ```
 
-Run these locally before opening a PR. The real-database integration suite ([HOW-TO-TEST.md](HOW-TO-TEST.md)) needs Docker. CI runs on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker); merges to `main` additionally go through an approval-gated production deploy.
+Run these locally before opening a PR. The integration and E2E suites ([HOW-TO-TEST.md](HOW-TO-TEST.md)) need Docker. CI runs all five suites on every PR, on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker); merges to `main` additionally go through an approval-gated production deploy.
 
 ## Getting a working environment
 
@@ -52,4 +53,4 @@ Run these locally before opening a PR. The real-database integration suite ([HOW
 
 ## Community
 
-Discord is where changes get discussed, contributors stay in sync, and community standards live: <https://discord.gg/AvS5PxnvSN>. Security issues: email <joneccker@gmail.com> rather than opening a public issue.
+Discord is where changes get discussed, contributors stay in sync, and community standards live: <https://discord.gg/AvS5PxnvSN>. Security issues: report them privately as a GitHub security advisory, never a public issue — see [SECURITY.md](../SECURITY.md).
