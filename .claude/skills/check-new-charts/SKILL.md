@@ -25,7 +25,7 @@ only to refresh the oracle.
 | `videos\<id>.json` | Watch-page cache (title/description/length). Accumulates forever — this is what lets a song complete across multiple runs |
 | `notice-<version>.json` | The patch's update notice on piugame.com (`fetch-notice.py`): each new song's Category → channel token (`null` for R!SE Vol.1, which PIU Scores has no value for), artist, BPM and step-chart list. `build-batch.ps1` and `channels-sql.py` take a song's channel from here first |
 | `channels.json` | Video id → channel token (`KPop`, `WorldMusic`, …) from the per-version playlists (`fetch-channels.ps1`). Accumulates like the video cache; the channel source where no notice names the song |
-| `rise-songs-<version>.json` | A patch's RISE-path spec for `rise-songs-sql.py`: version, release date, the RISE sheet, `riseSingles` for any RISE song newer than the sheet, and each RISE song's Korean title as the site served it — the record of what that SQL was built from |
+| `rise-songs-<version>.json` | A patch's RISE-path spec for `rise-songs-sql.py`: version, release date, the RISE sheet, `riseSingles` for any RISE song newer than the sheet, `channels` (the batch dates whose channels the script also writes), and each RISE song's Korean title as the site served it — the record of what that SQL was built from |
 
 If the state dir is missing, this is a first-run bootstrap: ask the owner for the newest
 already-processed video id, write `state.json` by hand (`channelId` is
@@ -42,13 +42,15 @@ python -I scripts\fetch-notice.py 1.03.0        # the patch's update notice -> n
 python -I scripts\rise-songs-sql.py <spec.json> Downloads\phoenix2-<ver>-rise-songs-<date>.sql   # only if RISE songs arrived (below)
 & scripts\build-batch.ps1         # emit Downloads\phoenix2-batch-<date>.json + -report.txt
 & scripts\check-korean-names.ps1 -BatchJson "$env:USERPROFILE\Downloads\phoenix2-batch-<date>.json"   # koreanName vs the site; fix the blob to the site's
-python -I scripts\channels-sql.py <batch date> <version> Downloads\phoenix2-<ver>-channels-<date>.sql   # the RISE-path songs' channels (the SQL writes none), or an earlier batch's
 ```
 
 `rise-songs-sql.py` records its songs in `shipped.json`, so it runs **before** `build-batch.ps1`
 (otherwise the builder emits them into the JSON too). Its spec names the version, release date,
 the RISE sheet and each song's Korean title as the site served it; v1.03.0's is
-`rise-songs-1.03.0.json` in the state dir.
+`rise-songs-1.03.0.json` in the state dir. Its `channels` list folds `channels-sql.py`'s section
+into the same script — this batch's date, plus any earlier batch whose channels never went in — so
+**a batch is one JSON and at most one SQL file**. `channels-sql.py` runs on its own only for a
+catch-up after the batch went in (`channels-sql.py <date>[,<date>] <version> <out.sql>`).
 
 Run `rebuild-oracle.ps1` **first** when: the report shows `NO BLOB MATCH` entries (a song not
 in the oracle), the oracle is known-exhausted (everything shipped), or the owner asks to check
@@ -118,8 +120,8 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   but appear weeks later. The blob's song `channel` field takes the enum name (`Original`,
   `KPop`, `WorldMusic`, `Xross`; Phoenix 2 has no J-Music). A song neither source names gets no
   channel and a FLAG line; the admin tool imports it with none and warns
-  (docs/design/song-channels.md §6). The RISE-path SQL writes no channel, so its songs' rows come
-  from `channels-sql.py` for the same batch date, run after it.
+  (docs/design/song-channels.md §6). The RISE-path songs get theirs inside the RISE-path SQL
+  (its spec's `channels`), which goes in after the JSON.
 - **The Steam-link songs sit in a channel PIU Scores does not have yet.** The notice's "STEAM
   LINK - 'R!SE Vol.1' Arcade Charts Added" section puts them in the arcade's **R!SE Vol.1**
   channel (v1.02.0's 15, v1.03.0's 4); the tracker's five are Original, K-Pop, World Music,
@@ -130,9 +132,12 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
 - **The notice's step-chart list is Andamiro's own list of the patch's charts.** `fetch-notice.py`
   checks it against `shipped.json` song by song (v1.02.0 and v1.03.0: every song matched). A
   mismatch is a missing or extra video — check it before handing over.
-- **Handoff**: give the owner the batch + report paths. Preview in `/Admin/BulkAddCharts` is
-  the human checkpoint (its already-in-catalog warnings are the dedup net for stale
-  watermarks). With real blob creds the images mirror to the production CDN for real.
+- **Handoff**: give the owner the batch + report paths — at most the JSON and one SQL file, with
+  a three-step checklist at the top of the report (upload, run the SQL as-is then with
+  `@WhatIf = 0`, restart). Owner, 2026-11-24, handed four SQL scripts: *"god that's a lot of sql
+  scripts, what am i doing?"* Preview in `/Admin/BulkAddCharts` is the human checkpoint (its
+  already-in-catalog warnings are the dedup net for stale watermarks). With real blob creds the
+  images mirror to the production CDN for real.
 - **If the owner decides not to upload a batch**, remove its songs from `shipped.json` —
   otherwise they never re-emit.
 

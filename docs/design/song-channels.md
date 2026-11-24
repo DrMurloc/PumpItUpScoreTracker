@@ -156,9 +156,9 @@ check-new-charts skill reads the notice first and the playlists only where the n
 and emits `channel` per song; since Phoenix 2 has no J-Music, the four names it can produce are
 the four the mix has. A song neither source names, or one in R!SE Vol.1 (§2), gets no channel and
 a flag line — the playlists file the R!SE Vol.1 songs under Original, which is why they never
-decide a song the notice names. A RISE song that reaches the arcade goes in by SQL and gets its
-row from the skill's channel script; returning songs seeded through the ChartMix path by hand get
-their SongMix row by hand.
+decide a song the notice names. A RISE song that reaches the arcade goes in by SQL, and that same
+script writes its row; returning songs seeded through the ChartMix path by hand get their SongMix
+row by hand.
 
 ## 7. Sources and the backfill
 
