@@ -8,9 +8,10 @@ namespace ScoreTracker.Tests.DomainTests;
 public sealed class ChannelTests
 {
     [Fact]
-    public void TheFiveChannelsComeInTheGamesOrder()
+    public void TheSixChannelsComeInTheGamesOrder()
     {
-        Assert.Equal(new[] { Channel.Original, Channel.KPop, Channel.WorldMusic, Channel.JMusic, Channel.Xross },
+        Assert.Equal(
+            new[] { Channel.Original, Channel.KPop, Channel.WorldMusic, Channel.JMusic, Channel.Xross, Channel.RiseVol1 },
             Enum.GetValues<Channel>());
     }
 
@@ -20,6 +21,7 @@ public sealed class ChannelTests
     [InlineData(Channel.WorldMusic, "World Music")]
     [InlineData(Channel.JMusic, "J-Music")]
     [InlineData(Channel.Xross, "Xross")]
+    [InlineData(Channel.RiseVol1, "R!SE Vol.1")]
     public void EveryChannelPrintsItsDisplayName(Channel channel, string expected)
     {
         Assert.Equal(expected, channel.GetName());
@@ -37,6 +39,7 @@ public sealed class ChannelTests
     [InlineData("kpop", Channel.KPop)]
     [InlineData(" WorldMusic ", Channel.WorldMusic)]
     [InlineData("Xross", Channel.Xross)]
+    [InlineData("risevol1", Channel.RiseVol1)]
     public void TheTokenIsTheEnumNameCaseInsensitively(string token, Channel expected)
     {
         Assert.True(ChannelHelperMethods.TryParse(token, out var channel));
@@ -46,6 +49,7 @@ public sealed class ChannelTests
     [Theory]
     [InlineData("K-Pop")]
     [InlineData("World Music")]
+    [InlineData("R!SE Vol.1")]
     [InlineData("7")]
     [InlineData("2")]
     [InlineData("")]

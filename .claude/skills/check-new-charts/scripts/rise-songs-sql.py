@@ -13,8 +13,12 @@ spec.json - Korean names exactly as check-korean-names.ps1 read them off the sit
     {"version": "1.03.0", "release": "2026-11-24", "jsonBatch": "phoenix2-batch-2026-11-24.json",
      "sheet": "<the RISE catalog's rise-song-list.csv>",
      "riseSingles": {"ELEVATE": [4, 7, 11, 16, 18, 21]},
+     "channels": ["2026-11-24", "2026-10-15"],
      "why": ["optional header lines: which of the songs are Steam-link tracks, which teaser songs"],
      "songs": {"Bamboo": "뱀부", ...}}
+channels (optional) folds channels-sql.py's section into this script, for every shipped song whose batch name
+matches one of the filters - this patch's own songs and, if an earlier batch still lacks its channels, that one's -
+so the owner runs one SQL file per batch.
 riseSingles (optional) gives the RISE single levels of a song from a RISE patch after the sheet's last one (the
 sheet stops at RISE 1.5.0; 1.6.0 reached PIU Scores on 2026-10-27), as the catalog holds them - the
 NewSongBatchProbeTests catalog probe prints them. Every RISE single is still checked against the catalog (THROW
@@ -26,7 +30,7 @@ has moved to this SQL and is re-pointed. Standard library only; reads the video 
 are the catalog's own v5 ids (tools/RiseCatalog/build.py - the 1.6.0 rows use them too); the rows this script
 creates get v5 ids in a namespace of their own, so a re-run emits the same script.
 """
-import csv, datetime, json, os, re, sys, uuid, unicodedata
+import csv, datetime, importlib.util, json, os, re, sys, uuid, unicodedata
 
 sys.stdout.reconfigure(encoding='utf-8')
 STATE = os.path.join(os.environ['USERPROFILE'], '.piu-score-tracker', 'check-new-charts')
@@ -65,6 +69,15 @@ def tnorm(s):
 
 def label(t, lvl):
     return f'CO-OP x{lvl}' if t == 'CoOp' else f'{t[0]}{lvl}'
+
+
+def channels_module():
+    """channels-sql.py by its own path (a hyphenated script name is not importable by name)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'channels-sql.py')
+    spec = importlib.util.spec_from_file_location('channels_sql', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def align(arcade, rise):
@@ -160,6 +173,40 @@ def main():
             'duration_from': 'BGA' if bga is not None else 'shortest chart video',
         })
 
+    # keep the songs out of build-batch's JSON while its drift check keeps watching them - before the channel rows
+    # are read, which find this script's songs through shipped.json
+    shipped_path = os.path.join(STATE, 'shipped.json')
+    shipped = json.load(open(shipped_path, encoding='utf-8-sig')) if os.path.exists(shipped_path) else {'songs': []}
+    have = {s['name']: s for s in shipped['songs']}
+    now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    added = moved = 0
+    for s in songs:
+        keys = sorted(f'{t}|{lvl}' for t, lvl in s['charts'])
+        entry = have.get(s['name'])
+        if entry is None:
+            shipped['songs'].append({'name': s['name'], 'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
+            added += 1
+        elif entry['batch'] == spec['jsonBatch']:
+            # it went out in the JSON first and turned out to be a RISE song the tracker has: it ships here now
+            entry.update({'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
+            moved += 1
+    if added or moved:
+        with open(shipped_path, 'w', encoding='utf-8') as fh:
+            json.dump(shipped, fh, ensure_ascii=False, indent=4)
+
+    channel_sql, channel_lines = '', []
+    if spec.get('channels'):
+        cm = channels_module()
+        rows, left_out, channel_lines = cm.channel_rows(spec['channels'])
+        if rows:
+            channel_sql = cm.section(rows, left_out) + '\n'
+        channel_note = (f"  Channels: also sets the Phoenix 2 channel of {len(rows)} songs - this patch's and any earlier batch's\n"
+                        f"  still without one ({', '.join(spec['channels'])}) - from the update notices; a song that already has a\n"
+                        f"  channel keeps it. {len(left_out)} sit in R!SE Vol.1 or are unnamed, and keep none (listed below).")
+    else:
+        channel_note = (f"  No channel here: a song's Phoenix 2 scores.SongMix row comes from the channels script (channels-sql.py),\n"
+                        f"  which reads the v{version} update notice and, where it is silent, the step-chart playlists.")
+
     total = sum(len(s['charts']) for s in songs)
     song_ids = ', '.join(f"'{s['id']}'" for s in songs)
     version_id = own_guid('version', 'Phoenix2', version)
@@ -185,8 +232,7 @@ def main():
       the RISE row left them empty;
     * every song gets its ko-KR name as piugame's Korean session serves it (read {release}) - Korean
       sessions import through that row.
-  No channel here: a song's Phoenix 2 scores.SongMix row comes from the channels script (channels-sql.py),
-  which reads the v{version} update notice and, where it is silent, the step-chart playlists.
+{channel_note}
 
   Run order: upload {spec['jsonBatch']} in /Admin/BulkAddCharts first (Version picker: new
   version {version}, release date {release}), then this script with @WhatIf = 1, read the result sets, then
@@ -326,7 +372,7 @@ ORDER BY s.[Name], CASE c.[Type] WHEN 'Single' THEN 0 WHEN 'Double' THEN 1 ELSE 
 
 SELECT [Name], [Artist], [Duration] / 10000000 AS DurationSeconds, [MinBpm], [MaxBpm] FROM [scores].[Song] WHERE [Id] IN ({song_ids}) ORDER BY [Name];
 
-IF @WhatIf = 1
+{channel_sql}IF @WhatIf = 1
 BEGIN
     ROLLBACK;
     PRINT 'WhatIf: everything above ran and was rolled back. Set @WhatIf = 0 to commit.';
@@ -346,26 +392,8 @@ END
             for r in report_rows:
                 fh.write('\t'.join(str(x) for x in r) + '\n')
 
-    # keep the songs out of build-batch's JSON while its drift check keeps watching them
-    shipped_path = os.path.join(STATE, 'shipped.json')
-    shipped = json.load(open(shipped_path, encoding='utf-8-sig')) if os.path.exists(shipped_path) else {'songs': []}
-    have = {s['name']: s for s in shipped['songs']}
-    now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    added = moved = 0
-    for s in songs:
-        keys = sorted(f'{t}|{lvl}' for t, lvl in s['charts'])
-        entry = have.get(s['name'])
-        if entry is None:
-            shipped['songs'].append({'name': s['name'], 'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
-            added += 1
-        elif entry['batch'] == spec['jsonBatch']:
-            # it went out in the JSON first and turned out to be a RISE song the tracker has: it ships here now
-            entry.update({'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
-            moved += 1
-    if added or moved:
-        with open(shipped_path, 'w', encoding='utf-8') as fh:
-            json.dump(shipped, fh, ensure_ascii=False, indent=4)
-
+    for line in channel_lines:
+        print(line)
     for s in songs:
         re_rates = [f'S{a} (RISE {r})' for a, r in s['pairs'] if a != r]
         print(f"{s['name']} [{s['ko']}] {s['min']:g}-{s['max']:g} BPM, {s['duration']}s ({s['duration_from']})")

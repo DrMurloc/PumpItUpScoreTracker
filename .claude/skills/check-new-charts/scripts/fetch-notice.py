@@ -2,19 +2,19 @@
 
 Andamiro posts "PIU PHOENIX 2 v1.03.0 update Notice" on piugame.com the day a patch ships, and it prints every
 new song's Category - the channel the song sits in on the cab (ORIGINAL, K-POP, WORLD MUSIC, XROSS) - beside
-its artist, BPM and step-chart list. The per-version YouTube playlists that fetch-channels.ps1 reads say the same
-thing weeks later, and misfile what they cannot name: a Steam-link song sits in the arcade's "R!SE Vol.1"
-channel, which has no playlist, so its videos land in the (Original) one. The notice wins wherever it speaks
-(build-batch.ps1, channels-sql.py).
+its artist, BPM and step-chart list, and lists the STEAM LINK songs it adds to the arcade's "R!SE Vol.1" channel.
+The per-version YouTube playlists that fetch-channels.ps1 reads say the same thing weeks later, and misfile what
+they cannot name: R!SE Vol.1 has no playlist, so its videos land in the (Original) one. The notice wins wherever
+it speaks (build-batch.ps1, channels-sql.py).
 
 Writes notice-<version>.json in the state dir:
     {"version": "1.03.0", "title": ..., "url": ..., "date": "2026-11-24",
      "songs": [{"name": "I DONT CARE", "category": "K-POP", "channel": "KPop", "section": "new",
                 "artist": ..., "bpm": ..., "charts": ["Single|2", ..., "CoOp|2"]},
-               {"name": "untitled", "category": "R!SE Vol.1", "channel": null, "section": "steam-link-arcade"}]}
-"channel" is the enum name the blob takes, or null for a channel PIU Scores does not have (R!SE Vol.1). The
-notice's "Rise Charts Added ... RISE MIX" section is the arcade's side of the Steam link - RISE's own charts,
-which Phoenix 2 does not carry (docs/design/rise.md D8) - and is not read.
+               {"name": "untitled", "category": "R!SE Vol.1", "channel": "RiseVol1", "section": "steam-link-arcade"}]}
+"channel" is the enum name the blob takes (R!SE Vol.1 is RiseVol1), or null for a Category PIU Scores has no
+channel for. The notice's "Rise Charts Added ... RISE MIX" section is the arcade's side of the Steam link -
+RISE's own charts, which Phoenix 2 does not carry (docs/design/rise.md D8) - and is not read.
 
 Prints each song with its channel, and checks the notice's step-chart list against shipped.json where the song
 has shipped: the notice is Andamiro's own list of the patch's charts.
@@ -29,7 +29,8 @@ SITE = 'https://piugame.com'
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 # the Category as the notice prints it -> the enum name (docs/design/song-channels.md D5)
 TOKENS = {'ORIGINAL': 'Original', 'K-POP': 'KPop', 'KPOP': 'KPop', 'WORLD MUSIC': 'WorldMusic',
-          'WORLDMUSIC': 'WorldMusic', 'J-MUSIC': 'JMusic', 'JMUSIC': 'JMusic', 'XROSS': 'Xross'}
+          'WORLDMUSIC': 'WorldMusic', 'J-MUSIC': 'JMusic', 'JMUSIC': 'JMusic', 'XROSS': 'Xross',
+          'R!SE VOL.1': 'RiseVol1', 'RISE VOL.1': 'RiseVol1'}
 
 
 def norm(s):

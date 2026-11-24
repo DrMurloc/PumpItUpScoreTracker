@@ -25,14 +25,15 @@ randomizer, API, chart details, yeah, basically all the stuff we touched in the 
 | D9 | **The dialog shows the page's two version facts, not the mock's three.** Between the mock and the build, [chart-versions.md](chart-versions.md) D13 retired "Released" from the site and the API: the debut fact now carries its patch and date, and Added in appears on a carry-over only. The dialog mirrors that. | chart-versions.md D13, same day |
 | D10 | **The dialog's header carries the identity; Chart Stats carries the history as lines.** At the field test the eight labelled tiles read as a wall, and inside a phone's dialog (326px wide, 278 inside the padding) the grid dropped to one column, sixteen lines deep. Song type, *song by*, *steps by*, BPM and notes became one muted line under the title, above the tabs, so every tab has it. Chart Stats became rows: *History* — the chart page's timeline as lines, the debut, every uprate or downrate with its mark and the patch it happened in, the mix in view, unchanged mixes skipped — and *Channel*, a chip that opens /Charts filtered on it. *Recorded N days ago* left the header, since Score History dates every entry; the score stays `PeerScore`. Mock round 3 ("Chart Stats Layout"), Mock 1 picked. | *"this area is starting to feel like a wall of text … that stuff should be a thin line between video and the tabs … For history, include uprates/downrates"*, 2026-09-13 |
 | D11 | **History is a list of events, mix first, with the entry as a tag; Removed and Revived are told where the catalog can back them.** Field test of D10: the *unchanged* line said nothing, the placeholder version *Release* said nothing the mix and the date did not, and a chart pulled from a mix and brought back later had no line at all. Each event reads `Mix · Date · Version · Entry · Level` with the ▲/▼ mark where the level moved, the entry a small tag (Debuted, Rerated, Removed, Revived — Variant B of the round-4 mock), the version only when it is a numbered patch. A mix where nothing happened has no line, so the mix in view appears only when it did something. **Removed and Revived are told from Prime 2 on** (Prime 2, XX, Phoenix, Phoenix 2): those song lists are complete and every arrival is stamped, so a chart present earlier and missing from one of them reads *Removed* at that mix's release and *Revived* when it returns, and a row that arrived in a patch while the chart existed before reads *Removed* at the release and *Revived* at the patch — Conflict on Phoenix, out at v1.00.0 and back at v2.00.0. The older catalogs have holes (of the charts on both sides of Rebirth 58% are missing from it, Extra 36%, Infinity 33%, NXA 28%), so a gap there is silence. Over Phoenix 2's 4,675 charts the rule finds 33 charts absent from a whole mix and back later (Prime 2 32, XX 1) and 34 that arrived in a patch after a release they were missing from (Prime 2 6, XX 15, Phoenix 13). On a phone the mix stands as its own line and each event sits indented beneath it. | *"I don't think we need lines for 'unchanged' … We don't need to say 'Release' … Are we marking if a song was removed in a mix? … `<Mix> · <Date> · <Version> · <Entry Type> · <DifficultyLevel>` … variant b. get it in"*, 2026-09-14 |
+| D12 | **R!SE Vol.1 is the sixth channel**: token `RiseVol1`, displayed as the game prints it in every locale (en-ZW `R!SE Glr.1`), sort order 50 after Xross, Phoenix 2's alone by its rows (D6). The nineteen STEAM LINK songs of v1.02.0 and v1.03.0 get it from a data migration that ships with the value, so no script; later ones get it from the update notice like any channel. | *"I think rise vol 1 is a channel, yeah"*, then *"1 yeh"* to building it, 2026-11-24 |
 
 ## 2. The channel
 
-Five channels have ever existed, and every source agrees on the five — the game's own step
-files (`SONGCATEGORY`), pumpout's `category` table, Andamiro's per-version playlists and the
-wiki's per-mix song lists. A channel is a **song** fact: no source has a song whose charts sit in
-different channels, and no song moves between channels across the record. What changes by mix is
-the set the cab offers:
+Six channels have ever existed. The first five are every mix's, and every source agrees on them —
+the game's own step files (`SONGCATEGORY`), pumpout's `category` table, Andamiro's per-version
+playlists and the wiki's per-mix song lists; the sixth is Phoenix 2's alone (below). A channel is a
+**song** fact: no source has a song whose charts sit in different channels, and no song moves
+between channels across the record. What changes by mix is the set the cab offers:
 
 | Channel | Since | Until |
 |---|---|---|
@@ -41,15 +42,15 @@ the set the cab offers:
 | World Music | NX (2006); the two export Premieres carried world licenses earlier, all cut today | — |
 | J-Music | Prime (1.09.0 in Korea, 1.12.0 abroad — the Japanese licenses left World Music) | Phoenix. **Phoenix 2 folded it into World Music**: *"The J-MUSIC channel has been integrated into the WORLD MUSIC channel."* |
 | Xross | Prime 2 (the collaboration channel; one Infinity oddity) | — |
+| R!SE Vol.1 | Phoenix 2 v1.02.0 (2026-10-15), the STEAM LINK folder | — |
 
 Every J-Music song debuted in Prime or Prime 2, so no older mix ever needs the channel, and the
 Phoenix 2 fold is the only place the stored value differs between a song's mixes.
 
-**A sixth folder, on the Phoenix 2 arcade only.** v1.02.0 (2026-10-15) opened **R!SE Vol.1** for
-STEAM LINK accounts: the RISE songs whose arcade charts only linked accounts can play — 15 in
-v1.02.0, 4 in v1.03.0, by Andamiro's update notices. *"I think rise vol 1 is a channel, yeah"*
-(owner, 2026-11-24): it becomes the sixth. Until the value exists, those songs carry no Phoenix 2
-channel.
+**R!SE Vol.1, on the Phoenix 2 arcade only** (D12). v1.02.0 opened it for STEAM LINK accounts: the
+RISE songs whose arcade charts only linked accounts can play — 15 in v1.02.0, 4 in v1.03.0, by
+Andamiro's update notices. The same songs sit in RISE's own folders on Rise, which carry no channel
+here.
 
 ## 3. The model
 
@@ -94,7 +95,7 @@ scores.SongMix                                    -- Catalog-owned, registered l
 
 | Route | What |
 |---|---|
-| `GET /api/v2/channels?mix=` | The channels the mix offers, in the game's order: `name` (the token `channel` takes), `displayName`, `sortOrder`, `songCount`, `chartCount`. Phoenix lists five, Phoenix 2 four. A sub-resource like `/versions`. |
+| `GET /api/v2/channels?mix=` | The channels the mix offers, in the game's order: `name` (the token `channel` takes), `displayName`, `sortOrder`, `songCount`, `chartCount`. Phoenix lists five; Phoenix 2 five too, without J-Music and with R!SE Vol.1 (`RiseVol1`, sort order 50). A sub-resource like `/versions`. |
 | `GET /api/v2/charts?mix=&channel=KPop` | One channel. Several: a comma list, or repeat the parameter; any-of. |
 | `GET /api/v2/songs?mix=&channel=WorldMusic` | The song catalog takes it too; a channel is a song fact. |
 | `…/charts/skills` and `…/charts/random` | The same parameter, by contract. |
@@ -153,12 +154,12 @@ Andamiro's update notice on piugame.com (`/phoenix2_notice`, posted on release d
 new song's Category — its channel — and the per-version playlists carry it in the title's
 parenthesis weeks later (`[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (K-POP)`). The
 check-new-charts skill reads the notice first and the playlists only where the notice is silent,
-and emits `channel` per song; since Phoenix 2 has no J-Music, the four names it can produce are
-the four the mix has. A song neither source names, or one in R!SE Vol.1 (§2), gets no channel and
-a flag line — the playlists file the R!SE Vol.1 songs under Original, which is why they never
-decide a song the notice names. A RISE song that reaches the arcade goes in by SQL and gets its
-row from the skill's channel script; returning songs seeded through the ChartMix path by hand get
-their SongMix row by hand.
+and emits `channel` per song; since Phoenix 2 has no J-Music, the five names it can produce are
+the five the mix has, R!SE Vol.1 as `RiseVol1`. A song neither source names gets no channel and a
+flag line. The playlists file the R!SE Vol.1 songs under Original (there is no R!SE Vol.1
+playlist), which is why they never decide a song the notice names. A RISE song that reaches the arcade goes in by SQL, and that same
+script writes its row; returning songs seeded through the ChartMix path by hand get their SongMix
+row by hand.
 
 ## 7. Sources and the backfill
 

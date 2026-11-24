@@ -1,11 +1,12 @@
 namespace ScoreTracker.SharedKernel.Enums;
 
 /// <summary>
-///     The folder a song sits in on the cab's song select (docs/design/song-channels.md §2). Five
+///     The folder a song sits in on the cab's song select (docs/design/song-channels.md §2). Six
 ///     have ever existed, in this order — the game's own — and a song carries one per mix it is
 ///     in, because the set a mix offers changes: J-Music ran from Prime through Phoenix and
-///     Phoenix 2 folded it into World Music. The enum name is the API token (<c>KPop</c>); the
-///     display name comes from <see cref="ChannelHelperMethods.GetName" />.
+///     Phoenix 2 folded it into World Music, and R!SE Vol.1 is Phoenix 2's alone — the STEAM LINK
+///     songs, since v1.02.0. The enum name is the API token (<c>KPop</c>); the display name comes
+///     from <see cref="ChannelHelperMethods.GetName" />.
 /// </summary>
 public enum Channel
 {
@@ -13,13 +14,14 @@ public enum Channel
     KPop,
     WorldMusic,
     JMusic,
-    Xross
+    Xross,
+    RiseVol1
 }
 
 [ExcludeFromCodeCoverage]
 public static class ChannelHelperMethods
 {
-    /// <summary>What the site prints: <c>K-Pop</c>, <c>World Music</c>.</summary>
+    /// <summary>What the site prints: <c>K-Pop</c>, <c>World Music</c>, <c>R!SE Vol.1</c> as the game spells it.</summary>
     public static string GetName(this Channel channel)
     {
         return channel switch
@@ -29,6 +31,7 @@ public static class ChannelHelperMethods
             Channel.WorldMusic => "World Music",
             Channel.JMusic => "J-Music",
             Channel.Xross => "Xross",
+            Channel.RiseVol1 => "R!SE Vol.1",
             _ => channel.ToString()
         };
     }
