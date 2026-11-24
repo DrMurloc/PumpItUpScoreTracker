@@ -45,6 +45,12 @@ the set the cab offers:
 Every J-Music song debuted in Prime or Prime 2, so no older mix ever needs the channel, and the
 Phoenix 2 fold is the only place the stored value differs between a song's mixes.
 
+**A sixth folder, on the Phoenix 2 arcade only.** v1.02.0 (2026-10-15) opened **R!SE Vol.1** for
+STEAM LINK accounts: the RISE songs whose arcade charts only linked accounts can play — 15 in
+v1.02.0, 4 in v1.03.0, by Andamiro's update notices. *"I think rise vol 1 is a channel, yeah"*
+(owner, 2026-11-24): it becomes the sixth. Until the value exists, those songs carry no Phoenix 2
+channel.
+
 ## 3. The model
 
 ```
@@ -143,11 +149,15 @@ channel and the row can be set later. On Confirm the batch writes the song's Pho
 
 ## 6. The ongoing flow
 
-Andamiro's per-version playlists carry the channel in the title's parenthesis —
-`[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (K-POP)` — the same playlists that name the patch.
-The check-new-charts skill reads it there and emits `channel` per song; since Phoenix 2 has no
-J-Music playlist, the four names it can produce are the four the mix has. A song in no playlist
-gets no channel and a flag line. Returning songs seeded through the ChartMix path by hand get
+Andamiro's update notice on piugame.com (`/phoenix2_notice`, posted on release day) prints each
+new song's Category — its channel — and the per-version playlists carry it in the title's
+parenthesis weeks later (`[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (K-POP)`). The
+check-new-charts skill reads the notice first and the playlists only where the notice is silent,
+and emits `channel` per song; since Phoenix 2 has no J-Music, the four names it can produce are
+the four the mix has. A song neither source names, or one in R!SE Vol.1 (§2), gets no channel and
+a flag line — the playlists file the R!SE Vol.1 songs under Original, which is why they never
+decide a song the notice names. A RISE song that reaches the arcade goes in by SQL and gets its
+row from the skill's channel script; returning songs seeded through the ChartMix path by hand get
 their SongMix row by hand.
 
 ## 7. Sources and the backfill

@@ -34,26 +34,36 @@ if (-not $apiKey) { throw 'no innertube key on the playlists page - YouTube mark
 $clientVersion = [regex]::Match($content, '"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"').Groups[1].Value
 if (-not $clientVersion) { $clientVersion = '2.20250620.00.00' }
 
-function Read-Playlists([string]$json, [hashtable]$into) {
-    # a playlist lockup carries its id first and its title a little further on; whitespace-tolerant
-    # because the browse API pretty-prints
-    foreach ($m in [regex]::Matches($json, '"contentId":\s*"(PL[^"]+)",\s*"contentType":\s*"LOCKUP_CONTENT_TYPE_PLAYLIST"')) {
-        $id = $m.Groups[1].Value
+function Read-Playlists([string]$json, [hashtable]$into, [hashtable]$declared) {
+    # one lockup per playlist card, read as a unit: its video-count badge and title come BEFORE its
+    # contentId, so the first title after an id belongs to the NEXT card - pairing that way filed
+    # every playlist under its neighbour's channel. Whitespace-tolerant because the browse API
+    # pretty-prints.
+    $starts = @([regex]::Matches($json, '"lockupViewModel":\s*\{') | ForEach-Object { $_.Index })
+    for ($k = 0; $k -lt $starts.Count; $k++) {
+        $end = $json.Length
+        if ($k + 1 -lt $starts.Count) { $end = $starts[$k + 1] }
+        $card = $json.Substring($starts[$k], $end - $starts[$k])
+        $im = [regex]::Match($card, '"contentId":\s*"(PL[^"]+)",\s*"contentType":\s*"LOCKUP_CONTENT_TYPE_PLAYLIST"')
+        $tm = [regex]::Match($card, '"title":\s*\{\s*"content":\s*"([^"]+)"')
+        if (-not $im.Success -or -not $tm.Success -or $tm.Index -gt $im.Index) { continue }
+        $id = $im.Groups[1].Value
         if ($into.ContainsKey($id)) { continue }
-        $tail = $json.Substring($m.Index, [Math]::Min(6000, $json.Length - $m.Index))
-        $tm = [regex]::Match($tail, '"title":\s*\{\s*"content":\s*"([^"]+)"')
-        if ($tm.Success) { $into[$id] = $tm.Groups[1].Value }
+        $into[$id] = $tm.Groups[1].Value
+        $cm = [regex]::Match($card, '"text":\s*"(\d+) videos?"')
+        if ($cm.Success) { $declared[$id] = [int]$cm.Groups[1].Value }
     }
 }
 
 $playlists = @{}
-Read-Playlists $content $playlists
+$declared = @{}
+Read-Playlists $content $playlists $declared
 $tm = [regex]::Match($content, '"continuationCommand":\s*\{\s*"token":\s*"([^"]+)"')
 if ($tm.Success) {
     try {
         $body = @{ context = @{ client = @{ clientName = 'WEB'; clientVersion = $clientVersion } }; continuation = $tm.Groups[1].Value } | ConvertTo-Json -Depth 5
         $resp = Invoke-WebRequest -Uri "https://www.youtube.com/youtubei/v1/browse?key=$apiKey" -Method Post -Body $body -ContentType 'application/json' -UserAgent $ua -TimeoutSec 30 -UseBasicParsing
-        Read-Playlists $resp.Content $playlists
+        Read-Playlists $resp.Content $playlists $declared
     } catch { Write-Output "NOTE: the playlists continuation failed ($($_.Exception.Message)) - the first page is what the newest patch needs" }
 }
 
@@ -108,7 +118,11 @@ foreach ($pl in $wanted) {
         $json = $resp.Content
         Start-Sleep -Milliseconds 400
     }
-    Write-Output ("  {0,-11} {1,4} videos  {2}" -f $pl.Channel, $seen.Count, $pl.Title)
+    # the card's own badge is the cross-check: a pairing slip shows up as a count that belongs to
+    # another playlist (YouTube hides unavailable videos, so one short is normal)
+    $badge = '?'
+    if ($declared.ContainsKey($pl.Id)) { $badge = $declared[$pl.Id] }
+    Write-Output ("  {0,-11} {1,4} videos (card says {2,3})  {3}  {4}" -f $pl.Channel, $seen.Count, $badge, $pl.Id, $pl.Title)
     Start-Sleep -Milliseconds 600
 }
 
