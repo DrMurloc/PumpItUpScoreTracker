@@ -47,8 +47,9 @@ Phoenix 2 fold is the only place the stored value differs between a song's mixes
 
 **A sixth folder, on the Phoenix 2 arcade only.** v1.02.0 (2026-10-15) opened **R!SE Vol.1** for
 STEAM LINK accounts: the RISE songs whose arcade charts only linked accounts can play — 15 in
-v1.02.0, 4 in v1.03.0, by Andamiro's update notices. PIU Scores has no value for it, so those
-songs carry no Phoenix 2 channel; whether it becomes a sixth channel is the owner's call.
+v1.02.0, 4 in v1.03.0, by Andamiro's update notices. *"I think rise vol 1 is a channel, yeah"*
+(owner, 2026-11-24): it becomes the sixth. Until the value exists, those songs carry no Phoenix 2
+channel.
 
 ## 3. The model
 

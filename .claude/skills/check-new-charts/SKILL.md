@@ -25,7 +25,7 @@ only to refresh the oracle.
 | `videos\<id>.json` | Watch-page cache (title/description/length). Accumulates forever — this is what lets a song complete across multiple runs |
 | `notice-<version>.json` | The patch's update notice on piugame.com (`fetch-notice.py`): each new song's Category → channel token (`null` for R!SE Vol.1, which PIU Scores has no value for), artist, BPM and step-chart list. `build-batch.ps1` and `channels-sql.py` take a song's channel from here first |
 | `channels.json` | Video id → channel token (`KPop`, `WorldMusic`, …) from the per-version playlists (`fetch-channels.ps1`). Accumulates like the video cache; the channel source where no notice names the song |
-| `rise-songs-<version>.json` | A patch's RISE-path spec for `rise-songs-sql.py`: version, release date, the RISE sheet, and each RISE song's Korean title as the site served it — the record of what that SQL was built from |
+| `rise-songs-<version>.json` | A patch's RISE-path spec for `rise-songs-sql.py`: version, release date, the RISE sheet, `riseSingles` for any RISE song newer than the sheet, and each RISE song's Korean title as the site served it — the record of what that SQL was built from |
 
 If the state dir is missing, this is a first-run bootstrap: ask the owner for the newest
 already-processed video id, write `state.json` by hand (`channelId` is
@@ -59,9 +59,16 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
 ## Agent review duties (the scripts flag, you judge)
 
 - **Oracle candidates are site-new, not necessarily tracker-new.** A returning song (cut in
-  Phoenix, back in P2 — e.g. KUGUTSU) already exists in the tracker and must go the
-  ChartMix-seed path, not BulkAddCharts. Verify each candidate against the tracker (site
-  `/Charts` search across mixes, or ask the owner) and remove returners from `oracle.json`.
+  Phoenix, back in P2 — e.g. KUGUTSU) or a RISE song already exists in the tracker and must not
+  go through BulkAddCharts. Check every song before handing over with the catalog probe
+  `NewSongBatchProbeTests` (`ScoreTracker.ExplorationTests/Catalog/`): it prints each name's song
+  rows, its charts per mix with ids and levels, its channels, its ko-KR row, and who already holds
+  the Korean title you mean to use. Names come from a file named by `CATALOG_PROBE_SONGS`
+  (`English` or `English<TAB>Korean` per line), else from `oracle.json`. It reads the database
+  `CatalogProbe:ConnectionString` / `SCORETRACKER_CATALOG_CONNECTION` names — the local
+  prod-synced copy; **production only when the owner says so in that conversation**, then through
+  his read-only login (`AzureSql:ReadOnly*` in the AppHost store) put in the variable inside the
+  running process, never printed. Remove returners from `oracle.json`.
 - **RISE songs reach the arcade too, and the tracker already has them.** v1.02.0 brought 17:
   15 whose chart videos say `Steam Link Exclusive Track` plus two teaser songs that were RISE
   songs first; v1.03.0 brought 5 (three Steam-link, two teaser). BulkAddCharts checks only Phoenix
@@ -71,10 +78,14 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   new chart debuting in Phoenix 2. `rise-songs-sql.py` emits that script (it stops on a pairing it
   cannot make by the one-level rule). Keep these songs in `oracle.json`; the emitter records them
   in `shipped.json` with the SQL as their batch, so the drift check keeps watching them. **Which
-  songs are RISE songs the tracker has** = the RISE catalog sheet the catalog was built from
-  (`Downloads\rise-research-2026-09-14\2026-09-22-catalog-inputs\rise-song-list.csv`, RISE through
-  1.5.0). A RISE song from a later RISE patch (v1.03.0's ELEVATE and untitled, RISE 1.6.0) is
-  only in the tracker if somebody added that patch since — ask the owner before it goes in the blob.
+  songs are RISE songs the tracker has** = the catalog, not the sheet: the RISE catalog sheet
+  (`Downloads\rise-research-2026-09-14\2026-09-22-catalog-inputs\rise-song-list.csv`) stops at
+  RISE 1.5.0, and later RISE patches do reach PIU Scores — 1.6.0 landed on 2026-10-27 (215 Rise
+  chart rows, the catalog's own v5 ids), which made v1.03.0's ELEVATE and untitled RISE songs, not
+  new ones. The probe above says which. A RISE song newer than the sheet goes in the spec's
+  `riseSingles` (its RISE single levels as the probe printed them); the script still checks each
+  one against the catalog before it writes, and a song that had gone out in the spec's JSON batch
+  is re-pointed to the SQL in `shipped.json`.
 - **Rehearse the SQL before handing it over.** LocalDB cannot replay the migration chain (one
   migration builds an index `WITH (ONLINE = ON)`, Enterprise-only), so build the current model's
   schema instead: `dotnet ef dbcontext script` from `ScoreTracker.Data` (startup project
@@ -109,11 +120,11 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   channel and a FLAG line; the admin tool imports it with none and warns
   (docs/design/song-channels.md §6). The RISE-path SQL writes no channel, so its songs' rows come
   from `channels-sql.py` for the same batch date, run after it.
-- **The Steam-link songs sit in a channel PIU Scores does not have.** The notice's "STEAM LINK -
-  'R!SE Vol.1' Arcade Charts Added" section puts them in the arcade's **R!SE Vol.1** channel
-  (v1.02.0's 15, v1.03.0's 4); the tracker's five are Original, K-Pop, World Music, J-Music, Xross.
-  They ship with no channel and a FLAG, and `channels-sql.py` leaves them out — until the owner
-  decides whether R!SE Vol.1 becomes a sixth channel. The notice's "Rise Charts Added … RISE MIX"
+- **The Steam-link songs sit in a channel PIU Scores does not have yet.** The notice's "STEAM
+  LINK - 'R!SE Vol.1' Arcade Charts Added" section puts them in the arcade's **R!SE Vol.1**
+  channel (v1.02.0's 15, v1.03.0's 4); the tracker's five are Original, K-Pop, World Music,
+  J-Music, Xross. The owner ruled on 2026-11-24 that R!SE Vol.1 is a channel; until the app has
+  the value, they ship with no channel and a FLAG, and `channels-sql.py` leaves them out. The notice's "Rise Charts Added … RISE MIX"
   section is RISE's own charts on the arcade, which Phoenix 2 does not carry (docs/design/rise.md
   D8); `fetch-notice.py` skips it.
 - **The notice's step-chart list is Andamiro's own list of the patch's charts.** `fetch-notice.py`
