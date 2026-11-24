@@ -896,6 +896,43 @@ public sealed class V2CatalogApiShapeTests
     }
 
     [Fact]
+    public async Task TheSteamLinkChannelIsRiseVol1AndSortsAfterXross()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixChannelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.Xross, 47, 371),
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.RiseVol1, 19, 193)
+            });
+
+        var result = await WithContext(new ChannelsController(_mediator.Object)).Get("Phoenix2");
+
+        JsonApproval.AssertWireShape("""
+            {
+              "data": [
+                {
+                  "name": "Xross",
+                  "displayName": "Xross",
+                  "sortOrder": 40,
+                  "songCount": 47,
+                  "chartCount": 371
+                },
+                {
+                  "name": "RiseVol1",
+                  "displayName": "R!SE Vol.1",
+                  "sortOrder": 50,
+                  "songCount": 19,
+                  "chartCount": 193
+                }
+              ],
+              "limit": 2,
+              "total": 2,
+              "next": null
+            }
+            """, result);
+    }
+
+    [Fact]
     public async Task ChannelsRequireAMixLikeEveryOtherCatalogRead()
     {
         var result = await WithContext(new ChannelsController(_mediator.Object)).Get();

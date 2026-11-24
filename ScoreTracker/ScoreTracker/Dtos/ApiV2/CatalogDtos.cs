@@ -63,8 +63,9 @@ public sealed class SongV2Dto
 
     /// <summary>
     ///     The channel the song sits in on this mix's song select, as <c>/api/v2/channels</c> names
-    ///     it — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>. Per mix:
-    ///     Phoenix 2 folded J-Music into World Music. Null when unknown.
+    ///     it — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>,
+    ///     <c>RiseVol1</c>. Per mix: Phoenix 2 folded J-Music into World Music, and only Phoenix 2 has
+    ///     R!SE Vol.1, its STEAM LINK songs. Null when unknown.
     /// </summary>
     public string? Channel { get; set; }
 
@@ -405,7 +406,7 @@ public sealed class MixChannelDto
         ChartCount = record.ChartCount;
     }
 
-    /// <summary>The token — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>.</summary>
+    /// <summary>The token — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>, <c>RiseVol1</c>.</summary>
     public string Name { get; set; }
 
     /// <summary>What the site prints: <c>K-Pop</c>, <c>World Music</c>.</summary>
