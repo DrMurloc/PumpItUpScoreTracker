@@ -12,13 +12,19 @@ song its ko-KR name. Every check THROWs, so a bad run writes nothing; @WhatIf = 
 spec.json - Korean names exactly as check-korean-names.ps1 read them off the site:
     {"version": "1.03.0", "release": "2026-11-24", "jsonBatch": "phoenix2-batch-2026-11-24.json",
      "sheet": "<the RISE catalog's rise-song-list.csv>",
+     "riseSingles": {"ELEVATE": [4, 7, 11, 16, 18, 21]},
      "why": ["optional header lines: which of the songs are Steam-link tracks, which teaser songs"],
      "songs": {"Bamboo": "뱀부", ...}}
+riseSingles (optional) gives the RISE single levels of a song from a RISE patch after the sheet's last one (the
+sheet stops at RISE 1.5.0; 1.6.0 reached PIU Scores on 2026-10-27), as the catalog holds them - the
+NewSongBatchProbeTests catalog probe prints them. Every RISE single is still checked against the catalog (THROW
+50003), so a wrong level stops the script instead of writing.
 
 Run it BEFORE build-batch.ps1: it records the songs in shipped.json with the SQL as their batch, which keeps them
-out of the JSON while the drift check keeps watching them. Standard library only; reads the video cache in the
-state dir. RISE ids are the catalog's own v5 ids (tools/RiseCatalog/build.py); the rows this script creates get
-v5 ids in a namespace of their own, so a re-run emits the same script.
+out of the JSON while the drift check keeps watching them; a song shipped.json lists under the spec's JSON batch
+has moved to this SQL and is re-pointed. Standard library only; reads the video cache in the state dir. RISE ids
+are the catalog's own v5 ids (tools/RiseCatalog/build.py - the 1.6.0 rows use them too); the rows this script
+creates get v5 ids in a namespace of their own, so a re-run emits the same script.
 """
 import csv, datetime, json, os, re, sys, uuid, unicodedata
 
@@ -129,10 +135,13 @@ def main():
                 charts[key] = {'video': v['videoId'], 'step': field(d, 'Step Artist')}
         if not charts:
             raise SystemExit(f'{name}: no Phoenix 2 chart videos in the cache')
-        if name not in sheet:
-            raise SystemExit(f'{name}: not in the RISE sheet - not a RISE song PIU Scores has?')
-        row = sheet[name]
-        rise_singles = sorted(int(float(row[f'S{i}'])) for i in range(1, 7) if row.get(f'S{i}', '').strip())
+        if name in sheet:
+            row = sheet[name]
+            rise_singles = sorted(int(float(row[f'S{i}'])) for i in range(1, 7) if row.get(f'S{i}', '').strip())
+        elif name in spec.get('riseSingles', {}):
+            rise_singles = sorted(int(x) for x in spec['riseSingles'][name])
+        else:
+            raise SystemExit(f'{name}: not in the RISE sheet and no riseSingles entry - not a RISE song PIU Scores has?')
         arcade_singles = sorted(lvl for (t, lvl) in charts if t == 'Single')
         pairs = align(arcade_singles, rise_singles)
         paired_arcade = {a for a, _ in pairs}
@@ -160,8 +169,8 @@ def main():
     w(f"""/*
   Phoenix 2 v{version} ({release}): the arcade charts of the {len(songs)} RISE songs that reached the Phoenix 2 arcade.
 
-  These songs already exist on PIU Scores as RISE songs (tools/RiseCatalog s2/s3, 2026-09-22), so
-  /Admin/BulkAddCharts would create a second copy of each.{why}
+  These songs already exist on PIU Scores as RISE songs (the RISE catalog of 2026-09-22 and the RISE
+  patches loaded since), so /Admin/BulkAddCharts would create a second copy of each.{why}
   This script adds their Phoenix 2 charts to the songs that are already there, the way the RISE catalog
   decisions say (docs/design/rise.md D7/D8), exactly as the v1.02.0 script did for its 17:
     * an arcade single IS the RISE single it was ported from - it gets a Phoenix 2 row on the existing
@@ -340,15 +349,20 @@ END
     # keep the songs out of build-batch's JSON while its drift check keeps watching them
     shipped_path = os.path.join(STATE, 'shipped.json')
     shipped = json.load(open(shipped_path, encoding='utf-8-sig')) if os.path.exists(shipped_path) else {'songs': []}
-    have = {s['name'] for s in shipped['songs']}
+    have = {s['name']: s for s in shipped['songs']}
     now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    added = 0
+    added = moved = 0
     for s in songs:
-        if s['name'] not in have:
-            shipped['songs'].append({'name': s['name'], 'charts': sorted(f'{t}|{lvl}' for t, lvl in s['charts']),
-                                     'batch': os.path.basename(out_path), 'dateUtc': now})
+        keys = sorted(f'{t}|{lvl}' for t, lvl in s['charts'])
+        entry = have.get(s['name'])
+        if entry is None:
+            shipped['songs'].append({'name': s['name'], 'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
             added += 1
-    if added:
+        elif entry['batch'] == spec['jsonBatch']:
+            # it went out in the JSON first and turned out to be a RISE song the tracker has: it ships here now
+            entry.update({'charts': keys, 'batch': os.path.basename(out_path), 'dateUtc': now})
+            moved += 1
+    if added or moved:
         with open(shipped_path, 'w', encoding='utf-8') as fh:
             json.dump(shipped, fh, ensure_ascii=False, indent=4)
 
@@ -358,7 +372,8 @@ END
         print(f"   joins RISE charts: {', '.join('S%d' % a for a, _ in s['pairs'])}" + (f"   re-rated: {', '.join(re_rates)}" if re_rates else ''))
         print(f"   new: {', '.join(label(t, lvl) for t, lvl in s['new'])}")
     print(f'{len(songs)} songs, {total} Phoenix 2 charts ({sum(len(s["pairs"]) for s in songs)} join RISE singles, '
-          f'{sum(len(s["new"]) for s in songs)} new) -> {out_path}; shipped.json +{added}')
+          f'{sum(len(s["new"]) for s in songs)} new) -> {out_path}; shipped.json +{added}'
+          + (f', {moved} moved here from {spec["jsonBatch"]}' if moved else ''))
 
 
 if __name__ == '__main__':
