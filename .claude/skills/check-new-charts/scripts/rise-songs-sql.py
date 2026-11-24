@@ -176,8 +176,8 @@ def main():
       the RISE row left them empty;
     * every song gets its ko-KR name as piugame's Korean session serves it (read {release}) - Korean
       sessions import through that row.
-  No channel: a song's Phoenix 2 scores.SongMix row goes in once the v{version} step-chart playlists exist
-  (channels-sql.py).
+  No channel here: a song's Phoenix 2 scores.SongMix row comes from the channels script (channels-sql.py),
+  which reads the v{version} update notice and, where it is silent, the step-chart playlists.
 
   Run order: upload {spec['jsonBatch']} in /Admin/BulkAddCharts first (Version picker: new
   version {version}, release date {release}), then this script with @WhatIf = 1, read the result sets, then

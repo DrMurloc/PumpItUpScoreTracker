@@ -54,8 +54,17 @@ if (Test-Path $shippedPath) {
     foreach ($ss in $shipped.songs) { $shippedCharts[(Normalize $ss.name)] = @($ss.charts | Sort-Object) -join ',' }
 }
 
-# ---- load the channel per video (fetch-channels.ps1; optional) ----
-# docs/design/song-channels.md §6: the patch's per-version playlists name each video's channel.
+# ---- load the channel per song (fetch-notice.py) and per video (fetch-channels.ps1); both optional ----
+# docs/design/song-channels.md §6. The patch's update notice prints each new song's Category on release
+# day and wins; the per-version playlists come weeks later and file the Steam-link songs (the arcade's
+# R!SE Vol.1 channel, which has no playlist) under Original, so they only speak where the notice is silent.
+$noticeSongs = @{}
+foreach ($nf in @(Get-ChildItem (Join-Path $StateDir 'notice-*.json') -ErrorAction SilentlyContinue)) {
+    $nj = Get-Content $nf.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($ns in $nj.songs) {
+        $noticeSongs[(Normalize $ns.name)] = [pscustomobject]@{ Category = [string]$ns.category; Channel = $ns.channel; Version = [string]$nj.version }
+    }
+}
 $channelsPath = Join-Path $StateDir 'channels.json'
 $videoChannels = @{}
 if (Test-Path $channelsPath) {
@@ -324,17 +333,27 @@ foreach ($name in ($songData.Keys | Sort-Object)) {
         $charts += ,$chart
     }
 
-    # the channel is the playlist the chart videos sit in; consensus across them, a FLAG when none
+    # the channel is the notice's Category; else the playlist the chart videos sit in (consensus across
+    # them); a FLAG when neither names one
     $channelVotes = @{}
     foreach ($c in $chartMap.Values) {
         if ($videoChannels.ContainsKey($c.Hash)) { $channelVotes[$videoChannels[$c.Hash]] = 1 + [int]$channelVotes[$videoChannels[$c.Hash]] }
     }
     $channel = $null
-    if ($channelVotes.Count -gt 0) {
+    $fromNotice = $noticeSongs[(Normalize $site.Name)]
+    if ($null -ne $fromNotice) {
+        if ($null -eq $fromNotice.Channel) {
+            Note "FLAG [$name] the v$($fromNotice.Version) notice files it under '$($fromNotice.Category)', which PIU Scores has no channel for -- the admin tool imports it with none"
+        } else {
+            $channel = [string]$fromNotice.Channel
+            $others = @($channelVotes.Keys | Where-Object { $_ -ne $channel })
+            if ($others.Count -gt 0) { Note "FLAG [$name] the playlists say $($channelVotes.Keys -join ', '); the v$($fromNotice.Version) notice says $channel -- taking the notice" }
+        }
+    } elseif ($channelVotes.Count -gt 0) {
         $channel = ($channelVotes.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 1).Key
         if ($channelVotes.Count -gt 1) { Note "FLAG [$name] chart videos sit in more than one channel playlist ($($channelVotes.Keys -join ', ')) -- taking $channel" }
     } else {
-        Note "FLAG [$name] no channel -- none of its chart videos is in a fetched channel playlist (run fetch-channels.ps1 for this patch); the admin tool imports it with none"
+        Note "FLAG [$name] no channel -- the update notice does not name it (run fetch-notice.py for this patch) and none of its chart videos is in a fetched channel playlist; the admin tool imports it with none"
     }
 
     $entry = [ordered]@{
