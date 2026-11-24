@@ -23,7 +23,7 @@ only to refresh the oracle.
 | `shipped.json` | Songs emitted in previous batches (name + chart keys + batch file). Excluded from new batches |
 | `catalog.csv` (+`catalog-prev.csv`) | Last full site sweep (Name/Type/Level/Id); the diff baseline for oracle candidates |
 | `videos\<id>.json` | Watch-page cache (title/description/length). Accumulates forever — this is what lets a song complete across multiple runs |
-| `notice-<version>.json` | The patch's update notice on piugame.com (`fetch-notice.py`): each new song's Category → channel token (`null` for R!SE Vol.1, which PIU Scores has no value for), artist, BPM and step-chart list. `build-batch.ps1` and `channels-sql.py` take a song's channel from here first |
+| `notice-<version>.json` | The patch's update notice on piugame.com (`fetch-notice.py`): each new song's Category → channel token (R!SE Vol.1 → `RiseVol1`; `null` for a Category PIU Scores has no value for), artist, BPM and step-chart list. `build-batch.ps1` and `channels-sql.py` take a song's channel from here first |
 | `channels.json` | Video id → channel token (`KPop`, `WorldMusic`, …) from the per-version playlists (`fetch-channels.ps1`). Accumulates like the video cache; the channel source where no notice names the song |
 | `rise-songs-<version>.json` | A patch's RISE-path spec for `rise-songs-sql.py`: version, release date, the RISE sheet, `riseSingles` for any RISE song newer than the sheet, `channels` (the batch dates whose channels the script also writes), and each RISE song's Korean title as the site served it — the record of what that SQL was built from |
 
@@ -122,11 +122,12 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   channel and a FLAG line; the admin tool imports it with none and warns
   (docs/design/song-channels.md §6). The RISE-path songs get theirs inside the RISE-path SQL
   (its spec's `channels`), which goes in after the JSON.
-- **The Steam-link songs sit in a channel PIU Scores does not have yet.** The notice's "STEAM
-  LINK - 'R!SE Vol.1' Arcade Charts Added" section puts them in the arcade's **R!SE Vol.1**
-  channel (v1.02.0's 15, v1.03.0's 4); the tracker's five are Original, K-Pop, World Music,
-  J-Music, Xross. The owner ruled on 2026-11-24 that R!SE Vol.1 is a channel; until the app has
-  the value, they ship with no channel and a FLAG, and `channels-sql.py` leaves them out. The notice's "Rise Charts Added … RISE MIX"
+- **The Steam-link songs sit in the R!SE Vol.1 channel.** The notice's "STEAM LINK - 'R!SE
+  Vol.1' Arcade Charts Added" section puts them in the arcade's **R!SE Vol.1** folder — the sixth
+  channel, token `RiseVol1` (song-channels.md D12); `fetch-notice.py` maps it like any Category.
+  v1.02.0's 15 and v1.03.0's 4 got it from the `SteamLinkSongsRiseVol1Channel` migration, because
+  they shipped before the app knew the value. Until a release carrying the value is live, a JSON
+  that says `RiseVol1` imports with no channel and a warning. The notice's "Rise Charts Added … RISE MIX"
   section is RISE's own charts on the arcade, which Phoenix 2 does not carry (docs/design/rise.md
   D8); `fetch-notice.py` skips it.
 - **The notice's step-chart list is Andamiro's own list of the patch's charts.** `fetch-notice.py`

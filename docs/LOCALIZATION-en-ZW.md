@@ -115,6 +115,7 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 |---|---|---|
 | Chart / Charts | Murgl | The single most-reused noun in the file. |
 | CoOp | Mrglrl | |
+| R!SE Vol.1 (the channel) | R!SE Glr.1 | Coined 2026-11-24. `R!SE` stays as the game prints it — a lone `R` is a Murloc letter and `SE` passes as an acronym — and `Glr` is *Vol.*, one syllable for a three-letter word. |
 | Doubles | Groggl | |
 | Grade | Rorgl | |
 | Leaderboard | Mrglrmrgl | Plural `Mrglrmrglrgl`. |
